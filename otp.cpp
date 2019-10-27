@@ -36,7 +36,7 @@ namespace OTPLib {
                    "<h2>Version: %2</h2>"
                    "<h3>A QT interface for E1.59 (Entertainment Technology Object Transform Protocol (OTP))</h3>"
                    "<h4>Marcus Birkin 2019</h4>"
-                   "<h4><a href=\"https://github.com/marcusbirkin/OTPView\">https://github.com/marcusbirkin/OTPView</a></h4></p>")
+                   "<h4><a href=\"https://github.com/marcusbirkin/OTPLib\">https://github.com/marcusbirkin/OTPLib</a></h4></p>")
                .arg(QString("OTPLib"))
                .arg(getVersion())
                .append(
