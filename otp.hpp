@@ -126,6 +126,12 @@ namespace ACN::OTP
         signals:
             void newProducerPointName(name_t);
 
+        /* Producer Addresses */
+        public:
+            QList<address_t> getProducerAddresses();
+            QList<address_t> getProducerAddresses(system_t);
+            QList<address_t> getProducerAddresses(system_t, group_t);
+
         /* Components */
         public:
             QList<cid_t> getComponents() const;
@@ -168,6 +174,12 @@ namespace ACN::OTP
         signals:
             void newPoint(cid_t, system_t, group_t, point_t);
             void removedPoint(cid_t, system_t, group_t, point_t);
+
+        /* Addresses */
+        public:
+            QList<address_t> getAddresses();
+            QList<address_t> getAddresses(system_t);
+            QList<address_t> getAddresses(system_t, group_t);
 
         /* Standard Modules */
         public:
@@ -342,7 +354,7 @@ namespace ACN::OTP
 
         /* Consumer Systems */
         public:
-            QList<system_t> getConsumerSystems() const { return systemList; }
+            QList<system_t> getConsumerSystems() const;
             void addConsumerSystem(system_t);
             void removeConsumerSystem(system_t);
         signals:
@@ -409,6 +421,13 @@ namespace ACN::OTP
                 { return isPointExpired(cid_t(), address); }
             bool isPointExpired(system_t system, group_t group, point_t point) const
                 { return isPointExpired(address_t(system, group, point)); }
+
+        /* Addresses */
+        public:
+            QList<address_t> getAddresses();
+            QList<address_t> getAddresses(system_t);
+            QList<address_t> getAddresses(system_t, group_t);
+
 
         signals:
             void newPoint(cid_t, system_t, group_t, point_t);
@@ -499,9 +518,9 @@ namespace ACN::OTP
         PDU::OTPLayer::folio_t SystemAdvertisementMessage_Folio = 0;
 
         QMap<cid_t, sequenceMap_t> sequenceMap;
+        folioMap_t folioMap;
 
         std::unique_ptr<Container> otpNetwork;
-        QList<system_t> systemList;
         QNetworkInterface iface;
 
         cid_t CID;

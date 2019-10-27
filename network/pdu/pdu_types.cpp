@@ -222,6 +222,11 @@ namespace ACN::OTP::PDU {
         bool system_t::isValid() { return RANGES::System.isValid(data); }
         system_t system_t::getMin() { return static_cast<system_t>(RANGES::System.getMin()); }
         system_t system_t::getMax() { return static_cast<system_t>(RANGES::System.getMax()); }
+        size_t system_t::getSize() {
+            PDUByteArray temp;
+            temp << *this;
+            return temp.size();
+        }
         PDUByteArray& operator>>(PDUByteArray &l, system_t &r)
         {
             l >> r.data;
@@ -336,6 +341,11 @@ namespace ACN::OTP::PDU {
     }
 
     namespace OTPModuleLayer {
+        size_t vector_t::getSize() {
+            PDUByteArray temp;
+            temp << *this;
+            return temp.size();
+        }
         PDUByteArray& operator<<(PDUByteArray &l, const vector_t &r)
         {
             return l << r.ManufacturerID << r.ModuleNumber;
@@ -468,6 +478,11 @@ namespace ACN::OTP::PDU {
     }
 
     namespace OTPNameAdvertisementLayer  {
+        size_t addressPointDescriptions_t::getSize() {
+            PDUByteArray temp;
+            temp << *this;
+            return temp.size();
+        }
         PDUByteArray& operator<<(PDUByteArray &l, const addressPointDescriptions_t &r)
         {
             l << r.System << r.Group << r.Point << r.PointName;

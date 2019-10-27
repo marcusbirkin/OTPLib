@@ -36,13 +36,19 @@ public:
             ACN::OTP::mode_e mode,
             cid_t CID,
             name_t ProducerName,
-            list_t NameList,
+            list_t PointDescriptionList,
             QObject *parent = nullptr);
     explicit Message(
             QNetworkDatagram message,
             QObject *parent = nullptr);
     bool isValid();
-    QNetworkDatagram toQNetworkDatagram(sequence_t sequenceNumber, folio_t folio);
+    QNetworkDatagram toQNetworkDatagram(
+        sequence_t sequenceNumber,
+        folio_t folio,
+        page_t thisPage,
+        page_t lastPage);
+
+    bool addItem(item_t value) { return nameAdvertisementLayer->addItem(value); }
 
     std::shared_ptr<OTP::PDU::OTPRootLayer::Layer> getRootLayer() { return rootLayer; }
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> getOTPLayer() { return otpLayer; }

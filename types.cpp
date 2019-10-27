@@ -22,6 +22,50 @@
 
 namespace ACN::OTP
 {
+    void folioMap_s::addPage(
+        cid_t cid,
+        ACN::OTP::PDU::vector_t vector,
+        ACN::OTP::PDU::OTPLayer::folio_t folio,
+        ACN::OTP::PDU::OTPLayer::page_t page,
+        QNetworkDatagram datagram)
+    {
+        key_t key = {cid, vector};
+        if (folioMap[key].folio != folio)
+        {
+            folioMap[key].pages.clear();
+            folioMap[key].datagrams.clear();
+            folioMap[key].folio = folio;
+        }
+        folioMap[key].pages.append(page);
+        folioMap[key].datagrams.append(datagram);
+    }
+
+    bool folioMap_s::checkAllPages(
+            cid_t cid,
+            ACN::OTP::PDU::vector_t vector,
+            ACN::OTP::PDU::OTPLayer::folio_t folio,
+            ACN::OTP::PDU::OTPLayer::page_t lastPage)
+    {
+        key_t key = {cid, vector};
+        if (folioMap[key].folio != folio) return false;
+        if (folioMap[key].pages.count() != (lastPage + 1)) return false;
+        for (int page = 0; page <= lastPage; page++)
+        {
+            if (!folioMap[key].pages.contains(page)) return false;
+        }
+        return true;
+    }
+
+    QVector<QNetworkDatagram> folioMap_s::getDatagrams(
+            cid_t cid,
+            ACN::OTP::PDU::vector_t vector,
+            ACN::OTP::PDU::OTPLayer::folio_t folio)
+    {
+        key_t key = {cid, vector};
+        if (folioMap[key].folio != folio) return QVector<QNetworkDatagram>();
+        return folioMap[key].datagrams;
+    }
+
     bool pointDetails::isExpired() {
         return (QDateTime::currentDateTime() > getLastSeen().addMSecs(OTP_TRANSFORM_DATA_LOSS_TIMEOUT.count()));
     }

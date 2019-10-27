@@ -26,6 +26,7 @@ namespace ACN::OTP::MESSAGES
     namespace  OTPTransformMessage {
         typedef ACN::OTP::PDU::OTPLayer::sequence_t sequence_t;
         typedef ACN::OTP::PDU::OTPLayer::folio_t folio_t;
+        typedef ACN::OTP::PDU::OTPLayer::page_t page_t;
     }
 
     namespace OTPModuleAdvertisementMessage {
@@ -33,6 +34,7 @@ namespace ACN::OTP::MESSAGES
         typedef ACN::OTP::PDU::OTPModuleAdvertisementLayer::list_t list_t;
         typedef ACN::OTP::PDU::OTPLayer::sequence_t sequence_t;
         typedef ACN::OTP::PDU::OTPLayer::folio_t folio_t;
+        typedef ACN::OTP::PDU::OTPLayer::page_t page_t;
     }
 
     namespace OTPNameAdvertisementMessage {
@@ -40,6 +42,7 @@ namespace ACN::OTP::MESSAGES
         typedef ACN::OTP::PDU::OTPNameAdvertisementLayer::list_t list_t;
         typedef ACN::OTP::PDU::OTPLayer::sequence_t sequence_t;
         typedef ACN::OTP::PDU::OTPLayer::folio_t folio_t;
+        typedef ACN::OTP::PDU::OTPLayer::page_t page_t;
     }
 
     namespace OTPSystemAdvertisementMessage {
@@ -47,6 +50,8 @@ namespace ACN::OTP::MESSAGES
         typedef ACN::OTP::PDU::OTPSystemAdvertisementLayer::list_t list_t;
         typedef ACN::OTP::PDU::OTPLayer::sequence_t sequence_t;
         typedef ACN::OTP::PDU::OTPLayer::folio_t folio_t;
+        typedef ACN::OTP::PDU::OTPLayer::page_t page_t;
+        typedef ACN::OTP::PDU::OTPLayer::page_t page_t;
     }
 }
 

@@ -46,7 +46,8 @@ public:
     void setPDULength(flags_length_t::pduLength_t value) { FlagsLength.PDULength = value; }
     const vector_t &getVector() { return Vector; }
     const list_t &getList() { return List; }
-    void setList(list_t value) { List = value; }
+    bool setList(list_t value);
+    bool addItem(item_t value);
 
 private:
     flags_length_t FlagsLength;

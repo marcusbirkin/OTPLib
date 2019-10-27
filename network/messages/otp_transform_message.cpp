@@ -124,42 +124,50 @@ bool Message::isValid()
     return true;
 }
 
-QNetworkDatagram Message::toQNetworkDatagram(sequence_t sequenceNumber, folio_t folio)
+QNetworkDatagram Message::toQNetworkDatagram(
+        sequence_t sequenceNumber,
+        folio_t folio,
+        page_t thisPage,
+        page_t lastPage)
 {
     otpLayer->setSequence(sequenceNumber);
     otpLayer->setFolio(folio);
+    otpLayer->setPage(thisPage);
+    otpLayer->setLastPage(lastPage);
     auto destAddr = QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address() + transformLayer->getSystem());
     return QNetworkDatagram(toByteArray(), destAddr, ACN_SDT_MULTICAST_PORT);
 }
 
-void Message::addModule(
-        ACN::OTP::address_t address,
-        ACN::OTP::timestamp_t sampleTime,
-        ACN::OTP::PDU::OTPModuleLayer::vector_t vector,
-        ACN::OTP::PDU::OTPModuleLayer::additional_t additional)
+Message::addModule_ret Message::addModule(addModule_t &moduleData)
 {
-    if (address.system != transformLayer->getSystem()) return;
-    if (additional.isEmpty()) return;
-    if (sampleTime == 0) return;
+    if (moduleData.address.system != transformLayer->getSystem()) return InvalidSystem;
+    if (moduleData.additional.isEmpty()) return InvalidAdditional;
+    if (moduleData.sampleTime == 0) return InvalidTimestamp;
 
-    if (!pointLayers.contains(address))
+    if (!pointLayers.contains(moduleData.address))
     {
-        pointLayers.insert(
-                    address,
-                    std::make_shared<OTP::PDU::OTPPointLayer::Layer>(
-                        0, address.group, address.point, sampleTime, this));
+        auto pointLayer = std::make_shared<OTP::PDU::OTPPointLayer::Layer>
+                (0, moduleData.address.group, moduleData.address.point, moduleData.sampleTime, this);
+
+        if ((pointLayer->toPDUByteArray().size() + this->toByteArray().size()) > RANGES::MESSAGE_SIZE.getMax())
+            return MessageToBig;
+        pointLayers.insert(moduleData.address, pointLayer);
     } else {
         /* TODO Seperate modules with differing sample times into different point layers */
-        if (sampleTime > pointLayers.value(address)->getTimestamp())
-            pointLayers.value(address)->setTimestamp(sampleTime);
+        if (moduleData.sampleTime > pointLayers.value(moduleData.address)->getTimestamp())
+            pointLayers.value(moduleData.address)->setTimestamp(moduleData.sampleTime);
     }
 
-    auto moduleLayer = std::make_shared<OTP::PDU::OTPModuleLayer::Layer>(0, vector.ManufacturerID, vector.ModuleNumber);
-    moduleLayer->setAdditional(additional);
+    auto moduleLayer = std::make_shared<OTP::PDU::OTPModuleLayer::Layer>(0, moduleData.vector.ManufacturerID, moduleData.vector.ModuleNumber);
+    moduleLayer->setAdditional(moduleData.additional);
 
-    moduleLayers.insert(address, moduleLayer);
+    if ((moduleLayer->toPDUByteArray().size() + this->toByteArray().size()) > RANGES::MESSAGE_SIZE.getMax())
+        return MessageToBig;
+    moduleLayers.insert(moduleData.address, moduleLayer);
 
     updatePduLength();
+
+    return OK;
 }
 
 QByteArray Message::toByteArray()

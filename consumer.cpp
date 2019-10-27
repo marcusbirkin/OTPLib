@@ -34,15 +34,13 @@ Consumer::Consumer(
         QObject *parent) :
     QObject(parent),
     otpNetwork(new Container(this)),
-    systemList(systems),
     iface(iface),
     CID(CID),
     name(name)
 {
     // Signals
     connect(otpNetwork.get(), &Container::newComponent, this, &Consumer::newComponent);
-    /* TODO - implement signal */
-//    connect(otpNetwork.get(), &Container::removedComponent, this, &Consumer::removedComponent);
+    connect(otpNetwork.get(), &Container::removedComponent, this, &Consumer::removedComponent);
 
     connect(otpNetwork.get(), qOverload<const cid_t&, const name_t&>(&Container::updatedComponent),
             this, qOverload<const cid_t&, const name_t&>(&Consumer::updatedComponent));
@@ -64,6 +62,9 @@ Consumer::Consumer(
     connect(otpNetwork.get(), &Container::expiredPoint, this, &Consumer::expiredPoint);
     connect(otpNetwork.get(), &Container::removedPoint, this, &Consumer::removedPoint);
 
+    // Setup Systems
+    for (auto system : systems)
+        addConsumerSystem(system);
     setupListener();
 
     auto groupAddress = OTP_Advertisement_Message_IPv4;
@@ -120,11 +121,16 @@ void Consumer::setConsumerNetworkInterface(QNetworkInterface value)
 }
 
 /* Component Systems */
+QList<system_t> Consumer::getConsumerSystems() const
+{
+    return otpNetwork->getSystemList(getConsumerCID());
+}
+
 void Consumer::addConsumerSystem(system_t system)
 {
     if (system.isValid())
     {
-        if (!systemList.contains(system)) systemList.append(system);
+        if (!getConsumerSystems().contains(system)) otpNetwork->addSystem(getConsumerCID(), system);
         auto groupAddress = QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address() + system);
         if (SocketManager::getInstance(iface)->joinMulticastGroup(groupAddress))
         {
@@ -138,7 +144,7 @@ void Consumer::removeConsumerSystem(system_t system)
 {
     if (system.isValid())
     {
-        systemList.removeAll(system);
+        otpNetwork->removeSystem(getConsumerCID(), system);
         auto groupAddress = QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address() + system);
         if (SocketManager::getInstance(iface)->leaveMulticastGroup(groupAddress))
         {
@@ -230,6 +236,33 @@ bool Consumer::isPointExpired(cid_t cid, address_t address) const
     if (cid.isNull()) return otpNetwork->PointDetails(address)->isExpired();
     if (!getPoints(cid, address.system, address.group).contains(address.point)) return true;
     return otpNetwork->PointDetails(cid, address)->isExpired();
+}
+
+/* Addresses */
+QList<address_t> Consumer::getAddresses()
+{
+    QList<address_t> ret;
+    for (auto system : getSystems())
+        ret.append(getAddresses(system));
+
+    return ret;
+}
+QList<address_t> Consumer::getAddresses(system_t system)
+{
+    QList<address_t> ret;
+    for (auto group : getGroups(system))
+        ret.append(getAddresses(system, group));
+
+    return ret;
+}
+
+QList<address_t> Consumer::getAddresses(system_t system, group_t group)
+{
+    QList<address_t> ret;
+    for (auto point : getPoints(system, group))
+        ret.append(address_t(system, group, point));
+
+    return ret;
 }
 
 /* Standard Modules */
@@ -346,14 +379,12 @@ void Consumer::setupListener()
     qDebug() << this << "- Starting on interface" << iface.humanReadableName() << iface.hardwareAddress();
     connect(SocketManager::getInstance(iface).get(), &SocketManager::newDatagram, this, &Consumer::newDatagram);
 
-    for (auto system : systemList)
+    for (auto system : getConsumerSystems())
         addConsumerSystem(system);
 }
 
 void Consumer::newDatagram(QNetworkDatagram datagram)
 {
-    /* TODO deal with folios */
-
     // Transform Message
     if ((datagram.destinationAddress().toIPv4Address() >= OTP_Transform_Message_IPv4.toIPv4Address()) &&
             (datagram.destinationAddress().toIPv4Address() <= OTP_Transform_Message_IPv4.toIPv4Address() + RANGES::System.getMax()))
@@ -464,7 +495,7 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
     if (nameAdvert.isValid())
     {
         auto cid = nameAdvert.getRootLayer()->getCID();
-        if (cid != CID && !sequenceMap[cid].checkSequence(
+        if (cid != getConsumerCID() && !sequenceMap[cid].checkSequence(
                     PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
                     nameAdvert.getOTPLayer()->getSequence()))
         {
@@ -484,14 +515,40 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
                 nameAdvert.getOTPLayer()->getProducerName(),
                 type);
 
-        for (auto point : nameAdvert.getNameAdvertisementLayer()->getList())
-        {
-            auto cid = nameAdvert.getRootLayer()->getCID();
-            address_t address = address_t(point.System, point.Group, point.Point);
-            otpNetwork->addPoint(cid, address);
-            otpNetwork->PointDetails(cid, address)->setName(point.PointName);
-        }
+        // Add page to folio map
+        folioMap.addPage(
+                    nameAdvert.getRootLayer()->getCID(),
+                    PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
+                    nameAdvert.getOTPLayer()->getFolio(),
+                    nameAdvert.getOTPLayer()->getPage(),
+                    datagram);
 
+        // Last page?
+        if (folioMap.checkAllPages(
+                    nameAdvert.getRootLayer()->getCID(),
+                    PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
+                    nameAdvert.getOTPLayer()->getFolio(),
+                    nameAdvert.getOTPLayer()->getLastPage()))
+        {
+            // Process all pages
+            MESSAGES::OTPNameAdvertisementMessage::list_t list;
+            for (auto datagram : folioMap.getDatagrams(nameAdvert.getRootLayer()->getCID(),
+                                                       PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
+                                                       systemAdvert.getOTPLayer()->getFolio()))
+            {
+                MESSAGES::OTPNameAdvertisementMessage::Message nameAdvert(datagram);
+                list.append(nameAdvert.getNameAdvertisementLayer()->getList());
+            }
+
+            // Add names
+            for (auto point : list)
+            {
+                auto cid = nameAdvert.getRootLayer()->getCID();
+                address_t address = address_t(point.System, point.Group, point.Point);
+                otpNetwork->addPoint(cid, address);
+                otpNetwork->PointDetails(cid, address)->setName(point.PointName);
+            }
+        }
         return;
     }
 
@@ -499,7 +556,7 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
     if (systemAdvert.isValid())
     {
         auto cid = systemAdvert.getRootLayer()->getCID();
-        if (cid != CID && !sequenceMap[cid].checkSequence(
+        if (cid != getConsumerCID() && !sequenceMap[cid].checkSequence(
                     PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
                     systemAdvert.getOTPLayer()->getSequence()))
         {
@@ -519,51 +576,98 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
                 systemAdvert.getOTPLayer()->getProducerName(),
                 type);
 
-        // Add new systems
-        for (auto system : systemAdvert.getSystemAdvertisementLayer()->getList())
-        {
-            otpNetwork->addSystem(
+        // Add page to folio map
+        folioMap.addPage(
                     systemAdvert.getRootLayer()->getCID(),
-                    system);
-        }
+                    PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
+                    systemAdvert.getOTPLayer()->getFolio(),
+                    systemAdvert.getOTPLayer()->getPage(),
+                    datagram);
 
-        // Prune old
-        for (auto system : otpNetwork->getSystemList(systemAdvert.getRootLayer()->getCID()))
+        // Last page?
+        if (folioMap.checkAllPages(
+                    systemAdvert.getRootLayer()->getCID(),
+                    PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
+                    systemAdvert.getOTPLayer()->getFolio(),
+                    systemAdvert.getOTPLayer()->getLastPage()))
         {
-            if (!systemAdvert.getSystemAdvertisementLayer()->getList().contains(system))
-                otpNetwork->removeSystem(
+            // Process all pages
+            MESSAGES::OTPSystemAdvertisementMessage::list_t list;
+            for (auto datagram : folioMap.getDatagrams(systemAdvert.getRootLayer()->getCID(),
+                                                       PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
+                                                       systemAdvert.getOTPLayer()->getFolio()))
+            {
+                MESSAGES::OTPSystemAdvertisementMessage::Message systemAdvert(datagram);
+                list.append(systemAdvert.getSystemAdvertisementLayer()->getList());
+            }
+
+            // Add new systems
+            for (auto system : list)
+            {
+                otpNetwork->addSystem(
                         systemAdvert.getRootLayer()->getCID(),
                         system);
-        }
+            }
 
+            // Prune old
+            for (auto system : otpNetwork->getSystemList(systemAdvert.getRootLayer()->getCID()))
+            {
+                if (!list.contains(system))
+                    otpNetwork->removeSystem(
+                            systemAdvert.getRootLayer()->getCID(),
+                            system);
+            }
+        }
         return;
     }
 }
 
 void Consumer::sendOTPModuleAdvertisementMessage()
 {
-    // Module Advertisement Message
     using namespace ACN::OTP::MESSAGES::OTPModuleAdvertisementMessage;
-    Message moduleAdvertisementMessage(
-                mode_e::Consumer,
-                CID,
-                name,
-                ACN::OTP::MODULES::getSupportedModules(),
-                this);
 
-    if (!moduleAdvertisementMessage.isValid())
-    {
-        qDebug() << this << "- OTP Module Advertisement Message Request Not Valid";
-        return;
+    // Get list of supported modules
+    list_t list = ACN::OTP::MODULES::getSupportedModules();
+
+    // Generate messages
+    QVector<std::shared_ptr<Message>> folioMessages;
+    while (list.count()) {
+        folioMessages.append(
+                    std::make_shared<Message>(
+                        mode_e::Consumer,
+                        getConsumerCID(),
+                        name,
+                        list_t(),
+                        this));
+
+        bool result = true;
+        while (result && list.count())
+        {
+            result = folioMessages.back()->addItem(list.front());
+            if (result) list.removeFirst();
+        }
+
+        if (!folioMessages.back()->isValid())
+        {
+            qDebug() << this << "- OTP Module Advertisement Message Request Not Valid";
+            return;
+        }
     }
 
-    auto datagram = moduleAdvertisementMessage.toQNetworkDatagram(
-                sequenceMap[CID].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_MODULE),
-                ModuleAdvertisementMessage_Folio++);
-    if (SocketManager::getInstance(iface)->writeDatagram(datagram) == datagram.data().size())
-        qDebug() << this << "- OTP Module Advertisement Message Request Sent";
-    else
-        qDebug() << this << "- OTP Module Advertisement Message Request Failed";
+    // Send messages
+    for (int n = 0; n < folioMessages.count(); n++)
+    {
+        auto datagram = folioMessages[n]->toQNetworkDatagram(
+                            sequenceMap[getConsumerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_MODULE),
+                            ModuleAdvertisementMessage_Folio++,
+                            n,
+                            folioMessages.count() - 1);
+
+        if (SocketManager::getInstance(iface)->writeDatagram(datagram) == datagram.data().size())
+            qDebug() << this << "- OTP Module Advertisement Message Request Sent To" << datagram.destinationAddress();
+        else
+            qDebug() << this << "- OTP Module Advertisement Message Request Failed";
+    }
 }
 
 void Consumer::sendOTPNameAdvertisementMessage()
@@ -572,7 +676,7 @@ void Consumer::sendOTPNameAdvertisementMessage()
     using namespace ACN::OTP::MESSAGES::OTPNameAdvertisementMessage;
     Message nameAdvertisementMessage(
                 mode_e::Consumer,
-                CID,
+                getConsumerCID(),
                 name,
                 list_t(),
                 this);
@@ -585,7 +689,7 @@ void Consumer::sendOTPNameAdvertisementMessage()
 
     auto datagram = nameAdvertisementMessage.toQNetworkDatagram(
                 sequenceMap[CID].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_NAME),
-                NameAdvertisementMessage_Folio++);
+                NameAdvertisementMessage_Folio++,0,0);
     if (SocketManager::getInstance(iface)->writeDatagram(datagram) == datagram.data().size())
         qDebug() << this << "- OTP Name Advertisement Message Request Sent";
     else
@@ -598,9 +702,9 @@ void Consumer::sendOTPSystemAdvertisementMessage()
     using namespace ACN::OTP::MESSAGES::OTPSystemAdvertisementMessage;
     Message systemAdvertisementMessage(
                 mode_e::Consumer,
-                CID,
+                getConsumerCID(),
                 name,
-                systemList,
+                otpNetwork->getSystemList(getConsumerCID()),
                 this);
 
     if (!systemAdvertisementMessage.isValid())
@@ -611,7 +715,7 @@ void Consumer::sendOTPSystemAdvertisementMessage()
 
     auto datagram = systemAdvertisementMessage.toQNetworkDatagram(
                 sequenceMap[CID].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM),
-                SystemAdvertisementMessage_Folio++);
+                SystemAdvertisementMessage_Folio++,0,0);
     if (SocketManager::getInstance(iface)->writeDatagram(datagram) == datagram.data().size())
         qDebug() << this << "- OTP System Advertisement Message Request Sent";
     else

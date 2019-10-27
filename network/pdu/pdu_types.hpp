@@ -141,6 +141,7 @@ namespace ACN::OTP::PDU
             bool isValid();
             static system_t getMin();
             static system_t getMax();
+            size_t getSize();
             operator type() const { return data; }
             friend PDUByteArray& operator>>(PDUByteArray &l, system_t &r);
             system_t& operator++();
@@ -276,6 +277,7 @@ namespace ACN::OTP::PDU
             vector_s(manufacturerID_t ManufacturerID, moduleNumber_t ModuleNumber) :
                 ManufacturerID(ManufacturerID),
                 ModuleNumber(ModuleNumber) {}
+            size_t getSize();
             manufacturerID_t ManufacturerID;
             moduleNumber_t ModuleNumber;
         } vector_t;
@@ -374,6 +376,7 @@ namespace ACN::OTP::PDU
                 Group(Group),
                 Point(Point),
                 PointName(PointName) {}
+            size_t getSize();
             OTPTransformLayer::system_t System;
             OTPPointLayer::group_t Group;
             OTPPointLayer::point_t Point;
@@ -381,6 +384,13 @@ namespace ACN::OTP::PDU
         } addressPointDescriptions_t;
         PDUByteArray& operator<<(PDUByteArray &l, const addressPointDescriptions_t &r);
         PDUByteArray& operator>>(PDUByteArray &l, addressPointDescriptions_t &r);
+        inline bool operator==(const addressPointDescriptions_t &l, const addressPointDescriptions_t &r) {
+            PDUByteArray la, ra;
+            la << l;
+            ra << r;
+            return la == ra;
+        }
+        inline bool operator!=(const addressPointDescriptions_t &l, const addressPointDescriptions_t &r) { return !(l == r); }
         typedef addressPointDescriptions_t item_t;
         typedef QList<item_t> list_t;
         PDUByteArray& operator<<(PDUByteArray &l, const list_t &r);

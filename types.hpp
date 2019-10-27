@@ -24,9 +24,11 @@
 #include <memory>
 #include <QMap>
 #include <QList>
+#include <QVector>
 #include <QHostAddress>
 #include <QDateTime>
 #include <QTimer>
+#include <QNetworkDatagram>
 
 namespace ACN::PDU {
     typedef quint8 flags_t;
@@ -102,6 +104,39 @@ namespace ACN::OTP
     private:
         QMap<ACN::OTP::PDU::vector_t, sequence_t> sequenceMap;
     } sequenceMap_t;
+
+    typedef struct folioMap_s {
+        void addPage(
+                cid_t cid,
+                ACN::OTP::PDU::vector_t vector,
+                ACN::OTP::PDU::OTPLayer::folio_t folio,
+                ACN::OTP::PDU::OTPLayer::page_t page,
+                QNetworkDatagram datagram);
+
+        bool checkAllPages(
+                cid_t cid,
+                ACN::OTP::PDU::vector_t vector,
+                ACN::OTP::PDU::OTPLayer::folio_t folio,
+                ACN::OTP::PDU::OTPLayer::page_t lastPage);
+
+        QVector<QNetworkDatagram> getDatagrams(
+                cid_t cid,
+                ACN::OTP::PDU::vector_t vector,
+                ACN::OTP::PDU::OTPLayer::folio_t folio);
+
+    private:
+        typedef std::pair<cid_t, ACN::OTP::PDU::vector_t> key_t;
+        struct folioMapPrivate_s {
+            folioMapPrivate_s() : folio(0) {}
+            folioMapPrivate_s(ACN::OTP::PDU::OTPLayer::folio_t folio)
+                : folio(folio) {}
+
+            ACN::OTP::PDU::OTPLayer::folio_t folio;
+            QVector<ACN::OTP::PDU::OTPLayer::page_t> pages;
+            QVector<QNetworkDatagram> datagrams;
+        };
+        QMap<key_t, folioMapPrivate_s> folioMap;
+    } folioMap_t;
 
     class pointDetails
     {

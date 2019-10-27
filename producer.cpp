@@ -20,6 +20,7 @@
 #include "container.hpp"
 #include "socket.hpp"
 #include "network/modules/modules.hpp"
+#include "network/messages/otp_transform_message.hpp"
 #include <QTimer>
 
 #include <QDebug>
@@ -66,8 +67,7 @@ Producer::Producer(
         });
 
     connect(otpNetwork.get(), &Container::newComponent, this, &Producer::newComponent);
-    /* TODO - implement signal */
-//    connect(otpNetwork.get(), &Container::removedComponent, this, &Consumer::removedComponent);
+    connect(otpNetwork.get(), &Container::removedComponent, this, &Producer::removedComponent);
 
     connect(otpNetwork.get(), qOverload<const cid_t&, const name_t&>(&Container::updatedComponent),
             this, qOverload<const cid_t&, const name_t&>(&Producer::updatedComponent));
@@ -190,6 +190,32 @@ void Producer::setProducerPointName(address_t address, QString name)
     emit newProducerPointName(name);
 }
 
+/* Producer Addesses */
+QList<address_t> Producer::getProducerAddresses()
+{
+    QList<address_t> ret;
+    for (auto system : getProducerSystems())
+        ret.append(getAddresses(system));
+
+    return ret;
+}
+QList<address_t> Producer::getProducerAddresses(system_t system)
+{
+    QList<address_t> ret;
+    for (auto group : getProducerGroups(system))
+        ret.append(getAddresses(system, group));
+
+    return ret;
+}
+QList<address_t> Producer::getProducerAddresses(system_t system, group_t group)
+{
+    QList<address_t> ret;
+    for (auto point : getProducerPoints(system, group))
+        ret.append(address_t(system, group, point));
+
+    return ret;
+}
+
 /* Components */
 QList<cid_t> Producer::getComponents() const
 {
@@ -234,6 +260,33 @@ QString Producer::getPointName(cid_t cid, address_t address) const
     if (!getPoints(address.system, address.group).contains(address.point)) return QString();
     if (cid.isNull()) return otpNetwork->PointDetails(address)->getName();
     return otpNetwork->PointDetails(cid, address)->getName();
+}
+
+/* Addresses */
+QList<address_t> Producer::getAddresses()
+{
+    QList<address_t> ret;
+    for (auto system : getSystems())
+        ret.append(getAddresses(system));
+
+    return ret;
+}
+QList<address_t> Producer::getAddresses(system_t system)
+{
+    QList<address_t> ret;
+    for (auto group : getGroups(system))
+        ret.append(getAddresses(system, group));
+
+    return ret;
+}
+
+QList<address_t> Producer::getAddresses(system_t system, group_t group)
+{
+    QList<address_t> ret;
+    for (auto point : getPoints(system, group))
+        ret.append(address_t(system, group, point));
+
+    return ret;
 }
 
 /* Standard Modules */
@@ -514,82 +567,114 @@ void Producer::newDatagram(QNetworkDatagram datagram)
 void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio)
 {
     using namespace ACN::OTP::MESSAGES::OTPNameAdvertisementMessage;
+
     // Create a List of Address Point Descriptions
     list_t list;
-    for (auto system : getProducerSystems())
+    for (auto address : getProducerAddresses())
     {
-        for (auto group : getProducerGroups(system))
+        item_t item(address.system, address.group, address.point,
+                    getProducerPointName(address));
+        list.append(item);
+    }
+
+    // Generate messages
+    QVector<std::shared_ptr<Message>> folioMessages;
+    while (list.count()) {
+        folioMessages.append(
+                    std::make_shared<Message>(
+                        mode_e::Producer,
+                        getProducerCID(),
+                        name,
+                        list_t(),
+                        this));
+
+        bool result = true;
+        while (result && list.count())
         {
-            for (auto point : getProducerPoints(system, group))
-            {
-                item_t item(system, group, point, getProducerPointName(system, group, point));
-                list.append(item);
-            }
+            result = folioMessages.back()->addItem(list.front());
+            if (result) list.removeFirst();
+        }
+
+        if (!folioMessages.back()->isValid())
+        {
+            qDebug() << this << "- OTP Name Advertisement Message Response Not Valid";
+            return;
         }
     }
 
-    Message nameAdvertisementMessage(
-                mode_e::Producer,
-                CID,
-                name,
-                list,
-                this);
-
-    if (!nameAdvertisementMessage.isValid())
+    // Send messages
+    for (int n = 0; n < folioMessages.count(); n++)
     {
-        qDebug() << this << "- OTP Name Advertisement Message Response Not Valid";
-        return;
-    }
+        auto datagram = folioMessages[n]->toQNetworkDatagram(
+                            sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_NAME),
+                            folio,
+                            n,
+                            folioMessages.count() - 1);
+        datagram.setDestination(destinationAddr, static_cast<quint16>(datagram.destinationPort()));
 
-    auto datagram = nameAdvertisementMessage.toQNetworkDatagram(
-                sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_NAME),
-                folio);
-    datagram.setDestination(destinationAddr, static_cast<quint16>(datagram.destinationPort()));
-    if (SocketManager::getInstance(iface)->writeDatagram(datagram) == datagram.data().size())
-        qDebug() << this << "- OTP Name Advertisement Message Response Sent To" << datagram.destinationAddress();
-    else
-        qDebug() << this << "- OTP Name Advertisement Message Response Failed";
+        if (SocketManager::getInstance(iface)->writeDatagram(datagram) == datagram.data().size())
+            qDebug() << this << "- OTP Name Advertisement Message Response Sent To" << datagram.destinationAddress();
+        else
+            qDebug() << this << "- OTP Name Advertisement Message Response Failed";
+    }
 }
 
 void Producer::sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio)
-{   
-    /* TODO deal with folios */
-
+{
     using namespace ACN::OTP::MESSAGES::OTPSystemAdvertisementMessage;
-    Message systemAdvertisementMessage(
-                mode_e::Producer,
-                CID,
-                name,
-                otpNetwork->getSystemList(CID),
-                this);
 
-    if (!systemAdvertisementMessage.isValid())
-    {
-        qDebug() << this << "- OTP System Advertisement Message Response Not Valid";
-        return;
+    // Get list of systems
+    list_t list = otpNetwork->getSystemList(getProducerCID());
+
+    // Generate messages
+    QVector<std::shared_ptr<Message>> folioMessages;
+    while (list.count()) {
+        folioMessages.append(
+                    std::make_shared<Message>(
+                        mode_e::Producer,
+                        getProducerCID(),
+                        name,
+                        list_t(),
+                        this));
+
+        bool result = true;
+        while (result && list.count())
+        {
+            result = folioMessages.back()->addItem(list.front());
+            if (result) list.removeFirst();
+        }
+
+        if (!folioMessages.back()->isValid())
+        {
+            qDebug() << this << "- OTP System Advertisement Message Response Not Valid";
+            return;
+        }
     }
 
-    auto datagram = systemAdvertisementMessage.toQNetworkDatagram(
-                sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM),
-                folio);
-    datagram.setDestination(destinationAddr, static_cast<quint16>(datagram.destinationPort()));
-    if (SocketManager::getInstance(iface)->writeDatagram(datagram) == datagram.data().size())
-        qDebug() << this << "- OTP System Advertisement Message Response Sent To" << datagram.destinationAddress();
-    else
-        qDebug() << this << "- OTP System Advertisement Message Response Failed";
+    // Send messages
+    for (int n = 0; n < folioMessages.count(); n++)
+    {
+        auto datagram = folioMessages[n]->toQNetworkDatagram(
+                            sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM),
+                            folio,
+                            n,
+                            folioMessages.count() - 1);
+        datagram.setDestination(destinationAddr, static_cast<quint16>(datagram.destinationPort()));
+
+        if (SocketManager::getInstance(iface)->writeDatagram(datagram) == datagram.data().size())
+            qDebug() << this << "- OTP System Advertisement Message Response Sent To" << datagram.destinationAddress();
+        else
+            qDebug() << this << "- OTP System Advertisement Message Response Failed";
+    }
 }
 
 void Producer::sendOTPTransformMessage(system_t system)
-{    
+{
     using namespace ACN::OTP::MESSAGES::OTPTransformMessage;
-    Message transformMessage(
-                CID,
-                name,
-                system,
-                this);
+    auto folio = TransformMessage_Folio++;
 
     // Establish requested modules for system
-    QList<PDU::OTPModuleLayer::vector_t> requestedModules;
+    QVector<PDU::OTPModuleLayer::vector_t> requestedModules;
     for (auto cid : otpNetwork->getComponentList())
     {
         if (otpNetwork->getSystemList(cid).contains(system))
@@ -604,50 +689,59 @@ void Producer::sendOTPTransformMessage(system_t system)
     }
     if (requestedModules.isEmpty()) return;
 
-    // Send details on each address
-    auto pointsFound = false;
-    for (auto system : getProducerSystems())
+    // Get each requested module
+    QVector<Message::addModule_t> folioModuleData;
+    for (auto address: getProducerAddresses(system))
     {
-        for (auto group: getProducerGroups(system))
+        for (auto module : requestedModules)
         {
-            for (auto point : getProducerPoints(system, group))
+            switch (module.ManufacturerID)
             {
-                auto address = address_t(system, group, point);
-                // Add requested modules
-                for (auto module : requestedModules)
+                case ESTA_MANUFACTURER_ID:
                 {
-                    switch (module.ManufacturerID)
-                    {
-                        case ESTA_MANUFACTURER_ID:
-                        {
-                            pointsFound = true;
-                            transformMessage.addModule(
-                                        address,
-                                        MODULES::STANDARD::getTimestamp(module, otpNetwork->PointDetails(address)),
-                                        {module.ManufacturerID, module.ModuleNumber},
-                                        MODULES::STANDARD::getAdditional(module, otpNetwork->PointDetails(address)));
-                        } break;
-                        default:
-                        {
-                            qDebug() << this << "- OTP Transform - Unknown module request" << module.ManufacturerID << "/" << module.ModuleNumber;
-                        } return;
-                    }
-                }
+                    folioModuleData.append(
+                        {address,
+                         MODULES::STANDARD::getTimestamp(module, otpNetwork->PointDetails(address)),
+                         {module.ManufacturerID, module.ModuleNumber},
+                         MODULES::STANDARD::getAdditional(module, otpNetwork->PointDetails(address))});
+                } break;
+                default:
+                {
+                    qDebug() << this << "- OTP Transform - Unknown module request" << module.ManufacturerID << "/" << module.ModuleNumber;
+                } return;
             }
         }
     }
 
-    if (!pointsFound) return;
+    // Generate messages
+    QVector<std::shared_ptr<Message>> folioMessages;
+    while (folioModuleData.count()) {
+        folioMessages.append(std::make_shared<Message>(getProducerCID(), name, system, this));
 
-    if (!transformMessage.isValid())
-    {
-        qDebug() << this << "- OTP Transform Message Not Valid";
-        return;
+        Message::addModule_ret result;
+        do {
+            result = folioMessages.back()->addModule(folioModuleData.front());
+            if (result != Message::addModule_ret::MessageToBig)
+                folioModuleData.removeFirst();
+        } while ((result != Message::addModule_ret::MessageToBig) && folioModuleData.count());
+
+        if (!folioMessages.back()->isValid())
+        {
+            qDebug() << this << "- OTP Transform Message Not Valid";
+            return;
+        }
     }
 
-    auto datagram = transformMessage.toQNetworkDatagram(
-                sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_TRANSFORM_MESSAGE),
-                TransformMessage_Folio++);
-    if (SocketManager::getInstance(iface)->writeDatagram(datagram) != datagram.data().size())
-        qDebug() << this << "- OTP Transform Message Failed";
+    // Send messages
+    for (int n = 0; n < folioMessages.count(); n++)
+    {
+        auto datagram = folioMessages[n]->toQNetworkDatagram(
+                            sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_TRANSFORM_MESSAGE),
+                            folio,
+                            n,
+                            folioMessages.count() - 1);
+
+        if (SocketManager::getInstance(iface)->writeDatagram(datagram) != datagram.data().size())
+            qDebug() << this << "- OTP Transform Message Failed";
+    }
 }

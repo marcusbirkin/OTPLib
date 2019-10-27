@@ -28,7 +28,8 @@ Container::Container(QObject *parent) :
 
 void Container::clearComponents()
 {
-    componentMap.clear();
+    for (auto cid : getComponentList())
+        removedComponent(cid);
 }
 
 void Container::addComponent(
@@ -83,6 +84,15 @@ void Container::addComponent(
             qDebug() << parent() << "- Updated component (Module List)" << cid << name.toString() << IPAddr;
             emit updatedComponent(cid, list);
         }
+    }
+}
+
+void Container::removeComponent(const cid_t &cid)
+{
+    if (componentMap.contains(cid))
+    {
+        componentMap.remove(cid);
+        emit removeComponent(cid);
     }
 }
 

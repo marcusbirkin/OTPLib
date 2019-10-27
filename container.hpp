@@ -43,7 +43,8 @@ namespace ACN::OTP
                 const QHostAddress &IPAddr,
                 const name_t &name = name_t(),
                 const moduleList_t &list = moduleList_t())
-            { addComponent(cid, IPAddr, name, component_t::consumer, list);}
+            { addComponent(cid, IPAddr, name, component_t::consumer, list); }
+        void removeComponent(const cid_t &cid);
 
         QList<cid_t> getComponentList() const;
         component_t getComponent(cid_t cid) const;
@@ -98,6 +99,7 @@ namespace ACN::OTP
         void updatedGroup(cid_t, system_t, group_t);
         void updatedPoint(cid_t, system_t, group_t, point_t);
 
+        void removedComponent(cid_t);
         void removedSystem(cid_t, system_t);
         void removedGroup(cid_t, system_t, group_t);
         void expiredPoint(cid_t, system_t, group_t, point_t);

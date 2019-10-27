@@ -42,7 +42,13 @@ public:
             QNetworkDatagram message,
             QObject *parent = nullptr);
     bool isValid();
-    QNetworkDatagram toQNetworkDatagram(sequence_t sequenceNumber, folio_t folio);
+    QNetworkDatagram toQNetworkDatagram(
+        sequence_t sequenceNumber,
+        folio_t folio,
+        page_t thisPage,
+        page_t lastPage);
+
+    bool addItem(item_t value) { return moduleAdvertisementLayer->addItem(value); }
 
     std::shared_ptr<OTP::PDU::OTPRootLayer::Layer> getRootLayer() { return rootLayer; }
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> getOTPLayer() { return otpLayer; }

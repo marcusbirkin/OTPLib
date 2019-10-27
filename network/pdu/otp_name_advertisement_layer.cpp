@@ -52,7 +52,7 @@ bool Layer::isValid()
     if (Vector != VECTOR) return false;
     if (Options.isResponse())
     {
-        if (!RANGES::ListSize.isValid(List.size() * sizeof(system_t))) return false;
+        if (!RANGES::ListSize.isValid(List.size() * item_t().getSize())) return false;
     }
     return true;
 }
@@ -85,4 +85,19 @@ void Layer::fromPDUByteArray(ACN::OTP::PDU::PDUByteArray layer)
         >> Options
         >> Reserved
         >> List;
+}
+
+bool Layer::setList(list_t value)
+{
+    List = value;
+    return RANGES::ListSize.isValid(List.size() * item_t().getSize());
+}
+
+bool Layer::addItem(item_t value)
+{
+    if (List.contains(value)) return true;
+    List.append(value);
+    if (RANGES::ListSize.isValid(List.size() * item_t().getSize())) return true;
+    List.removeLast();
+    return false;
 }

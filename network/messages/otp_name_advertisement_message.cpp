@@ -20,11 +20,10 @@
 
 using namespace ACN::OTP::MESSAGES::OTPNameAdvertisementMessage;
 
-Message::Message(
-        ACN::OTP::mode_e mode,
+Message::Message(ACN::OTP::mode_e mode,
         ACN::OTP::cid_t CID,
         ACN::OTP::name_t ProducerName,
-        ACN::OTP::PDU::OTPNameAdvertisementLayer::list_t NameList,
+        ACN::OTP::PDU::OTPNameAdvertisementLayer::list_t PointDescriptionList,
         QObject *parent) :
     QObject(parent),
     rootLayer(
@@ -38,7 +37,7 @@ Message::Message(
             0, ACN::OTP::PDU::VECTOR_OTP_ADVERTISEMENT_NAME, this)),
     nameAdvertisementLayer(
         new OTP::PDU::OTPNameAdvertisementLayer::Layer(
-            0, ACN::OTP::PDU::OTPNameAdvertisementLayer::options_t(), NameList, this))
+            0, ACN::OTP::PDU::OTPNameAdvertisementLayer::options_t(), PointDescriptionList, this))
 {
     ACN::OTP::PDU::OTPNameAdvertisementLayer::options_t options;
     switch (mode) {
@@ -104,10 +103,16 @@ bool Message::isValid()
     return true;
 }
 
-QNetworkDatagram Message::toQNetworkDatagram(sequence_t sequenceNumber, folio_t folio)
+QNetworkDatagram Message::toQNetworkDatagram(
+        sequence_t sequenceNumber,
+        folio_t folio,
+        page_t thisPage,
+        page_t lastPage)
 {
     otpLayer->setSequence(sequenceNumber);
     otpLayer->setFolio(folio);
+    otpLayer->setPage(thisPage);
+    otpLayer->setLastPage(lastPage);
     return QNetworkDatagram(toByteArray(), OTP_Advertisement_Message_IPv4, ACN_SDT_MULTICAST_PORT);
 }
 

@@ -49,7 +49,8 @@ public:
     const options_t &getOptions() { return Options; }
     void setOptions(options_t value) { Options = value; }
     const list_t &getList() { return List; }
-    void setList(list_t value) { List = value; }
+    bool setList(list_t value);
+    bool addItem(item_t value);
 
 private:
     flags_length_t FlagsLength;

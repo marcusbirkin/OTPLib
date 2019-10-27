@@ -99,10 +99,16 @@ bool Message::isValid()
     return true;
 }
 
-QNetworkDatagram Message::toQNetworkDatagram(sequence_t sequenceNumber, folio_t folio)
+QNetworkDatagram Message::toQNetworkDatagram(
+        sequence_t sequenceNumber,
+        folio_t folio,
+        page_t thisPage,
+        page_t lastPage)
 {
     otpLayer->setSequence(sequenceNumber);
     otpLayer->setFolio(folio);
+    otpLayer->setPage(thisPage);
+    otpLayer->setLastPage(lastPage);
     return QNetworkDatagram(toByteArray(), OTP_Advertisement_Message_IPv4, ACN_SDT_MULTICAST_PORT);
 }
 
