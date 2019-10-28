@@ -125,6 +125,7 @@ bool Message::isValid()
 }
 
 QNetworkDatagram Message::toQNetworkDatagram(
+        QHostAddress destAddr,
         sequence_t sequenceNumber,
         folio_t folio,
         page_t thisPage,
@@ -134,7 +135,7 @@ QNetworkDatagram Message::toQNetworkDatagram(
     otpLayer->setFolio(folio);
     otpLayer->setPage(thisPage);
     otpLayer->setLastPage(lastPage);
-    auto destAddr = QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address() + transformLayer->getSystem());
+    updatePduLength();
     return QNetworkDatagram(toByteArray(), destAddr, ACN_SDT_MULTICAST_PORT);
 }
 

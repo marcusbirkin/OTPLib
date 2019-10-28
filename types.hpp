@@ -46,7 +46,6 @@ namespace ACN::OTP
     typedef OTP::MESSAGES::OTPModuleAdvertisementMessage::list_t moduleList_t;
     typedef OTP::MODULES::STANDARD::axis_t axis_t;
 
-
     typedef struct component_s {
     public:
         component_s() {}

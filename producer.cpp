@@ -29,12 +29,14 @@ using namespace ACN::OTP;
 
 Producer::Producer(
         QNetworkInterface iface,
+        QAbstractSocket::NetworkLayerProtocol transport,
         name_t name,
         cid_t CID,
         QObject *parent) :
     QObject(parent),
     otpNetwork(new Container(this)),
     iface(iface),
+    transport(transport),
     CID(CID),
     name(name)
 {
@@ -127,6 +129,15 @@ void Producer::setProducerNetworkInterface(QNetworkInterface value)
     iface = value;
     setupListener();
     emit newProducerNetworkInterface(iface);
+}
+
+/* Producer Network Transport */
+void Producer::setProducerNetworkTransport(QAbstractSocket::NetworkLayerProtocol value)
+{
+    if (transport == value) return;
+    transport = value;
+    setupListener();
+    emit newProducerNetworkTransport(transport);
 }
 
 /* Producer Systems */
@@ -445,12 +456,24 @@ void Producer::setRotationAcceleration(
 void Producer::setupListener()
 {
     qDebug() << this << "- Starting on interface" << iface.humanReadableName() << iface.hardwareAddress();
-    connect(SocketManager::getInstance(iface).get(), &SocketManager::newDatagram, this, &Producer::newDatagram);
 
+    for (auto connection : listenerConnections)
+        disconnect(connection);
+
+    if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
     {
-        auto groupAddress = OTP_Advertisement_Message_IPv4;
-        if (SocketManager::getInstance(iface)->joinMulticastGroup(groupAddress))
-            qDebug() << this << "- Listening to Advertisement Messages" << groupAddress;
+        listenerConnections.append(connect(SocketManager::getInstance(iface, QAbstractSocket::IPv4Protocol).get(), &SocketManager::newDatagram,
+                this, &Producer::newDatagram));
+        SocketManager::getInstance(iface, QAbstractSocket::IPv4Protocol)->joinMulticastGroup(OTP_Advertisement_Message_IPv4);
+        qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv4;
+    }
+
+    if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
+    {
+        listenerConnections.append(connect(SocketManager::getInstance(iface, QAbstractSocket::IPv6Protocol).get(), &SocketManager::newDatagram,
+                this, &Producer::newDatagram));
+        SocketManager::getInstance(iface, QAbstractSocket::IPv6Protocol)->joinMulticastGroup(OTP_Advertisement_Message_IPv6);
+        qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv6;
     }
 }
 
@@ -467,8 +490,12 @@ void Producer::setupSender()
 
 void Producer::newDatagram(QNetworkDatagram datagram)
 {
+    /* Unicast packets to self have no senderAddress */
+    if (datagram.senderAddress().isNull()) datagram.setSender(datagram.destinationAddress());
+
     //  Advertisement Message
-    if (datagram.destinationAddress() == OTP_Advertisement_Message_IPv4)
+    if ((datagram.destinationAddress() == OTP_Advertisement_Message_IPv4) ||
+            (datagram.destinationAddress() == OTP_Advertisement_Message_IPv6))
     {
         MESSAGES::OTPModuleAdvertisementMessage::Message moduleAdvert(datagram);
         MESSAGES::OTPNameAdvertisementMessage::Message nameAdvert(datagram);
@@ -606,14 +633,13 @@ void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MES
     for (int n = 0; n < folioMessages.count(); n++)
     {
         auto datagram = folioMessages[n]->toQNetworkDatagram(
-                            sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_NAME),
-                            folio,
-                            n,
-                            folioMessages.count() - 1);
-        datagram.setDestination(destinationAddr, static_cast<quint16>(datagram.destinationPort()));
-
-        if (SocketManager::getInstance(iface)->writeDatagram(datagram) == datagram.data().size())
-            qDebug() << this << "- OTP Name Advertisement Message Response Sent To" << datagram.destinationAddress();
+                    destinationAddr,
+                    sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_NAME),
+                    folio,
+                    n,
+                    folioMessages.count() - 1);
+        if (SocketManager::getInstance(iface, destinationAddr.protocol())->writeDatagram(datagram))
+            qDebug() << this << "- OTP Name Advertisement Message Response Sent to" << destinationAddr;
         else
             qDebug() << this << "- OTP Name Advertisement Message Response Failed";
     }
@@ -655,13 +681,13 @@ void Producer::sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, M
     for (int n = 0; n < folioMessages.count(); n++)
     {
         auto datagram = folioMessages[n]->toQNetworkDatagram(
-                            sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM),
-                            folio,
-                            n,
-                            folioMessages.count() - 1);
-        datagram.setDestination(destinationAddr, static_cast<quint16>(datagram.destinationPort()));
+                    destinationAddr,
+                    sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM),
+                    folio,
+                    n,
+                    folioMessages.count() - 1);
 
-        if (SocketManager::getInstance(iface)->writeDatagram(datagram) == datagram.data().size())
+        if (SocketManager::getInstance(iface, destinationAddr.protocol())->writeDatagram(datagram))
             qDebug() << this << "- OTP System Advertisement Message Response Sent To" << datagram.destinationAddress();
         else
             qDebug() << this << "- OTP System Advertisement Message Response Failed";
@@ -735,13 +761,14 @@ void Producer::sendOTPTransformMessage(system_t system)
     // Send messages
     for (int n = 0; n < folioMessages.count(); n++)
     {
-        auto datagram = folioMessages[n]->toQNetworkDatagram(
-                            sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_TRANSFORM_MESSAGE),
-                            folio,
-                            n,
-                            folioMessages.count() - 1);
+        auto datagrams = folioMessages[n]->toQNetworkDatagrams(
+                    transport,
+                    sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_TRANSFORM_MESSAGE),
+                    folio,
+                    n,
+                    folioMessages.count() - 1);
 
-        if (SocketManager::getInstance(iface)->writeDatagram(datagram) != datagram.data().size())
+        if (!SocketManager::writeDatagrams(iface, datagrams))
             qDebug() << this << "- OTP Transform Message Failed";
     }
 }

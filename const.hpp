@@ -49,7 +49,7 @@ namespace ACN::OTP {
     const QHostAddress OTP_Advertisement_Message_IPv4 = QHostAddress("239.159.2.1");
 
     /* Table 15-3: IPv6 Multicast Addresses */
-    const QHostAddress OTP_Transform_Message_IPv6 = QHostAddress("ff15:0000:0000:0000:009f:0000:0001:0000"); // Base address excluding system number
+    const QHostAddress OTP_Transform_Message_IPv6 = QHostAddress("FF15:0000:0000:0000:009f:0000:0001:0000"); // Base address excluding system number
     const QHostAddress OTP_Advertisement_Message_IPv6 = QHostAddress("FF15:0000:0000:0000:009f:0000:0002:0001");
 
     namespace PDU {

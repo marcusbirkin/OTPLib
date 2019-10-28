@@ -104,6 +104,7 @@ bool Message::isValid()
 }
 
 QNetworkDatagram Message::toQNetworkDatagram(
+        QHostAddress destAddr,
         sequence_t sequenceNumber,
         folio_t folio,
         page_t thisPage,
@@ -113,7 +114,8 @@ QNetworkDatagram Message::toQNetworkDatagram(
     otpLayer->setFolio(folio);
     otpLayer->setPage(thisPage);
     otpLayer->setLastPage(lastPage);
-    return QNetworkDatagram(toByteArray(), OTP_Advertisement_Message_IPv4, ACN_SDT_MULTICAST_PORT);
+    updatePduLength();
+    return QNetworkDatagram(toByteArray(), destAddr, ACN_SDT_MULTICAST_PORT);
 }
 
 QByteArray Message::toByteArray()

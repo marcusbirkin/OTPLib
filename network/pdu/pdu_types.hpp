@@ -23,6 +23,7 @@
 #include <QDataStream>
 #include <QUuid>
 #include <QtEndian>
+#include <QHostAddress>
 
 namespace ACN::OTP::PDU
 {
@@ -151,6 +152,12 @@ namespace ACN::OTP::PDU
         private:
             type data;
         };
+        inline Q_IPV6ADDR operator+(Q_IPV6ADDR l, const system_t& r)
+        {
+            l.c[15] += r;
+            return l;
+        }
+
         /* TODO Check this value size with ratified standard
          *
          * For some unholy reason, a timestamp is 16 bytes aka 128bit

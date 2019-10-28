@@ -22,15 +22,26 @@
 
 using namespace ACN::OTP;
 
-/* TODO Add IPv6 support */
-SocketManager::SocketManager(QNetworkInterface interface) : QObject(),
-    interface(interface)
+SocketManager::SocketManager(QNetworkInterface interface, QAbstractSocket::NetworkLayerProtocol transport) : QObject(),
+    interface(interface), transport(transport)
 {
+    assert( (transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::IPv6Protocol) );
     RXSocket.reset(new QUdpSocket(this));
 
-    RXSocket->bind(
-            QHostAddress::AnyIPv4,
-            ACN::OTP::ACN_SDT_MULTICAST_PORT);
+    QVector<QHostAddress> bindAddr;
+    switch (transport) {
+        case QAbstractSocket::IPv4Protocol:
+        {
+            RXSocket->bind(QHostAddress::AnyIPv4, ACN::OTP::ACN_SDT_MULTICAST_PORT);
+        } break;
+
+        case QAbstractSocket::IPv6Protocol:
+        {
+            RXSocket->bind(QHostAddress::AnyIPv6, ACN::OTP::ACN_SDT_MULTICAST_PORT);
+        } break;
+
+        default: return;
+    }
 
     connect(RXSocket.get(), &QUdpSocket::readyRead,
         [this]() {
@@ -40,27 +51,37 @@ SocketManager::SocketManager(QNetworkInterface interface) : QObject(),
         });
 };
 
-std::shared_ptr<SocketManager> SocketManager::getInstance(QNetworkInterface interface)
+std::shared_ptr<SocketManager> SocketManager::getInstance(QNetworkInterface interface, QAbstractSocket::NetworkLayerProtocol transport)
 {
-    static QMap<QString, std::shared_ptr<SocketManager>> instances;
-    if (!instances.contains(interface.name()))
-        instances.insert(interface.name(), std::make_shared<SocketManager>(interface));
-    return instances.value(interface.name());
+    typedef std::pair<QString, QAbstractSocket::NetworkLayerProtocol> key_t;
+    key_t key = {interface.name(), transport};
+    static QMap<key_t, std::shared_ptr<SocketManager>> instances;
+    if (!instances.contains(key))
+        instances.insert(key, std::make_shared<SocketManager>(interface, transport));
+    return instances.value(key);
 }
 
-qint64 SocketManager::writeDatagram(const QNetworkDatagram &datagram)
+bool SocketManager::writeDatagram(const QNetworkDatagram &datagram)
 {
+    // Sending unicast to self?
+    if (!datagram.destinationAddress().isMulticast() &&
+            !datagram.destinationAddress().isBroadcast())
+        for (auto ifaceAddr : interface.addressEntries())
+            if (ifaceAddr.ip() == datagram.destinationAddress())
+            {
+                emit this->newDatagram(datagram);
+                return true;
+            }
+
     auto socket = QUdpSocket();
-    for (auto ifaceAddr : interface.addressEntries()) {
-        if (ifaceAddr.ip().protocol() == QAbstractSocket::IPv4Protocol) {
+    for (auto ifaceAddr : interface.addressEntries())
+        if (ifaceAddr.ip().protocol() == transport)
             socket.bind(ifaceAddr.ip());
-        }
-    }
 
     socket.setSocketOption(QAbstractSocket::MulticastLoopbackOption, QVariant(1));
     socket.setMulticastInterface(interface);
 
-    return socket.writeDatagram(datagram);
+    return socket.writeDatagram(datagram) == datagram.data().size();
 }
 
 bool SocketManager::joinMulticastGroup(const QHostAddress &groupAddress)

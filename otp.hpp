@@ -21,6 +21,7 @@
 
 #include <QObject>
 #include <QNetworkInterface>
+#include <QAbstractSocket>
 #include <QMessageBox>
 #include <memory>
 #include "socket.hpp"
@@ -52,6 +53,7 @@ namespace ACN::OTP
         */
         explicit Producer(
                 QNetworkInterface iface,
+                QAbstractSocket::NetworkLayerProtocol transport,
                 name_t name = QApplication::applicationName(),
                 cid_t CID = cid_t::createUuid(),
                 QObject *parent = nullptr);
@@ -80,10 +82,13 @@ namespace ACN::OTP
         public:
             QNetworkInterface getProducerNetworkInterface() const { return iface; }
             void setProducerNetworkInterface(QNetworkInterface value);
-            QAbstractSocket::SocketState getProducerNetworkinterfaceState() const
-                { return SocketManager::getInstance(getProducerNetworkInterface())->state(); }
+            QAbstractSocket::NetworkLayerProtocol getProducerNetworkTransport() const { return transport; }
+            void setProducerNetworkTransport(QAbstractSocket::NetworkLayerProtocol transport);
+            QAbstractSocket::SocketState getProducerNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const
+                { return SocketManager::getInstance(getProducerNetworkInterface(), transport)->state(); }
         signals:
             void newProducerNetworkInterface(QNetworkInterface);
+            void newProducerNetworkTransport(QAbstractSocket::NetworkLayerProtocol);
 
         /* Producer Systems */
         public:
@@ -294,6 +299,8 @@ namespace ACN::OTP
 
         std::unique_ptr<Container> otpNetwork;
         QNetworkInterface iface;
+        QAbstractSocket::NetworkLayerProtocol transport;
+        QList<QMetaObject::Connection> listenerConnections;
 
         cid_t CID;
         name_t name;
@@ -312,6 +319,7 @@ namespace ACN::OTP
         */
         explicit Consumer(
                 QNetworkInterface iface,
+                QAbstractSocket::NetworkLayerProtocol transport,
                 QList<system_t> systems,
                 name_t name = QApplication::applicationName(),
                 cid_t CID = cid_t::createUuid(),
@@ -347,10 +355,13 @@ namespace ACN::OTP
         public:
             QNetworkInterface getConsumerNetworkInterface() const { return iface; }
             void setConsumerNetworkInterface(QNetworkInterface value);
-            QAbstractSocket::SocketState getConsumerNetworkinterfaceState() const
-                { return SocketManager::getInstance(getConsumerNetworkInterface())->state(); }
+            QAbstractSocket::NetworkLayerProtocol getConsumerNetworkTransport() const { return transport; }
+            void setConsumerNetworkTransport(QAbstractSocket::NetworkLayerProtocol value);
+            QAbstractSocket::SocketState getConsumerNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const
+                { return SocketManager::getInstance(getConsumerNetworkInterface(), transport)->state(); }
         signals:
             void newConsumerNetworkInterface(QNetworkInterface);
+            void newConsumerNetworkTransport(QAbstractSocket::NetworkLayerProtocol);
 
         /* Consumer Systems */
         public:
@@ -522,6 +533,8 @@ namespace ACN::OTP
 
         std::unique_ptr<Container> otpNetwork;
         QNetworkInterface iface;
+        QAbstractSocket::NetworkLayerProtocol transport;
+        QList<QMetaObject::Connection> listenerConnections;
 
         cid_t CID;
         name_t name;
