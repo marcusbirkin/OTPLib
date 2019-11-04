@@ -49,7 +49,7 @@ namespace ACN::OTP
     typedef struct component_s {
     public:
         component_s() {}
-        typedef enum type_s
+        typedef enum type_e
         {
             consumer,
             produder
