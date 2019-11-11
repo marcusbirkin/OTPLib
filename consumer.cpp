@@ -296,111 +296,263 @@ QList<address_t> Consumer::getAddresses(system_t system, group_t group)
 }
 
 /* Standard Modules */
-QString Consumer::getScaleString(cid_t cid, address_t address, MODULES::STANDARD::VALUES::moduleValue_t moduleValue) const
+QString Consumer::getScaleString(MODULES::STANDARD::PositionModule_t::scale_t scale) const
 {
-    using namespace MODULES::STANDARD::VALUES;
-    switch (moduleValue)
-    {
-        case POSITION: return UNITS::getScaleString(getPositionScale(cid, address));
-        default: return QString();
-    }
+    return MODULES::STANDARD::VALUES::UNITS::getScaleString(scale);
 }
 
-QString Consumer::getUnitString(cid_t cid, address_t address, MODULES::STANDARD::VALUES::moduleValue_t moduleValue) const
+QString Consumer::getUnitString(MODULES::STANDARD::VALUES::moduleValue_t moduleValue) const
+{
+    using namespace MODULES::STANDARD::VALUES;
+    return QString ("%2")
+            .arg(UNITS::getUnitString(moduleValue));
+}
+
+QString Consumer::getUnitString(MODULES::STANDARD::PositionModule_t::scale_t scale, MODULES::STANDARD::VALUES::moduleValue_t moduleValue) const
 {
     using namespace MODULES::STANDARD::VALUES;
     return QString ("%1%2")
-            .arg(getScaleString(cid, address, moduleValue))
+            .arg(getScaleString(scale))
             .arg(UNITS::getUnitString(moduleValue));
 }
 
 /* Standard Modules - Position */
-MODULES::STANDARD::PositionModule_t::scale_t Consumer::getPositionScale(cid_t cid, address_t address) const
+Consumer::PositionValue_t Consumer::getPosition(cid_t cid, address_t address, axis_t axis) const
 {
+    using namespace MODULES::STANDARD;
+    Consumer::PositionValue_t ret;
     if (!getPoints(cid, address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::PositionModule_t::scale_t();
-    return otpNetwork->PointDetails(cid, address)->standardModules.position.getScaling();
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.position.getLocation(axis);
+    ret.scale = otpNetwork->PointDetails(cid, address)->standardModules.position.getScaling();
+    ret.unit = getUnitString(ret.scale, VALUES::POSITION);
+    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.position.getTimestamp();
+    ret.sourceCID = cid;
+    return ret;
 }
 
-MODULES::STANDARD::PositionModule_t::location_t Consumer::getPositionLocation(cid_t cid, address_t address, axis_t axis) const
+Consumer::PositionValue_t Consumer::getPosition(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
 {
-    if (!getPoints(cid, address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::PositionModule_t::location_t();
-    return otpNetwork->PointDetails(cid, address)->standardModules.position.getLocation(axis);
-}
-
-timestamp_t Consumer::getRotationTimestamp(cid_t cid, address_t address) const
-{
-    if (!getPoints(cid, address.system, address.group).contains(address.point)) return 0;
-    return otpNetwork->PointDetails(cid, address)->standardModules.rotation.getTimestamp();
+    PositionValue_t ret;
+    for (auto cid : getComponents())
+    {
+        auto temp = getPosition(cid, address, axis);
+        if (ret.sourceCID.isNull()) ret = temp;
+        switch (resolution) {
+            case Newest:
+            {
+                if (temp.timestamp > ret.timestamp) ret = temp;
+            } break;
+            case Largest:
+            {
+                if (temp.value > ret.value) ret = temp;
+            } break;
+            case Smallest:
+            {
+                if (temp.value < ret.value) ret = temp;
+            } break;
+        }
+    }
+    return ret;
 }
 
 /* Standard Modules - Position Velocity/Acceleration */
-MODULES::STANDARD::PositionVelAccModule_t::velocity_t Consumer::getPositionVelocity(cid_t cid, address_t address, axis_t axis) const
+Consumer::PositionVelocity_t Consumer::getPositionVelocity(cid_t cid, address_t address, axis_t axis) const
 {
+    using namespace MODULES::STANDARD;
+    Consumer::PositionVelocity_t ret;
     if (!getPoints(cid, address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::PositionVelAccModule_t::velocity_t();
-    return otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getVelocity(axis);
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getVelocity(axis);
+    ret.unit = getUnitString(VALUES::POSITION_VELOCITY);
+    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getTimestamp();
+    ret.sourceCID = cid;
+    return ret;
 }
 
-timestamp_t Consumer::getPositionVelocityTimestamp(cid_t cid, address_t address) const
+Consumer::PositionVelocity_t Consumer::getPositionVelocity(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
 {
-    if (!getPoints(cid, address.system, address.group).contains(address.point)) return 0;
-    return otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getTimestamp();
+    PositionVelocity_t ret;
+    for (auto cid : getComponents())
+    {
+        auto temp = getPositionVelocity(cid, address, axis);
+        if (ret.sourceCID.isNull()) ret = temp;
+        switch (resolution) {
+            case Newest:
+            {
+                if (temp.timestamp > ret.timestamp) ret = temp;
+            } break;
+            case Largest:
+            {
+                if (temp.value > ret.value) ret = temp;
+            } break;
+            case Smallest:
+            {
+                if (temp.value < ret.value) ret = temp;
+            } break;
+        }
+    }
+    return ret;
 }
 
-MODULES::STANDARD::PositionVelAccModule_t::acceleration_t Consumer::getPositionAcceleration(cid_t cid, address_t address, axis_t axis) const
+Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(cid_t cid, address_t address, axis_t axis) const
 {
+    using namespace MODULES::STANDARD;
+    Consumer::PositionAcceleration_t ret;
     if (!getPoints(cid, address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::PositionVelAccModule_t::acceleration_t();
-    return otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getAcceleration(axis);
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getAcceleration(axis);
+    ret.unit = getUnitString(VALUES::POSITION_ACCELERATION);
+    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getTimestamp();
+    ret.sourceCID = cid;
+    return ret;
 }
 
-timestamp_t Consumer::getPositionAccelerationTimestamp(cid_t cid, address_t address) const
+Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
 {
-    if (!getPoints(cid, address.system, address.group).contains(address.point)) return 0;
-    return otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getTimestamp();
+    PositionAcceleration_t ret;
+    for (auto cid : getComponents())
+    {
+        auto temp = getPositionAcceleration(cid, address, axis);
+        if (ret.sourceCID.isNull()) ret = temp;
+        switch (resolution) {
+            case Newest:
+            {
+                if (temp.timestamp > ret.timestamp) ret = temp;
+            } break;
+            case Largest:
+            {
+                if (temp.value > ret.value) ret = temp;
+            } break;
+            case Smallest:
+            {
+                if (temp.value < ret.value) ret = temp;
+            } break;
+        }
+    }
+    return ret;
 }
 
 /* Standard Modules - Rotation */
-MODULES::STANDARD::RotationModule_t::rotation_t Consumer::getRotation(cid_t cid, address_t address, axis_t axis) const
+Consumer::RotationValue_t Consumer::getRotation(cid_t cid, address_t address, axis_t axis) const
 {
+    using namespace MODULES::STANDARD;
+    Consumer::RotationValue_t ret;
     if (!getPoints(cid, address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::RotationModule_t::rotation_t();
-    return otpNetwork->PointDetails(cid, address)->standardModules.rotation.getRotation(axis);
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.rotation.getRotation(axis);
+    ret.unit = getUnitString(VALUES::ROTATION);
+    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.rotation.getTimestamp();
+    ret.sourceCID = cid;
+    return ret;
 }
 
-timestamp_t Consumer::getPositionTimestamp(cid_t cid, address_t address) const
+Consumer::RotationValue_t Consumer::getRotation(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
 {
-    if (!getPoints(cid, address.system, address.group).contains(address.point)) return 0;
-    return otpNetwork->PointDetails(cid, address)->standardModules.position.getTimestamp();
+    RotationValue_t ret;
+    for (auto cid : getComponents())
+    {
+        auto temp = getRotation(cid, address, axis);
+        if (ret.sourceCID.isNull()) ret = temp;
+        switch (resolution) {
+            case Newest:
+            {
+                if (temp.timestamp > ret.timestamp) ret = temp;
+            } break;
+            case Largest:
+            {
+                if (temp.value > ret.value) ret = temp;
+            } break;
+            case Smallest:
+            {
+                if (temp.value < ret.value) ret = temp;
+            } break;
+        }
+    }
+    return ret;
 }
 
 /* Standard Modules - Position Velocity/Acceleration */
-MODULES::STANDARD::RotationVelAccModule_t::velocity_t Consumer::getRotationVelocity(cid_t cid, address_t address, axis_t axis) const
+Consumer::RotationVelocity_t Consumer::getRotationVelocity(cid_t cid, address_t address, axis_t axis) const
 {
+    using namespace MODULES::STANDARD;
+    Consumer::RotationVelocity_t ret;
     if (!getPoints(cid, address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::RotationVelAccModule_t::velocity_t();
-    return otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getVelocity(axis);
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getVelocity(axis);
+    ret.unit = getUnitString(VALUES::ROTATION_VELOCITY);
+    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getTimestamp();
+    ret.sourceCID = cid;
+    return ret;
 }
 
-timestamp_t Consumer::getRotationVelocityTimestamp(cid_t cid, address_t address) const
+Consumer::RotationVelocity_t Consumer::getRotationVelocity(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
 {
-    if (!getPoints(cid, address.system, address.group).contains(address.point)) return 0;
-    return otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getTimestamp();
+    RotationVelocity_t ret;
+    for (auto cid : getComponents())
+    {
+        auto temp = getRotationVelocity(cid, address, axis);
+        if (ret.sourceCID.isNull()) ret = temp;
+        switch (resolution) {
+            case Newest:
+            {
+                if (temp.timestamp > ret.timestamp) ret = temp;
+            } break;
+            case Largest:
+            {
+                if (temp.value > ret.value) ret = temp;
+            } break;
+            case Smallest:
+            {
+                if (temp.value < ret.value) ret = temp;
+            } break;
+        }
+    }
+    return ret;
 }
 
-MODULES::STANDARD::RotationVelAccModule_t::acceleration_t Consumer::getRotationAcceleration(cid_t cid, address_t address, axis_t axis) const
+Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(cid_t cid, address_t address, axis_t axis) const
 {
+    using namespace MODULES::STANDARD;
+    Consumer::RotationAcceleration_t ret;
     if (!getPoints(cid, address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::RotationVelAccModule_t::acceleration_t();
-    return otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getAcceleration(axis);
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getAcceleration(axis);
+    ret.unit = getUnitString(VALUES::ROTATION_ACCELERATION);
+    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getTimestamp();
+    ret.sourceCID = cid;
+    return ret;
 }
 
-timestamp_t Consumer::getRotationAccelerationTimestamp(cid_t cid, address_t address) const
+Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
 {
-    if (!getPoints(cid, address.system, address.group).contains(address.point)) return 0;
-    return otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getTimestamp();
+    RotationAcceleration_t ret;
+    for (auto cid : getComponents())
+    {
+        auto temp = getRotationAcceleration(cid, address, axis);
+        if (ret.sourceCID.isNull()) ret = temp;
+        switch (resolution) {
+            case Newest:
+            {
+                if (temp.timestamp > ret.timestamp) ret = temp;
+            } break;
+            case Largest:
+            {
+                if (temp.value > ret.value) ret = temp;
+            } break;
+            case Smallest:
+            {
+                if (temp.value < ret.value) ret = temp;
+            } break;
+        }
+    }
+    return ret;
 }
 
 void Consumer::setupListener()

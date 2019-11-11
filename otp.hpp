@@ -448,69 +448,90 @@ namespace ACN::OTP
 
         /* Standard Modules */
         public:
-            QString getScaleString(cid_t, address_t, MODULES::STANDARD::VALUES::moduleValue_t) const;
-            QString getUnitString(cid_t, address_t, MODULES::STANDARD::VALUES::moduleValue_t) const;
+            enum multipleProducerResolution_e
+            {
+                Newest,
+                Largest,
+                Smallest
+            };
+            QString getScaleString(MODULES::STANDARD::PositionModule_t::scale_t) const;
+            QString getUnitString(MODULES::STANDARD::VALUES::moduleValue_t) const;
+            QString getUnitString(MODULES::STANDARD::PositionModule_t::scale_t, MODULES::STANDARD::VALUES::moduleValue_t) const;
         /* -Position */
         public:
-            MODULES::STANDARD::PositionModule_t::scale_t getPositionScale(cid_t, address_t) const;
-            QString getPositionScaleString(cid_t cid, address_t address) const
-                {
-                    return getScaleString(cid, address, MODULES::STANDARD::VALUES::POSITION);
-                }
-            MODULES::STANDARD::PositionModule_t::location_t getPositionLocation(cid_t, address_t, axis_t) const;
-            QString getPositionLocationUnit(cid_t cid, address_t address) const
-                {
-                    return getUnitString(cid, address, MODULES::STANDARD::VALUES::POSITION);
-                }
-            timestamp_t getPositionTimestamp(cid_t, address_t) const;
+            typedef struct PositionValue_s
+            {
+                MODULES::STANDARD::PositionModule_t::location_t value = 0;
+                QString unit;
+                timestamp_t timestamp;
+                MODULES::STANDARD::PositionModule_t::scale_t scale;
+                cid_t sourceCID;
+            } PositionValue_t;
+            PositionValue_t getPosition(cid_t, address_t, axis_t) const;
+            PositionValue_t getPosition(address_t, axis_t, multipleProducerResolution_e) const;
+
         signals:
             void updatedPosition(cid_t, address_t, axis_t);
 
         /* -Position Velocity/Acceleration */
         public:
-            MODULES::STANDARD::PositionVelAccModule_t::velocity_t getPositionVelocity(cid_t, address_t, axis_t) const;
-            QString getPositionVelocitynUnit(cid_t cid, address_t address) const
-                {
-                    return getUnitString(cid, address, MODULES::STANDARD::VALUES::POSITION_VELOCITY);
-                }
-            timestamp_t getPositionVelocityTimestamp(cid_t, address_t) const;
+            typedef struct PositionVelocity_s
+            {
+                MODULES::STANDARD::PositionVelAccModule_t::velocity_t value = 0;
+                QString unit;
+                timestamp_t timestamp;
+                cid_t sourceCID;
+            } PositionVelocity_t;
+            PositionVelocity_t getPositionVelocity(cid_t, address_t, axis_t) const;
+            PositionVelocity_t getPositionVelocity(address_t, axis_t, multipleProducerResolution_e) const;
 
-            MODULES::STANDARD::PositionVelAccModule_t::acceleration_t getPositionAcceleration(cid_t, address_t, axis_t) const;
-            QString getPositionAccelerationUnit(cid_t cid, address_t address) const
-                {
-                    return getUnitString(cid, address, MODULES::STANDARD::VALUES::POSITION_ACCELERATION);
-                }
-            timestamp_t getPositionAccelerationTimestamp(cid_t, address_t) const;
+            typedef struct PositionAcceleration_s
+            {
+                MODULES::STANDARD::PositionVelAccModule_t::acceleration_t value = 0;
+                QString unit;
+                timestamp_t timestamp;
+                cid_t sourceCID;
+            } PositionAcceleration_t;
+            PositionAcceleration_t getPositionAcceleration(cid_t, address_t, axis_t) const;
+            PositionAcceleration_t getPositionAcceleration(address_t, axis_t, multipleProducerResolution_e) const;
         signals:
             void updatedPositionVelocity(cid_t, address_t, axis_t);
             void updatedPositionAcceleration(cid_t, address_t, axis_t);
 
         /* -Rotation */
         public:
-            MODULES::STANDARD::RotationModule_t::rotation_t getRotation(cid_t, address_t, axis_t) const;
-            QString getRotationUnit(cid_t cid, address_t address) const
-                {
-                    return getUnitString(cid, address, MODULES::STANDARD::VALUES::ROTATION);
-                }
-            timestamp_t getRotationTimestamp(cid_t, address_t) const;
+            typedef struct RotationValue_s
+            {
+                MODULES::STANDARD::RotationModule_t::rotation_t value = 0;
+                QString unit;
+                timestamp_t timestamp;
+                cid_t sourceCID;
+            } RotationValue_t;
+            RotationValue_t getRotation(cid_t, address_t, axis_t) const;
+            RotationValue_t getRotation(address_t, axis_t, multipleProducerResolution_e) const;
         signals:
             void updatedRotation(cid_t, address_t, axis_t);
 
         /* -Position Velocity/Acceleration */
         public:
-            MODULES::STANDARD::RotationVelAccModule_t::velocity_t getRotationVelocity(cid_t, address_t, axis_t) const;
-            QString getRotationVelocityUnit(cid_t cid, address_t address) const
-                {
-                    return getUnitString(cid, address, MODULES::STANDARD::VALUES::ROTATION_VELOCITY);
-                }
-            timestamp_t getRotationVelocityTimestamp(cid_t, address_t) const;
-
-            MODULES::STANDARD::RotationVelAccModule_t::acceleration_t getRotationAcceleration(cid_t, address_t, axis_t) const;
-            QString getRotationAccelerationUnit(cid_t cid, address_t address) const
-                {
-                    return getUnitString(cid, address, MODULES::STANDARD::VALUES::ROTATION_ACCELERATION);
-                }
-            timestamp_t getRotationAccelerationTimestamp(cid_t, address_t) const;
+            typedef struct RotationVelocity_s
+            {
+                MODULES::STANDARD::RotationVelAccModule_t::velocity_t value = 0;
+                QString unit;
+                timestamp_t timestamp;
+                cid_t sourceCID;
+            } RotationVelocity_t;
+            RotationVelocity_t getRotationVelocity(cid_t, address_t, axis_t) const;
+            RotationVelocity_t getRotationVelocity(address_t, axis_t, multipleProducerResolution_e) const;
+            typedef struct RotationAcceleration_s
+            {
+                MODULES::STANDARD::RotationVelAccModule_t::acceleration_t value = 0;
+                QString unit;
+                timestamp_t timestamp;
+                cid_t sourceCID;
+            } RotationAcceleration_t;
+            RotationAcceleration_t getRotationAcceleration(cid_t, address_t, axis_t) const;
+            RotationAcceleration_t getRotationAcceleration(address_t, axis_t, multipleProducerResolution_e) const;
         signals:
             void updatedRotationVelocity(cid_t, address_t, axis_t);
             void updatedRotationAcceleration(cid_t, address_t, axis_t);
