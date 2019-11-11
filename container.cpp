@@ -282,36 +282,6 @@ QList<point_t> Container::getPointList(cid_t cid, system_t system, group_t group
     return ret;
 }
 
-pointDetails_t Container::PointDetails(address_t address)
-{
-    QHashIterator<cid_t, systemMap_t> i(addressMap);
-    while (i.hasNext()) {
-        i.next();
-        auto cid = i.key();
-        if (getPointList(cid, address.system, address.group).contains(address.point))
-        {
-            return PointDetails(cid, address);
-        }
-    }
-
-    throw std::out_of_range("Invalid Point Address");
-}
-
-pointDetails_t Container::PointDetails(address_t address) const
-{
-    QHashIterator<cid_t, systemMap_t> i(addressMap);
-    while (i.hasNext()) {
-        i.next();
-        auto cid = i.key();
-        if (getPointList(cid, address.system, address.group).contains(address.point))
-        {
-            return PointDetails(cid, address);
-        }
-    }
-
-    return pointDetails_t(new pointDetails);
-}
-
 bool Container::isValid(const address_t address) const
 {
     return getPointList(address.system, address.group).contains(address.point);

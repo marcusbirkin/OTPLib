@@ -265,11 +265,29 @@ QList<point_t> Producer::getPoints(system_t system, group_t group) const
 {
     return otpNetwork->getPointList(system, group);
 }
+QList<point_t> Producer::getPoints(cid_t cid, system_t system, group_t group) const
+{
+    return otpNetwork->getPointList(cid, system, group);
+}
 
 QString Producer::getPointName(cid_t cid, address_t address) const
 {
-    if (!getPoints(address.system, address.group).contains(address.point)) return QString();
-    if (cid.isNull()) return otpNetwork->PointDetails(address)->getName();
+    if (!getPoints(cid, address.system, address.group).contains(address.point)) return QString();
+    if (cid.isNull())
+    {
+        cid_t newestCid;
+        QDateTime lastSeen;
+        for (auto cid : getComponents())
+        {
+            auto tempSeen = otpNetwork->PointDetails(cid, address)->getLastSeen();
+            if (tempSeen > lastSeen)
+            {
+                lastSeen = tempSeen;
+                newestCid = cid;
+            }
+        }
+        return otpNetwork->PointDetails(newestCid, address)->getName();
+    }
     return otpNetwork->PointDetails(cid, address)->getName();
 }
 
@@ -301,154 +319,166 @@ QList<address_t> Producer::getAddresses(system_t system, group_t group)
 }
 
 /* Standard Modules */
-QString Producer::getScaleString(address_t address, MODULES::STANDARD::VALUES::moduleValue_t moduleValue) const
+QString Producer::getScaleString(MODULES::STANDARD::PositionModule_t::scale_t scale) const
 {
-    using namespace MODULES::STANDARD::VALUES;
-    switch (moduleValue)
-    {
-        case POSITION: return UNITS::getScaleString(getPositionScale(address));
-        default: return QString();
-    }
+    return MODULES::STANDARD::VALUES::UNITS::getScaleString(scale);
 }
 
-QString Producer::getUnitString(address_t address, MODULES::STANDARD::VALUES::moduleValue_t moduleValue) const
+QString Producer::getUnitString(MODULES::STANDARD::VALUES::moduleValue_t moduleValue) const
+{
+    using namespace MODULES::STANDARD::VALUES;
+    return QString ("%2")
+            .arg(UNITS::getUnitString(moduleValue));
+}
+
+QString Producer::getUnitString(MODULES::STANDARD::PositionModule_t::scale_t scale, MODULES::STANDARD::VALUES::moduleValue_t moduleValue) const
 {
     using namespace MODULES::STANDARD::VALUES;
     return QString ("%1%2")
-            .arg(getScaleString(address, moduleValue))
+            .arg(getScaleString(scale))
             .arg(UNITS::getUnitString(moduleValue));
 }
 
 /* Standard Modules - Position */
-MODULES::STANDARD::PositionModule_t::scale_t Producer::getPositionScale(address_t address) const
+Producer::PositionValue_t Producer::getProducerPosition(address_t address, axis_t axis) const
 {
-    if (!getPoints(address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::PositionModule_t::scale_t();
-    return otpNetwork->PointDetails(address)->standardModules.position.getScaling();
+    using namespace MODULES::STANDARD;
+    Producer::PositionValue_t ret;
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getLocation(axis);
+    ret.scale = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getScaling();
+    ret.unit = getUnitString(ret.scale, VALUES::POSITION);
+    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getTimestamp();
+    return ret;
 }
 
-void Producer::setPositionScale(address_t address, MODULES::STANDARD::PositionModule_t::scale_t scale)
+void Producer::setProducerPosition(address_t address, axis_t axis, PositionValue_t position)
 {
-    if (!getPoints(address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(address)->standardModules.position.setScaling(scale);
-    for (auto axis = axis_t::first; axis < axis_t::count; axis++)
-        emit updatedPosition(address, axis);
-}
-
-
-MODULES::STANDARD::PositionModule_t::location_t Producer::getPositionLocation(address_t address, axis_t axis) const
-{
-    if (!getPoints(address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::PositionModule_t::location_t();
-    return otpNetwork->PointDetails(address)->standardModules.position.getLocation(axis);
-}
-
-void Producer::setPositionLocation(
-        address_t address,
-        axis_t axis,
-        MODULES::STANDARD::PositionModule_t::location_t value,
-        timestamp_t timestamp)
-{
-    if (!getPoints(address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(address)->standardModules.position.setLocation(axis, value, timestamp);
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.setLocation(
+                axis, position.value, position.timestamp);
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.setScaling(
+                position.scale);
 
     emit updatedPosition(address, axis);
 }
 
 /* Standard Modules - Position Velocity/Acceleration */
-MODULES::STANDARD::PositionVelAccModule_t::velocity_t Producer::getPositionVelocity(address_t address, axis_t axis) const
+Producer::PositionVelocity_t Producer::getProducerPositionVelocity(address_t address, axis_t axis) const
 {
-    if (!getPoints(address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::PositionVelAccModule_t::velocity_t();
-    return otpNetwork->PointDetails(address)->standardModules.positionVelAcc.getVelocity(axis);
+    using namespace MODULES::STANDARD;
+    Producer::PositionVelocity_t ret;
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.getVelocity(axis);
+    ret.unit = getUnitString(VALUES::POSITION_VELOCITY);
+    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.getTimestamp();
+    return ret;
 }
 
-void Producer::setPositionVelocity(
-        address_t address,
-        axis_t axis,
-        MODULES::STANDARD::PositionVelAccModule_t::velocity_t value,
-        timestamp_t timestamp)
+void Producer::setProducerPositionVelocity(address_t address, axis_t axis, PositionVelocity_t positionVel)
 {
-    if (!getPoints(address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(address)->standardModules.positionVelAcc.setVelocity(axis, value, timestamp);
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.setVelocity(
+                axis, positionVel.value, positionVel.timestamp);
 
     emit updatedPositionVelocity(address, axis);
 }
 
-MODULES::STANDARD::PositionVelAccModule_t::acceleration_t Producer::getPositionAcceleration(address_t address, axis_t axis) const
+Producer::PositionAcceleration_t Producer::getProducerPositionAcceleration(address_t address, axis_t axis) const
 {
-    if (!getPoints(address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::PositionVelAccModule_t::acceleration_t();
-    return otpNetwork->PointDetails(address)->standardModules.positionVelAcc.getAcceleration(axis);
+    using namespace MODULES::STANDARD;
+    Producer::PositionAcceleration_t ret;
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.getAcceleration(axis);
+    ret.unit = getUnitString(VALUES::POSITION_ACCELERATION);
+    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.getTimestamp();
+    return ret;
 }
 
-void Producer::setPositionAcceleration(
-        address_t address,
-        axis_t axis,
-        MODULES::STANDARD::PositionVelAccModule_t::acceleration_t value,
-        timestamp_t timestamp)
+void Producer::setProducerPositionAcceleration(address_t address, axis_t axis, PositionAcceleration_t positionAccel)
 {
-    if (!getPoints(address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(address)->standardModules.positionVelAcc.setAcceleration(axis, value, timestamp);
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.setAcceleration(
+                axis, positionAccel.value, positionAccel.timestamp);
 
     emit updatedPositionAcceleration(address, axis);
 }
 
 /* Standard Modules - Rotation */
-MODULES::STANDARD::RotationModule_t::rotation_t Producer::getRotation(address_t address, axis_t axis) const
+Producer::RotationValue_t Producer::getProducerRotation(address_t address, axis_t axis) const
 {
-    if (!getPoints(address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::RotationModule_t::rotation_t();
-    return otpNetwork->PointDetails(address)->standardModules.rotation.getRotation(axis);
+    using namespace MODULES::STANDARD;
+    Producer::RotationValue_t ret;
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotation.getRotation(axis);
+    ret.unit = getUnitString(VALUES::ROTATION);
+    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotation.getTimestamp();
+    return ret;
 }
 
-void Producer::setRotation(
-        address_t address,
-        axis_t axis,
-        MODULES::STANDARD::RotationModule_t::rotation_t value,
-        timestamp_t timestamp)
+void Producer::setProducerRotation(address_t address, axis_t axis, RotationValue_t rotation)
 {
-    if (!getPoints(address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(address)->standardModules.rotation.setRotation(axis, value, timestamp);
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotation.setRotation(
+                axis, rotation.value, rotation.timestamp);
 
     emit updatedRotation(address, axis);
 }
 
 /* Standard Modules - Position Velocity/Acceleration */
-MODULES::STANDARD::RotationVelAccModule_t::velocity_t Producer::getRotationVelocity(address_t address, axis_t axis) const
+Producer::RotationVelocity_t Producer::getProducerRotationVelocity( address_t address, axis_t axis) const
 {
-    if (!getPoints(address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::RotationVelAccModule_t::velocity_t();
-   return otpNetwork->PointDetails(address)->standardModules.rotationVelAcc.getVelocity(axis);
+    using namespace MODULES::STANDARD;
+    Producer::RotationVelocity_t ret;
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.getVelocity(axis);
+    ret.unit = getUnitString(VALUES::ROTATION_VELOCITY);
+    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.getTimestamp();
+    return ret;
 }
 
-void Producer::setRotationVelocity(
-        address_t address,
-        axis_t axis,
-        MODULES::STANDARD::RotationVelAccModule_t::velocity_t value,
-        timestamp_t timestamp)
+void Producer::setProducerRotationVelocity(address_t address, axis_t axis, RotationVelocity_t rotationVel)
 {
-    if (!getPoints(address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(address)->standardModules.rotationVelAcc.setVelocity(axis, value, timestamp);
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.setVelocity(
+                axis, rotationVel.value, rotationVel.timestamp);
 
     emit updatedRotationVelocity(address, axis);
 }
 
-MODULES::STANDARD::RotationVelAccModule_t::acceleration_t Producer::getRotationAcceleration(address_t address, axis_t axis) const
+Producer::RotationAcceleration_t Producer::getProducerRotationAcceleration(address_t address, axis_t axis) const
 {
-    if (!getPoints(address.system, address.group).contains(address.point))
-        return MODULES::STANDARD::RotationVelAccModule_t::acceleration_t();
-    return otpNetwork->PointDetails(address)->standardModules.rotationVelAcc.getAcceleration(axis);
+    using namespace MODULES::STANDARD;
+    Producer::RotationAcceleration_t ret;
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.getAcceleration(axis);
+    ret.unit = getUnitString(VALUES::ROTATION_VELOCITY);
+    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.getTimestamp();
+    return ret;
 }
 
-void Producer::setRotationAcceleration(
-        address_t address,
-        axis_t axis,
-        MODULES::STANDARD::RotationVelAccModule_t::acceleration_t value,
-        timestamp_t timestamp)
+void Producer::setProducerRotationAcceleration(address_t address, axis_t axis, RotationAcceleration_t rotationAccel)
 {
-    if (!getPoints(address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(address)->standardModules.rotationVelAcc.setAcceleration(axis, value, timestamp);
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.setAcceleration(
+                axis, rotationAccel.value, rotationAccel.timestamp);
 
     emit updatedRotationAcceleration(address, axis);
 }
@@ -727,9 +757,9 @@ void Producer::sendOTPTransformMessage(system_t system)
                 {
                     folioModuleData.append(
                         {address,
-                         MODULES::STANDARD::getTimestamp(module, otpNetwork->PointDetails(address)),
+                         MODULES::STANDARD::getTimestamp(module, otpNetwork->PointDetails(getProducerCID(), address)),
                          {module.ManufacturerID, module.ModuleNumber},
-                         MODULES::STANDARD::getAdditional(module, otpNetwork->PointDetails(address))});
+                         MODULES::STANDARD::getAdditional(module, otpNetwork->PointDetails(getProducerCID(), address))});
                 } break;
                 default:
                 {

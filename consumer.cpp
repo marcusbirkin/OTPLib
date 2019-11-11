@@ -227,12 +227,7 @@ bool Consumer::isGroupExpired(cid_t cid, system_t system, group_t group) const
     for (auto point : pointList)
     {
         auto address = address_t{system, group, point};
-        if (cid.isNull())
-        {
-            if (!otpNetwork->PointDetails(address)->isExpired()) return false;
-        } else {
-            if (!otpNetwork->PointDetails(cid, address)->isExpired()) return false;
-        }
+        if (!isPointExpired(cid, address)) return false;
     }
     return true;
 }
@@ -242,6 +237,7 @@ QList<point_t> Consumer::getPoints(system_t system, group_t group) const
 {
     return otpNetwork->getPointList(system, group);
 }
+
 QList<point_t> Consumer::getPoints(cid_t cid, system_t system, group_t group) const
 {
     return otpNetwork->getPointList(cid, system, group);
@@ -249,21 +245,59 @@ QList<point_t> Consumer::getPoints(cid_t cid, system_t system, group_t group) co
 
 QString Consumer::getPointName(cid_t cid, address_t address) const
 {
-    if (cid.isNull()) return otpNetwork->PointDetails(address)->getName();
+    if (cid.isNull())
+    {
+        cid_t newestCid;
+        QDateTime lastSeen;
+        for (auto cid : getComponents())
+        {
+            if (getPoints(cid, address.system, address.group).contains(address.point))
+            {
+                auto tempSeen = otpNetwork->PointDetails(cid, address)->getLastSeen();
+                if (tempSeen > lastSeen)
+                {
+                    lastSeen = tempSeen;
+                    newestCid = cid;
+                }
+            }
+        }
+        return otpNetwork->PointDetails(newestCid, address)->getName();
+    }
+
     if (!getPoints(cid, address.system, address.group).contains(address.point)) return QString();
     return otpNetwork->PointDetails(cid, address)->getName();
 }
 
 QDateTime Consumer::getPointLastSeen(cid_t cid, address_t address) const
 {
-    if (cid.isNull()) return otpNetwork->PointDetails(address)->getLastSeen();
+    if (cid.isNull())
+    {
+        QDateTime ret;
+        for (auto cid : getComponents())
+        {
+            if (getPoints(cid, address.system, address.group).contains(address.point))
+            {
+                auto temp = otpNetwork->PointDetails(cid, address)->getLastSeen();
+                if (temp > ret) ret = temp;
+            }
+        }
+        return ret;
+    }
+
     if (!getPoints(cid, address.system, address.group).contains(address.point)) return QDateTime();
     return otpNetwork->PointDetails(cid, address)->getLastSeen();
 }
 
 bool Consumer::isPointExpired(cid_t cid, address_t address) const
 {
-    if (cid.isNull()) return otpNetwork->PointDetails(address)->isExpired();
+    if (cid.isNull())
+    {
+        for (auto cid : getComponents())
+            if (getPoints(cid, address.system, address.group).contains(address.point))
+                if (!otpNetwork->PointDetails(cid, address)->isExpired()) return false;
+        return true;
+    }
+
     if (!getPoints(cid, address.system, address.group).contains(address.point)) return true;
     return otpNetwork->PointDetails(cid, address)->isExpired();
 }

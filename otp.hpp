@@ -168,6 +168,7 @@ namespace ACN::OTP
         /* Points */
         public:
             QList<point_t> getPoints(system_t, group_t) const;
+            QList<point_t> getPoints(cid_t, system_t, group_t) const;
 
             QString getPointName(cid_t, address_t) const;
             QString getPointName(cid_t cid, system_t system, group_t group, point_t point) const
@@ -188,94 +189,79 @@ namespace ACN::OTP
 
         /* Standard Modules */
         public:
-            QString getScaleString(address_t, MODULES::STANDARD::VALUES::moduleValue_t) const;
-            QString getUnitString(address_t, MODULES::STANDARD::VALUES::moduleValue_t) const;
+            QString getScaleString(MODULES::STANDARD::PositionModule_t::scale_t) const;
+            QString getUnitString(MODULES::STANDARD::VALUES::moduleValue_t) const;
+            QString getUnitString(MODULES::STANDARD::PositionModule_t::scale_t, MODULES::STANDARD::VALUES::moduleValue_t) const;
 
         /* -Position */
         public:
-            MODULES::STANDARD::PositionModule_t::scale_t getPositionScale(address_t) const;
-            void setPositionScale(address_t, MODULES::STANDARD::PositionModule_t::scale_t);
-            QString getPositionScaleString(address_t address) const
-                {
-                    return getScaleString(address, MODULES::STANDARD::VALUES::POSITION);
-                }
-            MODULES::STANDARD::PositionModule_t::location_t getPositionLocation(address_t, axis_t) const;
-            void setPositionLocation(
-                    address_t,
-                    axis_t,
-                    MODULES::STANDARD::PositionModule_t::location_t,
-                    timestamp_t = static_cast<timestamp_t>(QDateTime::currentDateTime().toMSecsSinceEpoch()));
-            QString getPositionLocationUnit(address_t address) const
-                {
-                    return getUnitString(address, MODULES::STANDARD::VALUES::POSITION);
-                }
+            typedef struct PositionValue_s
+            {
+                MODULES::STANDARD::PositionModule_t::location_t value = 0;
+                QString unit;
+                timestamp_t timestamp = static_cast<timestamp_t>(QDateTime::currentDateTime().toMSecsSinceEpoch());
+                MODULES::STANDARD::PositionModule_t::scale_t scale;
+            } PositionValue_t;
+            PositionValue_t getProducerPosition(address_t, axis_t) const;
+            void setProducerPosition(address_t, axis_t, PositionValue_t);
         signals:
             void updatedPosition(address_t, axis_t);
 
         /* -Position Velocity/Acceleration */
         public:
-            MODULES::STANDARD::PositionVelAccModule_t::velocity_t getPositionVelocity(address_t, axis_t) const;
-            void setPositionVelocity(
-                    address_t,
-                    axis_t,
-                    MODULES::STANDARD::PositionVelAccModule_t::velocity_t,
-                    timestamp_t = static_cast<timestamp_t>(QDateTime::currentDateTime().toMSecsSinceEpoch()));
-            QString getPositionVelocitynUnit(address_t address) const
-                {
-                    return getUnitString(address, MODULES::STANDARD::VALUES::POSITION_VELOCITY);
-                }
+            typedef struct PositionVelocity_s
+            {
+                MODULES::STANDARD::PositionVelAccModule_t::velocity_t value = 0;
+                QString unit;
+                timestamp_t timestamp;
+            } PositionVelocity_t;
+            PositionVelocity_t getProducerPositionVelocity(address_t, axis_t) const;
+            void setProducerPositionVelocity(address_t, axis_t, PositionVelocity_t);
 
-            MODULES::STANDARD::PositionVelAccModule_t::acceleration_t getPositionAcceleration(address_t, axis_t) const;
-            void setPositionAcceleration(
-                    address_t, axis_t,
-                    MODULES::STANDARD::PositionVelAccModule_t::acceleration_t,
-                    timestamp_t = static_cast<timestamp_t>(QDateTime::currentDateTime().toMSecsSinceEpoch()));
-            QString getPositionAccelerationUnit(address_t address) const
-                {
-                    return getUnitString(address, MODULES::STANDARD::VALUES::POSITION_ACCELERATION);
-                }
+            typedef struct PositionAcceleration_s
+            {
+                MODULES::STANDARD::PositionVelAccModule_t::acceleration_t value = 0;
+                QString unit;
+                timestamp_t timestamp;
+            } PositionAcceleration_t;
+            PositionAcceleration_t getProducerPositionAcceleration( address_t, axis_t) const;
+            void setProducerPositionAcceleration(address_t, axis_t, PositionAcceleration_t);
         signals:
             void updatedPositionVelocity(address_t, axis_t);
             void updatedPositionAcceleration(address_t, axis_t);
 
         /* -Rotation */
         public:
-            MODULES::STANDARD::RotationModule_t::rotation_t getRotation(address_t, axis_t) const;
-            void setRotation(
-                    address_t,
-                    axis_t,
-                    MODULES::STANDARD::RotationModule_t::rotation_t,
-                    timestamp_t = static_cast<timestamp_t>(QDateTime::currentDateTime().toMSecsSinceEpoch()));
-            QString getRotationUnit(address_t address) const
-                {
-                    return getUnitString(address, MODULES::STANDARD::VALUES::ROTATION);
-                }
+            typedef struct RotationValue_s
+            {
+                MODULES::STANDARD::RotationModule_t::rotation_t value = 0;
+                QString unit;
+                timestamp_t timestamp;
+            } RotationValue_t;
+            RotationValue_t getProducerRotation(address_t, axis_t) const;
+            void setProducerRotation(address_t, axis_t, RotationValue_t);
         signals:
             void updatedRotation(address_t, axis_t);
 
-        /* -Position Velocity/Acceleration */
+        /* -Rotation Velocity/Acceleration */
         public:
-            MODULES::STANDARD::RotationVelAccModule_t::velocity_t getRotationVelocity(address_t, axis_t) const;
-            void setRotationVelocity(
-                    address_t,
-                    axis_t,
-                    MODULES::STANDARD::RotationVelAccModule_t::velocity_t,
-                    timestamp_t = static_cast<timestamp_t>(QDateTime::currentDateTime().toMSecsSinceEpoch()));
-            QString getRotationVelocityUnit(address_t address) const
-                {
-                    return getUnitString(address, MODULES::STANDARD::VALUES::ROTATION_VELOCITY);
-                }
+            typedef struct RotationVelocity_s
+            {
+                MODULES::STANDARD::RotationVelAccModule_t::velocity_t value = 0;
+                QString unit;
+                timestamp_t timestamp;
+            } RotationVelocity_t;
+            RotationVelocity_t getProducerRotationVelocity(address_t, axis_t) const;
+            void setProducerRotationVelocity(address_t, axis_t, RotationVelocity_t);
 
-            MODULES::STANDARD::RotationVelAccModule_t::acceleration_t getRotationAcceleration(address_t, axis_t) const;
-            void setRotationAcceleration(
-                    address_t,
-                    axis_t,
-                    MODULES::STANDARD::RotationVelAccModule_t::acceleration_t,
-                    timestamp_t = static_cast<timestamp_t>(QDateTime::currentDateTime().toMSecsSinceEpoch()));
-            QString getRotationAccelerationUnit(address_t address) const
-                {
-                    return getUnitString(address, MODULES::STANDARD::VALUES::ROTATION_ACCELERATION);
-                }
+            typedef struct RotationAcceleration_s
+            {
+                MODULES::STANDARD::RotationVelAccModule_t::acceleration_t value = 0;
+                QString unit;
+                timestamp_t timestamp;
+            } RotationAcceleration_t;
+            RotationAcceleration_t getProducerRotationAcceleration(address_t, axis_t) const;
+            void setProducerRotationAcceleration(address_t, axis_t, RotationAcceleration_t);
         signals:
             void updatedRotationVelocity(address_t, axis_t);
             void updatedRotationAcceleration(address_t, axis_t);
@@ -438,8 +424,6 @@ namespace ACN::OTP
             QList<address_t> getAddresses();
             QList<address_t> getAddresses(system_t);
             QList<address_t> getAddresses(system_t, group_t);
-
-
         signals:
             void newPoint(cid_t, system_t, group_t, point_t);
             void updatedPoint(cid_t, system_t, group_t, point_t);
@@ -523,6 +507,7 @@ namespace ACN::OTP
             } RotationVelocity_t;
             RotationVelocity_t getRotationVelocity(cid_t, address_t, axis_t) const;
             RotationVelocity_t getRotationVelocity(address_t, axis_t, multipleProducerResolution_e) const;
+
             typedef struct RotationAcceleration_s
             {
                 MODULES::STANDARD::RotationVelAccModule_t::acceleration_t value = 0;
