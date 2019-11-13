@@ -78,9 +78,9 @@ namespace ACN::OTP::MODULES {
 
             namespace RANGES {
                 static QMap<moduleValue_t, range_t> ranges{
-                    {POSITION, {STANDARD::PositionModule_t::location_t(-2147483648),PositionModule_t::location_t(2147483647)}},
-                    {POSITION_VELOCITY, {STANDARD::PositionVelAccModule_t::velocity_t(-2147483648),STANDARD::PositionVelAccModule_t::velocity_t(2147483647)}},
-                    {POSITION_ACCELERATION, {STANDARD::PositionVelAccModule_t::acceleration_t(-2147483648),STANDARD::PositionVelAccModule_t::acceleration_t(2147483647)}},
+                    {POSITION, {STANDARD::PositionModule_t::location_t(-2147483648LL),PositionModule_t::location_t(2147483647)}},
+                    {POSITION_VELOCITY, {STANDARD::PositionVelAccModule_t::velocity_t(-2147483648LL),STANDARD::PositionVelAccModule_t::velocity_t(2147483647)}},
+                    {POSITION_ACCELERATION, {STANDARD::PositionVelAccModule_t::acceleration_t(-2147483648LL),STANDARD::PositionVelAccModule_t::acceleration_t(2147483647)}},
 
                     {ROTATION, {STANDARD::RotationModule_t::rotation_t(0),STANDARD::RotationModule_t::rotation_t(359999999)}},
                     {ROTATION_VELOCITY, {STANDARD::RotationVelAccModule_t::velocity_t(-360000000),STANDARD::RotationVelAccModule_t::velocity_t(360000000)}},
