@@ -57,7 +57,7 @@ namespace ACN::OTP::MODULES {
             return temp;
         }
         inline axis_e operator++ (axis_e& a) {
-            return std::clamp(static_cast<axis_t>(static_cast<unsigned int>(a) + 1), axis_t::first, axis_t::count);
+            return a++;
         }
 
         // 16.1 Position Module
