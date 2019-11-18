@@ -330,24 +330,27 @@ QList<address_t> Consumer::getAddresses(system_t system, group_t group)
 }
 
 /* Standard Modules */
-QString Consumer::getScaleString(MODULES::STANDARD::PositionModule_t::scale_t scale) const
+QString Consumer::getScaleString(MODULES::STANDARD::PositionModule_t::scale_t scale, bool html) const
 {
-    return MODULES::STANDARD::VALUES::UNITS::getScaleString(scale);
+    return MODULES::STANDARD::VALUES::UNITS::getScaleString(scale, html);
 }
 
-QString Consumer::getUnitString(MODULES::STANDARD::VALUES::moduleValue_t moduleValue) const
+QString Consumer::getUnitString(MODULES::STANDARD::VALUES::moduleValue_t moduleValue, bool html) const
 {
     using namespace MODULES::STANDARD::VALUES;
     return QString ("%2")
-            .arg(UNITS::getUnitString(moduleValue));
+            .arg(UNITS::getUnitString(moduleValue, html));
 }
 
-QString Consumer::getUnitString(MODULES::STANDARD::PositionModule_t::scale_t scale, MODULES::STANDARD::VALUES::moduleValue_t moduleValue) const
+QString Consumer::getUnitString(
+        MODULES::STANDARD::PositionModule_t::scale_t scale,
+        MODULES::STANDARD::VALUES::moduleValue_t moduleValue,
+        bool html) const
 {
     using namespace MODULES::STANDARD::VALUES;
     return QString ("%1%2")
-            .arg(getScaleString(scale))
-            .arg(UNITS::getUnitString(moduleValue));
+            .arg(getScaleString(scale, html))
+            .arg(UNITS::getUnitString(moduleValue, html));
 }
 
 /* Standard Modules - Position */

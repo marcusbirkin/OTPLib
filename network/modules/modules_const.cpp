@@ -23,17 +23,25 @@ namespace ACN::OTP::MODULES {
     namespace STANDARD {
         namespace VALUES {
             namespace UNITS {
-                QString getUnitString(moduleValue_t value)
+                QString getUnitString(moduleValue_t value, bool html)
                 {
                     QString ret = "";
-                    if (baseUnits.contains(value)) ret = baseUnits.value(value);
+                    if (html) {
+                        if (html::baseUnits.contains(value)) ret = html::baseUnits.value(value);
+                    } else {
+                        if (unicode::baseUnits.contains(value)) ret = unicode::baseUnits.value(value);
+                    }
                     return ret;
                 }
 
-                QString getScaleString(PositionModule_t::scale_t value)
+                QString getScaleString(PositionModule_t::scale_t value, bool html)
                 {
                     QString ret = "";
-                    if (scale.contains(value)) ret = scale.value(value);
+                    if (html) {
+                        if (html::scale.contains(value)) ret = html::scale.value(value);
+                    } else {
+                        if (unicode::scale.contains(value)) ret = unicode::scale.value(value);
+                    }
                     return ret;
                 }
             }

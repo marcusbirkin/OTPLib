@@ -189,9 +189,9 @@ namespace ACN::OTP
 
         /* Standard Modules */
         public:
-            QString getScaleString(MODULES::STANDARD::PositionModule_t::scale_t) const;
-            QString getUnitString(MODULES::STANDARD::VALUES::moduleValue_t) const;
-            QString getUnitString(MODULES::STANDARD::PositionModule_t::scale_t, MODULES::STANDARD::VALUES::moduleValue_t) const;
+            QString getScaleString(MODULES::STANDARD::PositionModule_t::scale_t, bool html = false) const;
+            QString getUnitString(MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
+            QString getUnitString(MODULES::STANDARD::PositionModule_t::scale_t, MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
 
         /* -Position */
         public:
@@ -438,9 +438,9 @@ namespace ACN::OTP
                 Largest,
                 Smallest
             };
-            QString getScaleString(MODULES::STANDARD::PositionModule_t::scale_t) const;
-            QString getUnitString(MODULES::STANDARD::VALUES::moduleValue_t) const;
-            QString getUnitString(MODULES::STANDARD::PositionModule_t::scale_t, MODULES::STANDARD::VALUES::moduleValue_t) const;
+            QString getScaleString(MODULES::STANDARD::PositionModule_t::scale_t,  bool html = false) const;
+            QString getUnitString(MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
+            QString getUnitString(MODULES::STANDARD::PositionModule_t::scale_t, MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
         /* -Position */
         public:
             typedef struct PositionValue_s

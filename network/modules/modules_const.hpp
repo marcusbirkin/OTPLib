@@ -55,25 +55,67 @@ namespace ACN::OTP::MODULES {
             } moduleValue_t;
 
             namespace UNITS {
-                constexpr static const QChar superscript2 = char16_t(0x00b2);
-                constexpr static const QChar degrees = char16_t(0x00B0);
-                constexpr static const QChar micro = char16_t(0x03BC);
+                namespace unicode {
+                    constexpr static const QChar superscript2 = char16_t(0x00b2);
+                    constexpr static const QChar degrees = char16_t(0x00B0);
+                    constexpr static const QChar micro = char16_t(0x03BC);
 
-                static QMap<moduleValue_t, QString> baseUnits{
-                    {POSITION, QString("m")},
-                    {POSITION_VELOCITY, QString("m/sec")},
-                    {POSITION_ACCELERATION, QString("m/sec%1").arg(superscript2)},
-                    {ROTATION, QString("%1%2").arg(micro).arg(degrees)},
-                    {ROTATION_VELOCITY, QString("%1%2/sec").arg(micro).arg(degrees)},
-                    {ROTATION_ACCELERATION, QString("%1%2/sec%3").arg(micro).arg(degrees).arg(superscript2)}
-                };
-                QString getUnitString(moduleValue_t value);
+                    static QMap<moduleValue_t, QString> baseUnits{
+                        {POSITION, QString("m")},
+                        {POSITION_VELOCITY, QString("%1m/sec")
+                                    .arg(micro)},
+                        {POSITION_ACCELERATION, QString("%1m/sec%2")
+                                    .arg(micro)
+                                    .arg(superscript2)},
+                        {ROTATION, QString("%1%2")
+                                    .arg(micro)
+                                    .arg(degrees)},
+                        {ROTATION_VELOCITY, QString("%1%2/sec")
+                                    .arg(micro)
+                                    .arg(degrees)},
+                        {ROTATION_ACCELERATION, QString("%1%2/sec%3")
+                                    .arg(micro)
+                                    .arg(degrees)
+                                    .arg(superscript2)}
+                    };
 
-                static QMap<PositionModule_t::scale_t, QString> scale{
-                    {PositionModule_t::mm, QString("m")},
-                    {PositionModule_t::um, QString("%1").arg(micro)}
-                };
-                QString getScaleString(PositionModule_t::scale_t value);
+                    static QMap<PositionModule_t::scale_t, QString> scale{
+                        {PositionModule_t::mm, QString("m")},
+                        {PositionModule_t::um, QString("%1").arg(micro)}
+                    };
+                }
+                namespace html {
+                    constexpr static const std::string_view superscript2 = "&sup2;";
+                    constexpr static const std::string_view degrees = "&deg;";
+                    constexpr static const std::string_view micro = "&mu;";
+
+                    static QMap<moduleValue_t, QString> baseUnits{
+                        {POSITION, QString("m")},
+                        {POSITION_VELOCITY, QString("%1m/sec")
+                                    .arg(std::string(micro).c_str())},
+                        {POSITION_ACCELERATION, QString("%1m/sec%2")
+                                    .arg(std::string(micro).c_str())
+                                    .arg(std::string(superscript2).c_str())},
+                        {ROTATION, QString("%1%2")
+                                    .arg(std::string(micro).c_str())
+                                    .arg(std::string(degrees).c_str())},
+                        {ROTATION_VELOCITY, QString("%1%2/sec")
+                                    .arg(std::string(micro).c_str())
+                                    .arg(std::string(degrees).c_str())},
+                        {ROTATION_ACCELERATION, QString("%1%2/sec%3")
+                                    .arg(std::string(micro).c_str())
+                                    .arg(std::string(degrees).c_str())
+                                    .arg(std::string(superscript2).c_str())}
+                    };
+
+                    static QMap<PositionModule_t::scale_t, QString> scale{
+                        {PositionModule_t::mm, QString("m")},
+                        {PositionModule_t::um, QString("%1").arg(std::string(micro).c_str())}
+                    };
+                }
+
+                QString getUnitString(moduleValue_t value, bool html = false);
+                QString getScaleString(PositionModule_t::scale_t value, bool html = false);
             }
 
             namespace RANGES {
