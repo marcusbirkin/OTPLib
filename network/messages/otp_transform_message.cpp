@@ -18,12 +18,12 @@
 */
 #include "otp_transform_message.hpp"
 
-using namespace ACN::OTP::MESSAGES::OTPTransformMessage;
+using namespace OTP::MESSAGES::OTPTransformMessage;
 
 Message::Message(
-        ACN::OTP::cid_t CID,
-        ACN::OTP::name_t ProducerName,
-        ACN::OTP::system_t System,
+        OTP::cid_t CID,
+        OTP::name_t ProducerName,
+        OTP::system_t System,
         QObject *parent) :
     QObject(parent),
     rootLayer(
@@ -31,7 +31,7 @@ Message::Message(
             0, CID, this)),
     otpLayer(
         new OTP::PDU::OTPLayer::Layer(
-            0, ACN::OTP::PDU::VECTOR_OTP_TRANSFORM_MESSAGE, 0, 0, 0, 0, ProducerName, this)),
+            0, OTP::PDU::VECTOR_OTP_TRANSFORM_MESSAGE, 0, 0, 0, 0, ProducerName, this)),
     transformLayer(
         new OTP::PDU::OTPTransformLayer::Layer(
             0, System, static_cast<timestamp_t>(QDateTime::currentMSecsSinceEpoch() * 1000), this))
@@ -194,7 +194,7 @@ QByteArray Message::toByteArray()
 
 void Message::updatePduLength()
 {
-    ACN::OTP::PDU::flags_length_t::pduLength_t length = 0;
+    OTP::PDU::flags_length_t::pduLength_t length = 0;
 
     for (auto moduleLayer : moduleLayers)
     {
@@ -203,7 +203,7 @@ void Message::updatePduLength()
 
     for (auto pointLayer : pointLayers)
     {
-        ACN::OTP::PDU::flags_length_t::pduLength_t pointPDULength = 0;
+        OTP::PDU::flags_length_t::pduLength_t pointPDULength = 0;
         address_t address = {transformLayer->getSystem(), pointLayer->getGroup(), pointLayer->getPoint()};
         auto iterator = moduleLayers.find(address);
         while (iterator != moduleLayers.end() && iterator.key() == address)
@@ -223,5 +223,5 @@ void Message::updatePduLength()
     otpLayer->setPDULength(length);
 
     length += rootLayer->toPDUByteArray().size();
-    rootLayer->setPDULength(length - ACN::OTP::PDU::OTPRootLayer::PREAMBLE_SIZE);
+    rootLayer->setPDULength(length - OTP::PDU::OTPRootLayer::PREAMBLE_SIZE);
 }

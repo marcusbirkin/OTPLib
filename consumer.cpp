@@ -24,7 +24,7 @@
 #include <QTimer>
 #include <QDebug>
 
-using namespace ACN::OTP;
+using namespace OTP;
 
 Consumer::Consumer(
         QNetworkInterface iface,
@@ -46,12 +46,12 @@ Consumer::Consumer(
 
     connect(otpNetwork.get(), qOverload<const cid_t&, const name_t&>(&Container::updatedComponent),
             this, qOverload<const cid_t&, const name_t&>(&Consumer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const ACN::OTP::cid_t&, const QHostAddress&>(&Container::updatedComponent),
-            this, qOverload<const ACN::OTP::cid_t&, const QHostAddress&>(&Consumer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const ACN::OTP::cid_t&, const moduleList_t &>(&Container::updatedComponent),
-            this, qOverload<const ACN::OTP::cid_t&, const moduleList_t &>(&Consumer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t>(&Container::updatedComponent),
-            this, qOverload<const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t>(&Consumer::updatedComponent));
+    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, const QHostAddress&>(&Container::updatedComponent),
+            this, qOverload<const OTP::cid_t&, const QHostAddress&>(&Consumer::updatedComponent));
+    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, const moduleList_t &>(&Container::updatedComponent),
+            this, qOverload<const OTP::cid_t&, const moduleList_t &>(&Consumer::updatedComponent));
+    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, OTP::component_t::type_t>(&Container::updatedComponent),
+            this, qOverload<const OTP::cid_t&, OTP::component_t::type_t>(&Consumer::updatedComponent));
 
     connect(otpNetwork.get(), &Container::newSystem, this, &Consumer::newSystem);
     connect(otpNetwork.get(), &Container::removedSystem, this, &Consumer::removedSystem);
@@ -874,10 +874,10 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
 
 void Consumer::sendOTPModuleAdvertisementMessage()
 {
-    using namespace ACN::OTP::MESSAGES::OTPModuleAdvertisementMessage;
+    using namespace OTP::MESSAGES::OTPModuleAdvertisementMessage;
 
     // Get list of supported modules
-    list_t list = ACN::OTP::MODULES::getSupportedModules();
+    list_t list = OTP::MODULES::getSupportedModules();
 
     // Generate messages
     QVector<std::shared_ptr<Message>> folioMessages;
@@ -923,7 +923,7 @@ void Consumer::sendOTPModuleAdvertisementMessage()
 void Consumer::sendOTPNameAdvertisementMessage()
 {
     // Name Advertisement Message
-    using namespace ACN::OTP::MESSAGES::OTPNameAdvertisementMessage;
+    using namespace OTP::MESSAGES::OTPNameAdvertisementMessage;
     Message nameAdvertisementMessage(
                 mode_e::Consumer,
                 getConsumerCID(),
@@ -950,7 +950,7 @@ void Consumer::sendOTPNameAdvertisementMessage()
 void Consumer::sendOTPSystemAdvertisementMessage()
 {
     // System Advertisement Message
-    using namespace ACN::OTP::MESSAGES::OTPSystemAdvertisementMessage;
+    using namespace OTP::MESSAGES::OTPSystemAdvertisementMessage;
     Message systemAdvertisementMessage(
                 mode_e::Consumer,
                 getConsumerCID(),

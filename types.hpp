@@ -34,7 +34,7 @@ namespace ACN::PDU {
     typedef quint8 flags_t;
 }
 
-namespace ACN::OTP
+namespace OTP
 {
     typedef OTP::PDU::name_t name_t;
     typedef OTP::PDU::OTPRootLayer::cid_t cid_t;
@@ -64,8 +64,8 @@ namespace ACN::OTP
         void setIPAddr(QHostAddress value) { ipAddr = value; updateLastSeen(); }
 
 
-        typedef ACN::OTP::MESSAGES::OTPModuleAdvertisementMessage::item_t ModuleItem_t;
-        typedef ACN::OTP::MESSAGES::OTPModuleAdvertisementMessage::list_t ModuleList_t;
+        typedef OTP::MESSAGES::OTPModuleAdvertisementMessage::item_t ModuleItem_t;
+        typedef OTP::MESSAGES::OTPModuleAdvertisementMessage::list_t ModuleList_t;
         ModuleList_t getModuleList() const {
             return moduleList.keys();
         }
@@ -91,9 +91,9 @@ namespace ACN::OTP
     typedef QMap<cid_t, component_t> componentMap_t;
 
     typedef struct sequenceMap_s {
-        sequence_t getLastSequence(ACN::OTP::PDU::vector_t vector) { return sequenceMap[vector]; }
-        sequence_t getNextSequence(ACN::OTP::PDU::vector_t vector) { return ++sequenceMap[vector]; }
-        bool checkSequence(ACN::OTP::PDU::vector_t vector, sequence_t value)
+        sequence_t getLastSequence(OTP::PDU::vector_t vector) { return sequenceMap[vector]; }
+        sequence_t getNextSequence(OTP::PDU::vector_t vector) { return ++sequenceMap[vector]; }
+        bool checkSequence(OTP::PDU::vector_t vector, sequence_t value)
         {
             auto sequence = sequenceMap[vector];
             auto ret = sequence.checkSequence(value);
@@ -101,37 +101,37 @@ namespace ACN::OTP
             return ret;
         }
     private:
-        QMap<ACN::OTP::PDU::vector_t, sequence_t> sequenceMap;
+        QMap<OTP::PDU::vector_t, sequence_t> sequenceMap;
     } sequenceMap_t;
 
     typedef struct folioMap_s {
         void addPage(
                 cid_t cid,
-                ACN::OTP::PDU::vector_t vector,
-                ACN::OTP::PDU::OTPLayer::folio_t folio,
-                ACN::OTP::PDU::OTPLayer::page_t page,
+                OTP::PDU::vector_t vector,
+                OTP::PDU::OTPLayer::folio_t folio,
+                OTP::PDU::OTPLayer::page_t page,
                 QNetworkDatagram datagram);
 
         bool checkAllPages(
                 cid_t cid,
-                ACN::OTP::PDU::vector_t vector,
-                ACN::OTP::PDU::OTPLayer::folio_t folio,
-                ACN::OTP::PDU::OTPLayer::page_t lastPage);
+                OTP::PDU::vector_t vector,
+                OTP::PDU::OTPLayer::folio_t folio,
+                OTP::PDU::OTPLayer::page_t lastPage);
 
         QVector<QNetworkDatagram> getDatagrams(
                 cid_t cid,
-                ACN::OTP::PDU::vector_t vector,
-                ACN::OTP::PDU::OTPLayer::folio_t folio);
+                OTP::PDU::vector_t vector,
+                OTP::PDU::OTPLayer::folio_t folio);
 
     private:
-        typedef std::pair<cid_t, ACN::OTP::PDU::vector_t> key_t;
+        typedef std::pair<cid_t, OTP::PDU::vector_t> key_t;
         struct folioMapPrivate_s {
             folioMapPrivate_s() : folio(0) {}
-            folioMapPrivate_s(ACN::OTP::PDU::OTPLayer::folio_t folio)
+            folioMapPrivate_s(OTP::PDU::OTPLayer::folio_t folio)
                 : folio(folio) {}
 
-            ACN::OTP::PDU::OTPLayer::folio_t folio;
-            QVector<ACN::OTP::PDU::OTPLayer::page_t> pages;
+            OTP::PDU::OTPLayer::folio_t folio;
+            QVector<OTP::PDU::OTPLayer::page_t> pages;
             QVector<QNetworkDatagram> datagrams;
         };
         QMap<key_t, folioMapPrivate_s> folioMap;

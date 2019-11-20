@@ -24,7 +24,7 @@
 #include "pdu_types.hpp"
 #include "pdu_const.hpp"
 
-namespace ACN::OTP::PDU::OTPLayer
+namespace OTP::PDU::OTPLayer
 {
 
 class Layer : public QObject

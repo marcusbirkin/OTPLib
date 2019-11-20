@@ -22,7 +22,7 @@
 #include "../../const.hpp"
 #include "pdu_types.hpp"
 
-namespace ACN::OTP::PDU {
+namespace OTP::PDU {
 
     const size_t NAME_LENGTH = 32;
 

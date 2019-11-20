@@ -18,10 +18,10 @@
 */
 #include "otp_root_layer.hpp"
 
-using namespace ACN::OTP::PDU::OTPRootLayer;
+using namespace OTP::PDU::OTPRootLayer;
 
 Layer::Layer(
-        ACN::OTP::PDU::flags_length_t::pduLength_t PDULength,
+        OTP::PDU::flags_length_t::pduLength_t PDULength,
         cid_t CID,
         QObject *parent) :
     QObject(parent),
@@ -34,7 +34,7 @@ Layer::Layer(
 {}
 
 Layer::Layer(
-        ACN::OTP::PDU::PDUByteArray layer,
+        OTP::PDU::PDUByteArray layer,
         QObject *parent) :
     QObject(parent),
     PreableSize(0),
@@ -58,7 +58,7 @@ bool Layer::isValid()
     return true;
 }
 
-ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
+OTP::PDU::PDUByteArray Layer::toPDUByteArray()
 {
     PDUByteArray ret;
     return ret
@@ -70,7 +70,7 @@ ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
         << CID;
 }
 
-void Layer::fromPDUByteArray(ACN::OTP::PDU::PDUByteArray layer)
+void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
 {
 
     PreableSize = 0;

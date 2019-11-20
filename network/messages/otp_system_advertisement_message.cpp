@@ -18,13 +18,13 @@
 */
 #include "otp_system_advertisement_message.hpp"
 
-using namespace ACN::OTP::MESSAGES::OTPSystemAdvertisementMessage;
+using namespace OTP::MESSAGES::OTPSystemAdvertisementMessage;
 
 Message::Message(
-        ACN::OTP::mode_e mode,
-        ACN::OTP::cid_t CID,
-        ACN::OTP::name_t ProducerName,
-        ACN::OTP::PDU::OTPSystemAdvertisementLayer::list_t SystemList,
+        OTP::mode_e mode,
+        OTP::cid_t CID,
+        OTP::name_t ProducerName,
+        OTP::PDU::OTPSystemAdvertisementLayer::list_t SystemList,
         QObject *parent) :
     QObject(parent),
     rootLayer(
@@ -32,16 +32,16 @@ Message::Message(
             0, CID, this)),
     otpLayer(
         new OTP::PDU::OTPLayer::Layer(
-            0, ACN::OTP::PDU::VECTOR_OTP_ADVERTISEMENT_MESSAGE, 0, 0, 0, 0, ProducerName, this)),
+            0, OTP::PDU::VECTOR_OTP_ADVERTISEMENT_MESSAGE, 0, 0, 0, 0, ProducerName, this)),
     advertisementLayer(
         new OTP::PDU::OTPAdvertisementLayer::Layer(
-            0, ACN::OTP::PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM, this)),
+            0, OTP::PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM, this)),
     systemAdvertisementLayer(
         new OTP::PDU::OTPSystemAdvertisementLayer::Layer(
-            0, ACN::OTP::PDU::OTPSystemAdvertisementLayer::options_t(), SystemList, this))
+            0, OTP::PDU::OTPSystemAdvertisementLayer::options_t(), SystemList, this))
 {
 
-    ACN::OTP::PDU::OTPSystemAdvertisementLayer::options_t options;
+    OTP::PDU::OTPSystemAdvertisementLayer::options_t options;
     switch (mode) {
         case Producer: options.setResponse(); break;
         case Consumer: options.setRequest(); break;
@@ -135,7 +135,7 @@ QByteArray Message::toByteArray()
 
 void Message::updatePduLength()
 {
-    ACN::OTP::PDU::flags_length_t::pduLength_t length = systemAdvertisementLayer->toPDUByteArray().size();
+    OTP::PDU::flags_length_t::pduLength_t length = systemAdvertisementLayer->toPDUByteArray().size();
     systemAdvertisementLayer->setPDULength(length);
 
     length += advertisementLayer->toPDUByteArray().size();
@@ -145,5 +145,5 @@ void Message::updatePduLength()
     otpLayer->setPDULength(length);
 
     length += rootLayer->toPDUByteArray().size();
-    rootLayer->setPDULength(length - ACN::OTP::PDU::OTPRootLayer::PREAMBLE_SIZE);
+    rootLayer->setPDULength(length - OTP::PDU::OTPRootLayer::PREAMBLE_SIZE);
 }

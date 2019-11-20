@@ -22,7 +22,7 @@
 #include "modules_types.hpp"
 #include "../messages/message_types.hpp"
 
-namespace ACN::OTP::MODULES {
+namespace OTP::MODULES {
     /* Section 16 Standard Modules */
     namespace STANDARD {
         enum : MODULES::moduleNumber_t

@@ -25,7 +25,7 @@
 #include <QtEndian>
 #include <QHostAddress>
 
-namespace ACN::OTP::PDU
+namespace OTP::PDU
 {
     class PDUByteArray;
 

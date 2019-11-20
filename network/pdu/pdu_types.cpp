@@ -21,7 +21,7 @@
 #include "../../const.hpp"
 #include <QtEndian>
 
-namespace ACN::OTP::PDU {
+namespace OTP::PDU {
 
     PDUByteArray& operator<<(PDUByteArray &l, const quint8 &r)
     {

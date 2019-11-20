@@ -25,7 +25,7 @@
 
 #include <QDebug>
 
-using namespace ACN::OTP;
+using namespace OTP;
 
 Producer::Producer(
         QNetworkInterface iface,
@@ -73,12 +73,12 @@ Producer::Producer(
 
     connect(otpNetwork.get(), qOverload<const cid_t&, const name_t&>(&Container::updatedComponent),
             this, qOverload<const cid_t&, const name_t&>(&Producer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const ACN::OTP::cid_t&, const QHostAddress&>(&Container::updatedComponent),
-            this, qOverload<const ACN::OTP::cid_t&, const QHostAddress&>(&Producer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const ACN::OTP::cid_t&, const moduleList_t &>(&Container::updatedComponent),
-            this, qOverload<const ACN::OTP::cid_t&, const moduleList_t &>(&Producer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t>(&Container::updatedComponent),
-            this, qOverload<const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t>(&Producer::updatedComponent));
+    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, const QHostAddress&>(&Container::updatedComponent),
+            this, qOverload<const OTP::cid_t&, const QHostAddress&>(&Producer::updatedComponent));
+    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, const moduleList_t &>(&Container::updatedComponent),
+            this, qOverload<const OTP::cid_t&, const moduleList_t &>(&Producer::updatedComponent));
+    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, OTP::component_t::type_t>(&Container::updatedComponent),
+            this, qOverload<const OTP::cid_t&, OTP::component_t::type_t>(&Producer::updatedComponent));
 
     connect(otpNetwork.get(), &Container::newSystem, this, &Producer::newSystem);
     connect(otpNetwork.get(), &Container::removedSystem, this, &Producer::removedSystem);
@@ -626,7 +626,7 @@ void Producer::newDatagram(QNetworkDatagram datagram)
 
 void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio)
 {
-    using namespace ACN::OTP::MESSAGES::OTPNameAdvertisementMessage;
+    using namespace OTP::MESSAGES::OTPNameAdvertisementMessage;
 
     // Create a List of Address Point Descriptions
     list_t list;
@@ -680,7 +680,7 @@ void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MES
 
 void Producer::sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio)
 {
-    using namespace ACN::OTP::MESSAGES::OTPSystemAdvertisementMessage;
+    using namespace OTP::MESSAGES::OTPSystemAdvertisementMessage;
 
     // Get list of systems
     list_t list = otpNetwork->getSystemList(getProducerCID());
@@ -729,7 +729,7 @@ void Producer::sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, M
 
 void Producer::sendOTPTransformMessage(system_t system)
 {
-    using namespace ACN::OTP::MESSAGES::OTPTransformMessage;
+    using namespace OTP::MESSAGES::OTPTransformMessage;
     auto folio = TransformMessage_Folio++;
 
     // Establish requested modules for system

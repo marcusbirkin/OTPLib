@@ -23,7 +23,7 @@
 #include "modules_types.hpp"
 #include "../pdu/pdu_types.hpp"
 
-namespace ACN::OTP::MODULES {
+namespace OTP::MODULES {
     namespace STANDARD {
         additional_t getAdditional(
                 PDU::OTPModuleLayer::vector_t standardModule,

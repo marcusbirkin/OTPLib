@@ -18,11 +18,11 @@
 */
 #include "modules.hpp"
 
-using namespace ACN::OTP::MODULES;
+using namespace OTP::MODULES;
 
 STANDARD::additional_t STANDARD::getAdditional(
-        ACN::OTP::PDU::OTPModuleLayer::vector_t standardModule,
-        ACN::OTP::pointDetails_t pointDetails)
+        OTP::PDU::OTPModuleLayer::vector_t standardModule,
+        OTP::pointDetails_t pointDetails)
 {
     additional_t additional;
     if (standardModule.ManufacturerID != ESTA_MANUFACTURER_ID) return additional;
@@ -51,8 +51,8 @@ STANDARD::additional_t STANDARD::getAdditional(
 }
 
 timestamp_t STANDARD::getTimestamp(
-        ACN::OTP::PDU::OTPModuleLayer::vector_t standardModule,
-        ACN::OTP::pointDetails_t pointDetails)
+        OTP::PDU::OTPModuleLayer::vector_t standardModule,
+        OTP::pointDetails_t pointDetails)
 {
     switch (standardModule.ModuleNumber)
     {

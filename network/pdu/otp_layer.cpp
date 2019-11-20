@@ -18,16 +18,16 @@
 */
 #include "otp_layer.hpp"
 
-using namespace ACN::OTP::PDU::OTPLayer;
+using namespace OTP::PDU::OTPLayer;
 
 Layer::Layer(
-        ACN::OTP::PDU::flags_length_t::pduLength_t PDULength,
-        ACN::OTP::PDU::vector_t Vector,
+        OTP::PDU::flags_length_t::pduLength_t PDULength,
+        OTP::PDU::vector_t Vector,
         sequence_t Sequence,
         folio_t Folio,
         page_t Page,
         page_t LastPage,
-        ACN::OTP::PDU::name_t ProducerName,
+        OTP::PDU::name_t ProducerName,
         QObject *parent) :
     QObject(parent),
     FlagsLength({FLAGS, PDULength}),
@@ -43,7 +43,7 @@ Layer::Layer(
 {}
 
 Layer::Layer(
-        ACN::OTP::PDU::PDUByteArray layer,
+        OTP::PDU::PDUByteArray layer,
         QObject *parent) :
     QObject(parent),
     FlagsLength({0, 0}),
@@ -71,7 +71,7 @@ bool Layer::isValid()
     return true;
 }
 
-ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
+OTP::PDU::PDUByteArray Layer::toPDUByteArray()
 {
     PDUByteArray ret;
     return ret
@@ -88,7 +88,7 @@ ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
 }
 
 
-void Layer::fromPDUByteArray(ACN::OTP::PDU::PDUByteArray layer)
+void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
 {
     FlagsLength = {0,0};
     Vector = 0;

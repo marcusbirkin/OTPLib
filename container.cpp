@@ -20,7 +20,7 @@
 #include "otp.hpp"
 #include <QTimer>
 
-using namespace ACN::OTP;
+using namespace OTP;
 
 Container::Container(QObject *parent) :
     QObject(parent)

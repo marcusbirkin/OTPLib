@@ -36,7 +36,7 @@ namespace OTPLib {
     void displayAbout(QWidget *parent);
 }
 
-namespace ACN::OTP
+namespace OTP
 {
     class Container;
 
@@ -144,10 +144,10 @@ namespace ACN::OTP
         signals:
             void newComponent(cid_t);
             void removedComponent(cid_t);
-            void updatedComponent(const ACN::OTP::cid_t&, const ACN::OTP::name_t&);
-            void updatedComponent(const ACN::OTP::cid_t&, const QHostAddress&);
-            void updatedComponent(const ACN::OTP::cid_t&, const ACN::OTP::moduleList_t &);
-            void updatedComponent(const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t);
+            void updatedComponent(const OTP::cid_t&, const OTP::name_t&);
+            void updatedComponent(const OTP::cid_t&, const QHostAddress&);
+            void updatedComponent(const OTP::cid_t&, const OTP::moduleList_t &);
+            void updatedComponent(const OTP::cid_t&, OTP::component_t::type_t);
 
         /* Systems */
         public:
@@ -365,10 +365,10 @@ namespace ACN::OTP
         signals:
             void newComponent(cid_t);
             void removedComponent(cid_t);
-            void updatedComponent(const ACN::OTP::cid_t&, const ACN::OTP::name_t&);
-            void updatedComponent(const ACN::OTP::cid_t&, const QHostAddress&);
-            void updatedComponent(const ACN::OTP::cid_t&, const ACN::OTP::moduleList_t &);
-            void updatedComponent(const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t);
+            void updatedComponent(const OTP::cid_t&, const OTP::name_t&);
+            void updatedComponent(const OTP::cid_t&, const QHostAddress&);
+            void updatedComponent(const OTP::cid_t&, const OTP::moduleList_t &);
+            void updatedComponent(const OTP::cid_t&, OTP::component_t::type_t);
 
         /* Systems */
         public:

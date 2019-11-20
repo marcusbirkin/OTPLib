@@ -18,7 +18,7 @@
 */
 #include "modules_const.hpp"
 
-namespace ACN::OTP::MODULES {
+namespace OTP::MODULES {
 
     namespace STANDARD {
         namespace VALUES {

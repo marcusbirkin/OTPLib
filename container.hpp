@@ -22,7 +22,7 @@
 #include <QObject>
 #include "otp.hpp"
 
-namespace ACN::OTP
+namespace OTP
 {
     class Container : public QObject
     {
@@ -92,7 +92,7 @@ namespace ACN::OTP
         void updatedComponent(const cid_t&, const name_t&);
         void updatedComponent(const cid_t&, const QHostAddress&);
         void updatedComponent(const cid_t&, const moduleList_t&);
-        void updatedComponent(const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t);
+        void updatedComponent(const OTP::cid_t&, OTP::component_t::type_t);
         void updatedSystem(cid_t, system_t);
         void updatedGroup(cid_t, system_t, group_t);
         void updatedPoint(cid_t, system_t, group_t, point_t);

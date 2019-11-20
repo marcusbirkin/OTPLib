@@ -25,7 +25,7 @@
 #include <exception>
 #include <memory>
 
-namespace ACN::OTP
+namespace OTP
 {
     inline bool operator< (const Q_IPV6ADDR& l, const Q_IPV6ADDR& r){
         for (int n = 0; n < 16; n++)

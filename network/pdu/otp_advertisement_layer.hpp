@@ -23,7 +23,7 @@
 #include "pdu_types.hpp"
 #include "pdu_const.hpp"
 
-namespace ACN::OTP::PDU::OTPAdvertisementLayer
+namespace OTP::PDU::OTPAdvertisementLayer
 {
 
 class Layer : public QObject

@@ -25,7 +25,7 @@
 #include "message_const.hpp"
 #include "../pdu/pdu.hpp"
 
-namespace ACN::OTP::MESSAGES::OTPModuleAdvertisementMessage
+namespace OTP::MESSAGES::OTPModuleAdvertisementMessage
 {
 
 class Message : public QObject
@@ -33,7 +33,7 @@ class Message : public QObject
     Q_OBJECT
 public:
     explicit Message(
-            ACN::OTP::mode_e mode,
+            OTP::mode_e mode,
             cid_t CID,
             name_t ProducerName,
             list_t ModuleList,

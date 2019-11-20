@@ -18,10 +18,10 @@
 */
 #include "otp_point_layer.hpp"
 
-using namespace ACN::OTP::PDU::OTPPointLayer;
+using namespace OTP::PDU::OTPPointLayer;
 
 Layer::Layer(
-        ACN::OTP::PDU::flags_length_t::pduLength_t PDULength,
+        OTP::PDU::flags_length_t::pduLength_t PDULength,
         group_t Group,
         point_t Point,
         timestamp_t Timestamp,
@@ -37,7 +37,7 @@ Layer::Layer(
 {}
 
 Layer::Layer(
-        ACN::OTP::PDU::PDUByteArray layer,
+        OTP::PDU::PDUByteArray layer,
         QObject *parent) :
     QObject(parent),
     FlagsLength({0, 0}),
@@ -70,7 +70,7 @@ bool Layer::isValid()
     return true;
 }
 
-ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
+OTP::PDU::PDUByteArray Layer::toPDUByteArray()
 {
     PDUByteArray ret;
     return ret << FlagsLength
@@ -82,7 +82,7 @@ ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
         << Reserved;
 }
 
-void Layer::fromPDUByteArray(ACN::OTP::PDU::PDUByteArray layer)
+void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
 {
     FlagsLength = {0,0};
     Vector = 0;

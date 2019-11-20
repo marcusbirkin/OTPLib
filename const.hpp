@@ -35,7 +35,7 @@ namespace ACN {
     }
 }
 
-namespace ACN::OTP {
+namespace OTP {
 
     /* Table 6-2: Address Numbering */
     namespace RANGES {

@@ -29,7 +29,7 @@
 #include "otp_name_advertisement_layer.hpp"
 #include "otp_system_advertisement_layer.hpp"
 
-namespace ACN::OTP::PDU {
+namespace OTP::PDU {
     vector_t extractVector(PDUByteArray ba);
     flags_length_t::pduLength_t extractLength(PDUByteArray ba);
 }

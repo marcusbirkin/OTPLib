@@ -23,7 +23,7 @@
 #include "../messages/message_types.hpp"
 #include "../pdu/pdu_types.hpp"
 
-namespace ACN::OTP::MODULES {
+namespace OTP::MODULES {
     typedef OTP::PDU::OTPTransformLayer::timestamp_t timestamp_t;
 
     typedef struct
@@ -40,7 +40,7 @@ namespace ACN::OTP::MODULES {
 
     /* Section 16 Standard Modules */
     namespace STANDARD {
-        typedef ACN::OTP::PDU::OTPModuleLayer::additional_t additional_t;
+        typedef OTP::PDU::OTPModuleLayer::additional_t additional_t;
 
         typedef enum axis_e
         {

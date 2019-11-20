@@ -24,7 +24,7 @@
 #include "../../enums.hpp"
 #include "../pdu/pdu_const.hpp"
 
-namespace ACN::OTP::MESSAGES
+namespace OTP::MESSAGES
 {
     /*
      * 7.1 Flags & Length

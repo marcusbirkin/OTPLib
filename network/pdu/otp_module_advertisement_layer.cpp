@@ -18,9 +18,9 @@
 */
 #include "otp_module_advertisement_layer.hpp"
 
-using namespace ACN::OTP::PDU::OTPModuleAdvertisementLayer;
+using namespace OTP::PDU::OTPModuleAdvertisementLayer;
 
-Layer::Layer(ACN::OTP::PDU::flags_length_t::pduLength_t PDULength,
+Layer::Layer(OTP::PDU::flags_length_t::pduLength_t PDULength,
         list_t List,
         QObject *parent) :
     QObject(parent),
@@ -31,7 +31,7 @@ Layer::Layer(ACN::OTP::PDU::flags_length_t::pduLength_t PDULength,
 {}
 
 Layer::Layer(
-        ACN::OTP::PDU::PDUByteArray layer,
+        OTP::PDU::PDUByteArray layer,
         QObject *parent) :
     QObject(parent),
     FlagsLength({0, 0}),
@@ -51,7 +51,7 @@ bool Layer::isValid()
     return true;
 }
 
-ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
+OTP::PDU::PDUByteArray Layer::toPDUByteArray()
 {
     PDUByteArray ret;
     return ret << FlagsLength
@@ -60,7 +60,7 @@ ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
         << List;
 }
 
-void Layer::fromPDUByteArray(ACN::OTP::PDU::PDUByteArray layer)
+void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
 {
     FlagsLength = {0,0};
     Vector = 0;

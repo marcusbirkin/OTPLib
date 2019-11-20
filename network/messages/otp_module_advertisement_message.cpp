@@ -18,13 +18,13 @@
 */
 #include "otp_module_advertisement_message.hpp"
 
-using namespace ACN::OTP::MESSAGES::OTPModuleAdvertisementMessage;
+using namespace OTP::MESSAGES::OTPModuleAdvertisementMessage;
 
 Message::Message(
-        ACN::OTP::mode_e mode,
-        ACN::OTP::cid_t CID,
-        ACN::OTP::name_t ProducerName,
-        ACN::OTP::PDU::OTPModuleAdvertisementLayer::list_t ModuleList,
+        OTP::mode_e mode,
+        OTP::cid_t CID,
+        OTP::name_t ProducerName,
+        OTP::PDU::OTPModuleAdvertisementLayer::list_t ModuleList,
         QObject *parent) :
     QObject(parent),
     rootLayer(
@@ -32,10 +32,10 @@ Message::Message(
             0, CID, this)),
     otpLayer(
         new OTP::PDU::OTPLayer::Layer(
-            0, ACN::OTP::PDU::VECTOR_OTP_ADVERTISEMENT_MESSAGE, 0, 0, 0, 0, ProducerName, this)),
+            0, OTP::PDU::VECTOR_OTP_ADVERTISEMENT_MESSAGE, 0, 0, 0, 0, ProducerName, this)),
     advertisementLayer(
         new OTP::PDU::OTPAdvertisementLayer::Layer(
-            0, ACN::OTP::PDU::VECTOR_OTP_ADVERTISEMENT_MODULE, this)),
+            0, OTP::PDU::VECTOR_OTP_ADVERTISEMENT_MODULE, this)),
     moduleAdvertisementLayer(
         new OTP::PDU::OTPModuleAdvertisementLayer::Layer(
             0, ModuleList, this))
@@ -127,7 +127,7 @@ QByteArray Message::toByteArray()
 
 void Message::updatePduLength()
 {
-    ACN::OTP::PDU::flags_length_t::pduLength_t length = moduleAdvertisementLayer->toPDUByteArray().size();
+    OTP::PDU::flags_length_t::pduLength_t length = moduleAdvertisementLayer->toPDUByteArray().size();
     moduleAdvertisementLayer->setPDULength(length);
 
     length += advertisementLayer->toPDUByteArray().size();
@@ -137,5 +137,5 @@ void Message::updatePduLength()
     otpLayer->setPDULength(length);
 
     length += rootLayer->toPDUByteArray().size();
-    rootLayer->setPDULength(length - ACN::OTP::PDU::OTPRootLayer::PREAMBLE_SIZE);
+    rootLayer->setPDULength(length - OTP::PDU::OTPRootLayer::PREAMBLE_SIZE);
 }

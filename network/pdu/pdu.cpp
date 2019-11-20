@@ -18,7 +18,7 @@
 */
 #include "pdu.hpp"
 
-using namespace ACN::OTP::PDU;
+using namespace OTP::PDU;
 
 vector_t extractVector(PDUByteArray ba)
 {
