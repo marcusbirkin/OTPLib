@@ -26,56 +26,60 @@
 
 namespace OTP {
 
-    /* Table 6-2: Address Numbering */
+    /* Table 7-2: Address Numbering */
     namespace RANGES {
-        const range_t System = {1,200};
-        const range_t Group = {1,60000};
-        const range_t Point = {1,4000000000};
+        inline const range_t System = {1,200};
+        inline const range_t Group = {1,60000};
+        inline const range_t Point = {1,4000000000};
     }
 
     /* Table 15-2: IPv4 Multicast Addresses */
-    const QHostAddress OTP_Transform_Message_IPv4 = QHostAddress("239.159.1.0"); // Base address excluding system number
-    const QHostAddress OTP_Advertisement_Message_IPv4 = QHostAddress("239.159.2.1");
+    inline const QHostAddress OTP_Transform_Message_IPv4 = QHostAddress("239.159.1.0"); // Base address excluding system number
+    inline const QHostAddress OTP_Advertisement_Message_IPv4 = QHostAddress("239.159.2.1");
 
     /* Table 15-3: IPv6 Multicast Addresses */
-    const QHostAddress OTP_Transform_Message_IPv6 = QHostAddress("FF15:0000:0000:0000:009f:0000:0001:0000"); // Base address excluding system number
-    const QHostAddress OTP_Advertisement_Message_IPv6 = QHostAddress("FF15:0000:0000:0000:009f:0000:0002:0001");
+    inline const QHostAddress OTP_Transform_Message_IPv6 = QHostAddress("FF15:0000:0000:0000:009f:0000:0001:0000"); // Base address excluding system number
+    inline const QHostAddress OTP_Advertisement_Message_IPv6 = QHostAddress("FF15:0000:0000:0000:009f:0000:0002:0001");
 
     namespace PDU {
         /* Table A-1: Vector Defines */
         // OTP
-        const vector_t VECTOR_OTP_TRANSFORM_MESSAGE = 0xFF000001;
-        const vector_t VECTOR_OTP_ADVERTISEMENT_MESSAGE = 0xFF000002;
+        inline const vector_t VECTOR_OTP_TRANSFORM_MESSAGE = 0xFF01;
+        inline const vector_t VECTOR_OTP_ADVERTISEMENT_MESSAGE = 0xFF02;
         // OTP Transform
-        const vector_t VECTOR_OTP_POINT = 0x00000001;
+        inline const vector_t VECTOR_OTP_POINT = 0x0001;
         // OTP Point
-        const vector_t VECTOR_OTP_MODULE = 0x00000001;
+        inline const vector_t VECTOR_OTP_MODULE = 0x0001;
         // OTP Advertisement
-        const vector_t VECTOR_OTP_ADVERTISEMENT_MODULE = 0x00000001;
-        const vector_t VECTOR_OTP_ADVERTISEMENT_NAME = 0x00000002;
-        const vector_t VECTOR_OTP_ADVERTISEMENT_SYSTEM = 0x00000003;
+        inline const vector_t VECTOR_OTP_ADVERTISEMENT_MODULE = 0x0001;
+        inline const vector_t VECTOR_OTP_ADVERTISEMENT_NAME = 0x0002;
+        inline const vector_t VECTOR_OTP_ADVERTISEMENT_SYSTEM = 0x0003;
         // OTP Module Advertisement
-        const vector_t VECTOR_OTP_ADVERTISEMENT_MODULE_LIST = 0x00000001;
+        inline const vector_t VECTOR_OTP_ADVERTISEMENT_MODULE_LIST = 0x0001;
         // OTP Name Advertisement
-        const vector_t VECTOR_OTP_ADVERTISEMENT_NAME_LIST = 0x00000001;
+        inline const vector_t VECTOR_OTP_ADVERTISEMENT_NAME_LIST = 0x0001;
         // OTP System Advertisement
-        const vector_t VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST = 0x00000001;
+        inline const vector_t VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST = 0x0001;
     }
 
     /* Table A-2: Timing Defines */
     // OTP Transform
-    const std::chrono::milliseconds OTP_TRANSFORM_TIMING_MIN = std::chrono::milliseconds(1);
-    const std::chrono::milliseconds OTP_TRANSFORM_TIMING_MAX = std::chrono::milliseconds(50);
-    const std::chrono::milliseconds OTP_TRANSFORM_KEEPALIVE_TIMING_MIN = std::chrono::milliseconds(2800);
-    const std::chrono::milliseconds OTP_TRANSFORM_KEEPALIVE_TIMING_MAX = std::chrono::milliseconds(3000);
-    const std::chrono::milliseconds OTP_TRANSFORM_DATA_LOSS_TIMEOUT = std::chrono::milliseconds(7500);
+    inline const std::chrono::milliseconds OTP_TRANSFORM_TIMING_MIN = std::chrono::milliseconds(1);
+    inline const std::chrono::milliseconds OTP_TRANSFORM_TIMING_MAX = std::chrono::milliseconds(50);
+    inline const std::chrono::milliseconds OTP_TRANSFORM_FULL_POINT_SET_TIMING_MIN = std::chrono::milliseconds(2800);
+    inline const std::chrono::milliseconds OTP_TRANSFORM_FULL_POINT_SET_TIMING_MAX = std::chrono::milliseconds(3000);
+    inline const std::chrono::milliseconds OTP_TRANSFORM_DATA_LOSS_TIMEOUT = std::chrono::milliseconds(7500);
     // OTP Module Advertisement
-    const std::chrono::milliseconds OTP_ADVERTISEMENT_TIMING = std::chrono::seconds(10);
-    const std::chrono::milliseconds OTP_ADVERTISEMENT_STARTUP_WAIT = std::chrono::seconds(12);
-    const std::chrono::milliseconds OTP_ADVERTISEMENT_TIMEOUT = std::chrono::seconds(30);
+    inline const std::chrono::milliseconds OTP_ADVERTISEMENT_TIMING = std::chrono::seconds(10);
+    inline const std::chrono::milliseconds OTP_ADVERTISEMENT_STARTUP_WAIT = std::chrono::seconds(12);
+    inline const std::chrono::milliseconds OTP_ADVERTISEMENT_TIMEOUT = std::chrono::seconds(30);
+    // OTP Name Advertisement
+    inline const std::chrono::microseconds OTP_NAME_ADVERTISEMENT_MAX_BACKOFF = std::chrono::seconds(5);
+    // OTP System Advertisement
+    inline const std::chrono::microseconds OTP_SYSTEM_ADVERTISEMENT_MAX_BACKOFF = std::chrono::seconds(5);
 
     /* Table A-3: Additional Defines */
-    const quint16 ACN_SDT_MULTICAST_PORT = 5568;
-    const quint16 ESTA_MANUFACTURER_ID = 0x0000;
+    inline const quint16 OTP_PORT = 5568;
+    inline const quint16 ESTA_MANUFACTURER_ID = 0x0000;
 }
 #endif // CONST_HPP

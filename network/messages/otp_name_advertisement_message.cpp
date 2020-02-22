@@ -115,7 +115,7 @@ QNetworkDatagram Message::toQNetworkDatagram(
     otpLayer->setPage(thisPage);
     otpLayer->setLastPage(lastPage);
     updatePduLength();
-    return QNetworkDatagram(toByteArray(), destAddr, ACN_SDT_MULTICAST_PORT);
+    return QNetworkDatagram(toByteArray(), destAddr, OTP_PORT);
 }
 
 QByteArray Message::toByteArray()
