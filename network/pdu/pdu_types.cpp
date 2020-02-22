@@ -184,17 +184,20 @@ namespace OTP::PDU {
 
         bool sequence_t::checkSequence(sequence_t value)
         {
-            /* 7.4 Sequence Number
-                Components shall process messages in the order that they are received, with the exception that they shall
-                be discarded if they are deemed out-of-sequence according to the algorithm below:
-                1. A component receives a message of OTP type X with a sequence number A.
-                2. That same component receives a message of OTP type X with a sequence number B.
-                3. If, using signed 16-bit binary arithmetic, (B – A) is between –20 and 1, exclusive,
-                    then the message containing sequence number B shall be deemed out-of-sequence.
+            /* 6.5 Sequence Number
+            Components shall process messages in the order that they are received,
+            using the following algorithm to determine whether an OTP message is part of the current communication:
+            Having first received a message of OTP type X with sequence number A,
+            a Component then receives another message of OTP type X with sequence number B.
+            If, using unsigned 32-bit binary arithmetic, (A - B) falls within the range [0 - 65535], inclusive,
+            then the message containing sequence number B shall be discarded. Otherwise,
+            the message containing sequence number B shall be processed.
             */
-            auto A = quint16(data);
-            auto B = quint16(value);
-            return !(((B - A) > -20) && ((B - A) < 1));
+            sequence_t::type A = data;
+            sequence_t::type B = value;
+            quint32 test = A-B;
+
+            return !((test >= 0) && (test <= 63335));
         }
 
         PDUByteArray& operator>>(PDUByteArray &l, sequence_t &r)
