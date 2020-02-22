@@ -19,6 +19,7 @@
 #ifndef OTP_HPP
 #define OTP_HPP
 
+#include "bugs.hpp"
 #include <QObject>
 #include <QNetworkInterface>
 #include <QAbstractSocket>

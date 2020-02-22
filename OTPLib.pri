@@ -25,6 +25,7 @@ SOURCES += \
     $$PWD/network/modules/modules_const.cpp
 
 HEADERS += \
+    $$PWD/bugs.hpp \
     $$PWD/otp.hpp \
     $$PWD/container.hpp \
     $$PWD/const.hpp \
