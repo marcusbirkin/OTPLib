@@ -112,9 +112,9 @@ namespace OTP
         /* Producer Points */
         public:
             QList<point_t> getProducerPoints(system_t, group_t) const;
-            void addProducerPoint(address_t);
-            void addProducerPoint(system_t system, group_t group, point_t point)
-                { addProducerPoint(address_t(system, group, point)); }
+            void addProducerPoint(address_t, priority_t);
+            void addProducerPoint(system_t system, group_t group, point_t point, priority_t priority)
+                { addProducerPoint(address_t(system, group, point), priority); }
             void removeProducerPoint(address_t);
             void removeProducerPoint(system_t system, group_t group, point_t point)
                 { removeProducerPoint(address_t(system, group, point)); }

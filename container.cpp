@@ -215,9 +215,10 @@ QList<group_t> Container::getGroupList(cid_t cid, system_t system) const
 }
 
 
-void Container::addPoint(cid_t cid, address_t address)
+void Container::addPoint(cid_t cid, address_t address, priority_t priority)
 {
     if (!address.point.isValid()) return;
+    if (!priority.isValid()) return;
 
     addGroup(cid, address.system, address.group);
     bool existing = getPointList(cid, address.system, address.group).contains(address.point);
@@ -229,7 +230,7 @@ void Container::addPoint(cid_t cid, address_t address)
     {
         auto newDetails = pointDetails_t(new pointDetails);
         addressMap[cid][address.system][address.group].insert(address.point, newDetails);
-        qDebug() << parent() << "- New point" << cid << address.system << address.group << address.point;
+        qDebug() << parent() << "- New point" << cid << address.system << address.group << address.point << "(Priority: " << priority << ")";
         emit newPoint(cid, address.system, address.group, address.point);
     }
 

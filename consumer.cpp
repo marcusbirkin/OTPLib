@@ -658,7 +658,7 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
                     pointLayer->getGroup(),
                     pointLayer->getPoint()};
                 auto timestamp = pointLayer->getTimestamp();
-                otpNetwork->addPoint(cid, address);
+                otpNetwork->addPoint(cid, address, priority_t());  //TODO Priority
                 for (auto moduleLayer : transformMessage.getModuleLayers().values(address))
                 {
                     switch (moduleLayer->getManufacturerID())
@@ -794,7 +794,7 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
             for (auto point : list)
             {
                 address_t address = address_t(point.System, point.Group, point.Point);
-                otpNetwork->addPoint(cid, address);
+                otpNetwork->addPoint(cid, address, priority_t());  //TODO Priority
                 otpNetwork->PointDetails(cid, address)->setName(point.PointName);
             }
         }

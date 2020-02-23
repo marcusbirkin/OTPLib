@@ -1,6 +1,6 @@
 /*
     OTPLib
-    A QT interface for E1.59 (Entertainment Technology Object Transform Protocol (OTP)) 
+    A QT interface for E1.59 (Entertainment Technology Object Transform Protocol (OTP))
     Copyright (C) 2019  Marcus Birkin
 
     This program is free software: you can redistribute it and/or modify
@@ -178,9 +178,9 @@ QList<point_t> Producer::getProducerPoints(system_t system, group_t group) const
     return otpNetwork->getPointList(CID, system, group);
 }
 
-void Producer::addProducerPoint(address_t address)
+void Producer::addProducerPoint(address_t address, priority_t priority)
 {
-    otpNetwork->addPoint(getProducerCID(), address);
+    otpNetwork->addPoint(getProducerCID(), address, priority);
 }
 
 void Producer::removeProducerPoint(address_t address)
@@ -754,6 +754,7 @@ void Producer::sendOTPTransformMessage(system_t system)
     QVector<Message::addModule_t> folioModuleData;
     for (auto address: getProducerAddresses(system))
     {
+        auto pointDetails = otpNetwork->PointDetails(getProducerCID(), address);
         for (auto module : requestedModules)
         {
             switch (module.ManufacturerID)
@@ -761,10 +762,11 @@ void Producer::sendOTPTransformMessage(system_t system)
                 case ESTA_MANUFACTURER_ID:
                 {
                     folioModuleData.append(
-                        {address,
-                         MODULES::STANDARD::getTimestamp(module, otpNetwork->PointDetails(getProducerCID(), address)),
+                        {pointDetails->getPriority(),
+                         address,
+                         MODULES::STANDARD::getTimestamp(module, pointDetails),
                          {module.ManufacturerID, module.ModuleNumber},
-                         MODULES::STANDARD::getAdditional(module, otpNetwork->PointDetails(getProducerCID(), address))});
+                         MODULES::STANDARD::getAdditional(module, pointDetails)});
                 } break;
                 default:
                 {

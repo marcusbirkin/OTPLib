@@ -37,6 +37,7 @@ namespace OTP
     typedef OTP::PDU::OTPLayer::sequence_t sequence_t;
     typedef OTP::PDU::OTPPointLayer::point_t point_t;
     typedef OTP::PDU::OTPPointLayer::group_t group_t;
+    typedef OTP::PDU::OTPPointLayer::priority_t priority_t;
     typedef OTP::PDU::OTPTransformLayer::system_t system_t;
     typedef OTP::PDU::OTPTransformLayer::timestamp_t timestamp_t;
     typedef OTP::MESSAGES::OTPModuleAdvertisementMessage::list_t moduleList_t;
@@ -137,7 +138,13 @@ namespace OTP
     {
     public:
         pointDetails() : lastSeen(QDateTime::currentDateTime()) {}
-        pointDetails(QString name) : name(name), lastSeen(QDateTime::currentDateTime()) {}
+        pointDetails(priority_t priority) :
+            lastSeen(QDateTime::currentDateTime()),
+            priority(priority) {}
+        pointDetails(QString name, priority_t priority) :
+            name(name),
+            lastSeen(QDateTime::currentDateTime()),
+            priority(priority) {}
 
         name_t getName() const { return name; }
         void setName(name_t value) { name = value; updateLastSeen(); }
@@ -145,6 +152,9 @@ namespace OTP
         QDateTime getLastSeen() const { return std::max(lastSeen, standardModules.getLastSeen()); }
         void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
         bool isExpired();
+
+        priority_t getPriority() const { return priority; }
+        void setPriority(priority_t value) { priority = value; updateLastSeen(); }
 
         typedef struct standardModules {
         public:
@@ -179,6 +189,7 @@ namespace OTP
     private:
         QString name;
         QDateTime lastSeen;
+        priority_t priority;
     };
     typedef std::shared_ptr<pointDetails> pointDetails_t;
 
@@ -193,7 +204,7 @@ namespace OTP
             point(point) {}
 
         bool isValid();
-        QString toString() {return QString("%1/%2/%3").arg(system).arg(group).arg(point); }
+        QString toString() { return QString("%1/%2/%3").arg(system).arg(group).arg(point); }
 
         system_t system;
         group_t group;

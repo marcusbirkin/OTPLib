@@ -61,9 +61,9 @@ namespace OTP
         QList<group_t> getGroupList(system_t system) const;
         QList<group_t> getGroupList(cid_t cid, system_t system) const;
 
-        void addPoint(cid_t cid, address_t address);
-        void addPoint(cid_t cid, system_t system, group_t group, point_t point)
-            { addPoint(cid, {system, group, point}); }
+        void addPoint(cid_t cid, address_t address, priority_t priority);
+        void addPoint(cid_t cid, system_t system, group_t group, point_t point, priority_t priority)
+            { addPoint(cid, {system, group, point}, priority); }
         void removePoint(cid_t cid, address_t address);
         void removePoint(cid_t cid, system_t system, group_t group, point_t point)
             { removePoint(cid, {system, group, point}); }
