@@ -21,6 +21,13 @@
 using namespace OTP::PDU;
 using namespace OTP::PDU::OTPModuleLayer;
 
+Layer::Layer(QObject *parent) :
+    QObject(parent),
+    ModuleIdent(ident_t()),
+    PDULength(0),
+    Additional(QByteArray())
+{}
+
 Layer::Layer(
         ident_t::manufacturerID_t ManufacturerID,
         pduLength_t PDULength,
@@ -36,7 +43,7 @@ Layer::Layer(
         OTP::PDU::PDUByteArray layer,
         QObject *parent) :
     QObject(parent),
-    ModuleIdent({0, 0}),
+    ModuleIdent(ident_t()),
     PDULength(0),
     Additional(QByteArray())
 {

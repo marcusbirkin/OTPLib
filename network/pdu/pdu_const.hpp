@@ -78,7 +78,7 @@ namespace OTP::PDU {
         const vector_t VECTOR = VECTOR_OTP_ADVERTISEMENT_MODULE_LIST;
         const reserved_t RESERVED = 0x0;
         namespace RANGES {
-            const range_t ListSize = {4,1280};
+            const range_t ListSize = {4,1376};
         }
     }
 
