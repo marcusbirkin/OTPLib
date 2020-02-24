@@ -18,30 +18,27 @@
 */
 #include "otp_module_advertisement_message.hpp"
 
+using namespace OTP::PDU;
 using namespace OTP::MESSAGES::OTPModuleAdvertisementMessage;
 
 Message::Message(
         OTP::mode_e mode,
         OTP::cid_t CID,
-        OTP::name_t ProducerName,
+        OTP::name_t ComponentName,
         OTP::PDU::OTPModuleAdvertisementLayer::list_t ModuleList,
         QObject *parent) :
-    QObject(parent),
-    rootLayer(
-        new OTP::PDU::OTPRootLayer::Layer(
-            0, CID, this)),
+    QObject(parent),  
     otpLayer(
-        new OTP::PDU::OTPLayer::Layer(
-            0, OTP::PDU::VECTOR_OTP_ADVERTISEMENT_MESSAGE, 0, 0, 0, 0, ProducerName, this)),
+        new OTPLayer::Layer(
+            VECTOR_OTP_ADVERTISEMENT_MESSAGE, 0, CID, 0, 0, 0, 0, ComponentName, this)),
     advertisementLayer(
         new OTP::PDU::OTPAdvertisementLayer::Layer(
-            0, OTP::PDU::VECTOR_OTP_ADVERTISEMENT_MODULE, this)),
+            OTP::PDU::VECTOR_OTP_ADVERTISEMENT_MODULE, 0, this)),
     moduleAdvertisementLayer(
         new OTP::PDU::OTPModuleAdvertisementLayer::Layer(
             0, ModuleList, this))
 {
-    Q_UNUSED(mode);
-
+    Q_UNUSED(mode)
     updatePduLength();
 }
 
@@ -49,19 +46,11 @@ Message::Message(
         QNetworkDatagram message,
         QObject *parent) :
     QObject(parent),
-    rootLayer(new OTP::PDU::OTPRootLayer::Layer()),
     otpLayer(new OTP::PDU::OTPLayer::Layer()),
     advertisementLayer(new OTP::PDU::OTPAdvertisementLayer::Layer()),
     moduleAdvertisementLayer(new OTP::PDU::OTPModuleAdvertisementLayer::Layer())
 {
     int idx = 0;
-    // Root layer
-    {
-        PDU::PDUByteArray layer;
-        idx += layer.append(message.data().mid(idx, rootLayer->toPDUByteArray().size())).size();
-        rootLayer->fromPDUByteArray(layer);
-        if (!rootLayer->isValid()) return;
-    }
 
     // OTP Layer
     {
@@ -91,9 +80,20 @@ Message::Message(
 
 bool Message::isValid()
 {
-    if (!rootLayer->isValid()) return false;
+    auto lengthCheck = toByteArray().length();
+    if (lengthCheck != otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET)
+        return false;
     if (!otpLayer->isValid()) return false;
+
+    lengthCheck -= otpLayer->toPDUByteArray().length();
+    if (lengthCheck != advertisementLayer->getPDULength() + OTPAdvertisementLayer::LENGTHOFFSET)
+        return false;
+    if (advertisementLayer->getVector() != PDU::VECTOR_OTP_ADVERTISEMENT_MODULE) return false;
     if (!advertisementLayer->isValid()) return false;
+
+    lengthCheck -= advertisementLayer->toPDUByteArray().length();
+    if (lengthCheck != moduleAdvertisementLayer->getPDULength() + OTPModuleAdvertisementLayer::LENGTHOFFSET)
+        return false;
     if (!moduleAdvertisementLayer->isValid()) return false;
     if (!RANGES::MESSAGE_SIZE.isValid(toByteArray().size())) return false;
     return true;
@@ -117,7 +117,6 @@ QNetworkDatagram Message::toQNetworkDatagram(
 QByteArray Message::toByteArray()
 {   
     QByteArray ba;
-    ba.append(rootLayer->toPDUByteArray());
     ba.append(otpLayer->toPDUByteArray());
     ba.append(advertisementLayer->toPDUByteArray());
     ba.append(moduleAdvertisementLayer->toPDUByteArray());
@@ -127,15 +126,15 @@ QByteArray Message::toByteArray()
 
 void Message::updatePduLength()
 {
-    OTP::PDU::flags_length_t::pduLength_t length = moduleAdvertisementLayer->toPDUByteArray().size();
-    moduleAdvertisementLayer->setPDULength(length);
+    /* 14.2 Length */
+    pduLength_t length = moduleAdvertisementLayer->toPDUByteArray().size();
+    moduleAdvertisementLayer->setPDULength(length - OTPModuleLayer::LENGTHOFFSET);
 
+    /* 11.2 Length */
     length += advertisementLayer->toPDUByteArray().size();
-    advertisementLayer->setPDULength(length);
+    advertisementLayer->setPDULength(length - OTPAdvertisementLayer::LENGTHOFFSET);
 
+    /* 6.3 Length */
     length += otpLayer->toPDUByteArray().size();
-    otpLayer->setPDULength(length);
-
-    length += rootLayer->toPDUByteArray().size();
-    rootLayer->setPDULength(length - OTP::PDU::OTPRootLayer::PREAMBLE_SIZE);
+    otpLayer->setPDULength(length - OTPLayer::LENGTHOFFSET);
 }
