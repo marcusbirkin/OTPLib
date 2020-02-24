@@ -18,15 +18,17 @@
 */
 #include "otp_name_advertisement_layer.hpp"
 
+using namespace OTP::PDU;
 using namespace OTP::PDU::OTPNameAdvertisementLayer;
 
-Layer::Layer(OTP::PDU::flags_length_t::pduLength_t PDULength,
+Layer::Layer(
+        pduLength_t PDULength,
         options_t Options,
         list_t List,
         QObject *parent) :
     QObject(parent),
-    FlagsLength({FLAGS, PDULength}),
     Vector(VECTOR),
+    PDULength(PDULength),
     Options(Options),
     Reserved(RESERVED),
     List(List)
@@ -36,8 +38,8 @@ Layer::Layer(
         OTP::PDU::PDUByteArray layer,
         QObject *parent) :
     QObject(parent),
-    FlagsLength({0, 0}),
     Vector(0),
+    PDULength(0),
     Options(options_t()),
     Reserved(0),
     List(list_t())
@@ -47,9 +49,8 @@ Layer::Layer(
 
 bool Layer::isValid()
 {
-    if (FlagsLength.Flags != FLAGS) return false;
-    if (FlagsLength.PDULength == 0) return false;
     if (Vector != VECTOR) return false;
+    if (PDULength != toPDUByteArray().size() - LENGTHOFFSET) return false;
     if (Options.isResponse())
     {
         if (!RANGES::ListSize.isValid(List.size() * item_t().getSize())) return false;
@@ -60,8 +61,8 @@ bool Layer::isValid()
 OTP::PDU::PDUByteArray Layer::toPDUByteArray()
 {
     PDUByteArray ret;
-    ret << FlagsLength
-        << Vector
+    ret << Vector
+        << PDULength
         << Options
         << Reserved;
     if (Options.isResponse()) ret << List;
@@ -71,8 +72,8 @@ OTP::PDU::PDUByteArray Layer::toPDUByteArray()
 
 void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
 {
-    FlagsLength = {0,0};
     Vector = 0;
+    PDULength = 0;
     Options = options_t();
     Reserved = 0;
     List.clear();
@@ -80,8 +81,8 @@ void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
     if (layer.size() < Layer().toPDUByteArray().size())
         return;
 
-    layer >> FlagsLength
-        >> Vector
+    layer >> Vector
+        >> PDULength
         >> Options
         >> Reserved
         >> List;

@@ -327,23 +327,35 @@ namespace OTP::PDU
     namespace OTPNameAdvertisementLayer {
         typedef struct options_s
         {
-            options_s() : options(0) {}
-            bool isRequest() const {return ((options & REQUEST_RESPONSE_MASK) >> REQUEST_RESPONSE_SHIFT) == REQUEST;}
-            void setRequest() {options &= ~REQUEST_RESPONSE_MASK; }
-            bool isResponse() const { return ((options & REQUEST_RESPONSE_MASK) >> REQUEST_RESPONSE_SHIFT) == RESPONSE;}
-            void setResponse() {options |= REQUEST_RESPONSE_MASK; }
-            friend PDUByteArray& operator<<(PDUByteArray &l, const options_s &r) { l << r.options; return l; }
-            friend PDUByteArray& operator>>(PDUByteArray &l, options_s &r) { l >> r.options; return l; }
-            options_s& operator=(const options_s& r) {this->options = r.options; return *this; }
+            options_s() : data(0) {}
+            bool isRequest() const { return data[REQUEST_RESPONSE_BIT] == REQUEST; }
+            void setRequest() { data[REQUEST_RESPONSE_BIT] = REQUEST; }
+            bool isResponse() const { return data[REQUEST_RESPONSE_BIT] == RESPONSE;}
+            void setResponse() { data[REQUEST_RESPONSE_BIT] = RESPONSE; }
+            friend PDUByteArray& operator<<(PDUByteArray &l, const options_s &r) {
+                l << type(r.data.to_ulong());
+                return l;
+            }
+            friend PDUByteArray& operator>>(PDUByteArray &l, options_s &r) {
+                type temp;
+                l >> temp;
+                r.data = std::bitset<bitWidth>(temp);
+                return l;
+            }
+            options_s& operator=(const options_s& r) {this->data = r.data; return *this; }
+            options_s& operator=(const unsigned int& r) {this->data = static_cast<type>(r); return *this; }
         private:
-            const quint8 REQUEST_RESPONSE_SHIFT = 7;
-            const quint8 REQUEST_RESPONSE_MASK = 1 << REQUEST_RESPONSE_SHIFT;
-            enum : quint8
+            typedef quint8 type;
+            static const quint8 bitWidth = sizeof(type) * 8;
+            enum {
+                REQUEST_RESPONSE_BIT = 7
+            };
+            enum
             {
                 REQUEST = 0,
                 RESPONSE = 1
             };
-            quint8 options;
+            std::bitset<bitWidth> data;
         } options_t;
 
         typedef quint32 reserved_t;

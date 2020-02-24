@@ -89,7 +89,7 @@ namespace OTP::PDU {
         const vector_t VECTOR = VECTOR_OTP_ADVERTISEMENT_NAME_LIST;
         const reserved_t RESERVED = 0x0;
         namespace RANGES {
-            const range_t ListSize = {0,1326};
+            const range_t ListSize = {0,1365};
         }
     }
 
