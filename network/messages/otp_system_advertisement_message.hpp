@@ -35,7 +35,7 @@ public:
     explicit Message(
             OTP::mode_e mode,
             cid_t CID,
-            name_t ProducerName,
+            name_t ComponentName,
             list_t SystemList,
             QObject *parent = nullptr);
     explicit Message(
@@ -73,7 +73,11 @@ public:
         return ret;
     }
 
-    bool addItem(item_t value) { return systemAdvertisementLayer->addItem(value); }
+    bool addItem(item_t value) {
+        auto ret = systemAdvertisementLayer->addItem(value);
+        updatePduLength();
+        return ret;
+    }
 
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> getOTPLayer() { return otpLayer;}
     std::shared_ptr<OTP::PDU::OTPAdvertisementLayer::Layer> getAdvertisementLayer() { return advertisementLayer; }
