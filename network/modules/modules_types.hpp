@@ -34,9 +34,9 @@ namespace OTP::MODULES {
             QString Name;
         } moduleDescription_t;
         moduleDescription_t description;
-        PDU::OTPModuleLayer::vector_t vector;
+        PDU::OTPModuleLayer::ident_t ident;
     } module_t;
-    typedef PDU::OTPModuleLayer::vector_t::moduleNumber_t moduleNumber_t;
+    typedef PDU::OTPModuleLayer::ident_t::moduleNumber_t moduleNumber_t;
 
     /* Section 16 Standard Modules */
     namespace STANDARD {

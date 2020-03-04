@@ -84,7 +84,7 @@ public:
     typedef struct {
         OTP::address_t address;
         OTP::timestamp_t sampleTime;
-        OTP::PDU::OTPModuleLayer::vector_t vector;
+        OTP::PDU::OTPModuleLayer::ident_t ident;
         OTP::PDU::OTPModuleLayer::additional_t additional;
     } addModule_t;
     addModule_ret addModule(addModule_t &moduleData);

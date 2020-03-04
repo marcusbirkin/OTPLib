@@ -254,29 +254,29 @@ namespace OTP::PDU
     }
 
     namespace OTPModuleLayer {
-        typedef struct vector_s
+        typedef struct ident_s
         {
             typedef quint16 manufacturerID_t;
             typedef quint16 moduleNumber_t;
-            vector_s() :
+            ident_s() :
                 ManufacturerID(0),
                 ModuleNumber(0) {}
-            vector_s(manufacturerID_t ManufacturerID, moduleNumber_t ModuleNumber) :
+            ident_s(manufacturerID_t ManufacturerID, moduleNumber_t ModuleNumber) :
                 ManufacturerID(ManufacturerID),
                 ModuleNumber(ModuleNumber) {}
             size_t getSize();
             manufacturerID_t ManufacturerID;
             moduleNumber_t ModuleNumber;
-        } vector_t;
-        PDUByteArray& operator<<(PDUByteArray &l, const vector_t &r);
-        PDUByteArray& operator>>(PDUByteArray &l, vector_t &r);
-        inline bool operator==(const vector_t &l, const vector_t &r) {
+        } ident_t;
+        PDUByteArray& operator<<(PDUByteArray &l, const ident_t &r);
+        PDUByteArray& operator>>(PDUByteArray &l, ident_t &r);
+        inline bool operator==(const ident_t &l, const ident_t &r) {
             return (
                 (l.ModuleNumber == r.ModuleNumber) &&
                 (l.ManufacturerID == r.ManufacturerID));
         }
-        inline bool operator!=(const vector_t &l, const vector_t &r) { return !(l == r); };
-        inline bool operator< (const vector_t& l, const vector_t& r){
+        inline bool operator!=(const ident_t &l, const ident_t &r) { return !(l == r); };
+        inline bool operator< (const ident_t& l, const ident_t& r){
             return ((l.ManufacturerID < r.ManufacturerID) || (l.ModuleNumber < r.ModuleNumber));
         }
 
@@ -312,7 +312,7 @@ namespace OTP::PDU
 
     namespace OTPModuleAdvertisementLayer {
         typedef quint32 reserved_t;
-        typedef OTPModuleLayer::vector_t item_t;
+        typedef OTPModuleLayer::ident_t item_t;
         typedef QList<item_t> list_t;
         PDUByteArray& operator<<(PDUByteArray &l, const list_t &r);
         PDUByteArray& operator>>(PDUByteArray &l, list_t &r);

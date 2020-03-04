@@ -30,10 +30,11 @@ class Layer : public QObject
 {
     Q_OBJECT
 public:
+    explicit Layer(QObject *parent = nullptr);
     explicit Layer(
-            flags_length_t::pduLength_t PDULength = 0,
-            vector_t::manufacturerID_t ManufacturerID = 0,
-            vector_t::moduleNumber_t ModuleNumber = 0,
+            ident_t::manufacturerID_t ManufacturerID,
+            pduLength_t PDULength,
+            ident_t::moduleNumber_t ModuleNumber,
             QObject *parent = nullptr);
     explicit Layer(
             PDUByteArray layer,
@@ -42,27 +43,26 @@ public:
     PDUByteArray toPDUByteArray();
     void fromPDUByteArray(PDUByteArray layer);
 
-    const flags_length_t::flags_t &getFlags() { return FlagsLength.Flags; }
-    static flags_length_t::pduLength_t getPDULength(PDUByteArray layer)
+    const ident_t::manufacturerID_t &getManufacturerID() { return ModuleIdent.ManufacturerID; }
+    void setManufacturerID(ident_t::manufacturerID_t value) { ModuleIdent.ManufacturerID = value; }
+    static pduLength_t getPDULength(PDUByteArray layer)
     {
-        flags_length_t flagLength;
-        layer >> flagLength;
-        return flagLength.PDULength;
+        ident_t ModuleIdent;
+        pduLength_t PDULength;
+        layer >> ModuleIdent.ManufacturerID >> PDULength;
+        return PDULength;
     }
-    const flags_length_t::pduLength_t &getPDULength() { return FlagsLength.PDULength; }
-    void setPDULength(flags_length_t::pduLength_t value) { FlagsLength.PDULength = value; }
-    vector_t getVector() { return Vector; }
-    void setVector(vector_t vector) { Vector = vector; }
-    const vector_t::manufacturerID_t &getManufacturerID() { return Vector.ManufacturerID; }
-    void setManufacturerID(vector_t::manufacturerID_t value) { Vector.ManufacturerID = value; }
-    const vector_t::moduleNumber_t &getModuleNumber() { return Vector.ModuleNumber; }
-    void setModuleNumber(vector_t::moduleNumber_t value) { Vector.ModuleNumber = value; }
+    const pduLength_t &getPDULength() { return PDULength; }
+    void setPDULength(pduLength_t value) { PDULength = value; }
+
+    const ident_t::moduleNumber_t &getModuleNumber() { return ModuleIdent.ModuleNumber; }
+    void setModuleNumber(ident_t::moduleNumber_t value) { ModuleIdent.ModuleNumber = value; }
     const additional_t &getAdditional() { return Additional; }
     void setAdditional(QByteArray value) { Additional = value; }
 
 private:
-    flags_length_t FlagsLength;
-    vector_t Vector;
+    ident_t ModuleIdent;
+    pduLength_t PDULength;
     additional_t Additional;
 
 };

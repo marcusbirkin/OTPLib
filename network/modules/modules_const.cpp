@@ -61,10 +61,10 @@ namespace OTP::MODULES {
     MESSAGES::OTPModuleAdvertisementMessage::list_t const getSupportedModules()
     {
         MESSAGES::OTPModuleAdvertisementMessage::list_t ret;
-        ret.append(STANDARD::modules.value(STANDARD::POSITION).vector);
-        ret.append(STANDARD::modules.value(STANDARD::POSITION_VELOCITY_ACCELERATION).vector);
-        ret.append(STANDARD::modules.value(STANDARD::ROTATION).vector);
-        ret.append(STANDARD::modules.value(STANDARD::ROTATION_VELOCITY_ACCELERATION).vector);
+        ret.append(STANDARD::modules.value(STANDARD::POSITION).ident);
+        ret.append(STANDARD::modules.value(STANDARD::POSITION_VELOCITY_ACCELERATION).ident);
+        ret.append(STANDARD::modules.value(STANDARD::ROTATION).ident);
+        ret.append(STANDARD::modules.value(STANDARD::ROTATION_VELOCITY_ACCELERATION).ident);
         /* Not documented in draft *
         ret.append(STANDARD::modules.value(STANDARD::ORIENTATION).vector);
         ret.append(STANDARD::modules.value(STANDARD::ORIENTATION_VELOCITY_ACCELERATION).vector);
@@ -72,20 +72,20 @@ namespace OTP::MODULES {
         return ret;
     }
 
-    module_t::moduleDescription_t const getModuleDescription(PDU::OTPModuleLayer::vector_t vector)
+    module_t::moduleDescription_t const getModuleDescription(PDU::OTPModuleLayer::ident_t ident)
     {
         module_t::moduleDescription_t ret;
         ret.Name = QObject::tr("Unknown");
         ret.Manufactuer = QObject::tr("Unknown");
 
-        switch (vector.ManufacturerID)
+        switch (ident.ManufacturerID)
         {
             case ESTA_MANUFACTURER_ID:
             {
-                if (STANDARD::modules.contains(vector.ModuleNumber))
+                if (STANDARD::modules.contains(ident.ModuleNumber))
                 {
-                    ret.Manufactuer = STANDARD::modules.value(vector.ModuleNumber).description.Manufactuer;
-                    ret.Name = STANDARD::modules.value(vector.ModuleNumber).description.Name;
+                    ret.Manufactuer = STANDARD::modules.value(ident.ModuleNumber).description.Manufactuer;
+                    ret.Name = STANDARD::modules.value(ident.ModuleNumber).description.Name;
                 }
             } break;
 

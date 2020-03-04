@@ -134,7 +134,7 @@ namespace OTP::MODULES {
     }
 
     MESSAGES::OTPModuleAdvertisementMessage::list_t const getSupportedModules();
-    module_t::moduleDescription_t const getModuleDescription(PDU::OTPModuleLayer::vector_t vector);
+    module_t::moduleDescription_t const getModuleDescription(PDU::OTPModuleLayer::ident_t ident);
 }
 
 #endif // MODULES_CONST_HPP

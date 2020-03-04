@@ -365,16 +365,16 @@ namespace OTP::PDU {
     }
 
     namespace OTPModuleLayer {
-        size_t vector_t::getSize() {
+        size_t ident_t::getSize() {
             PDUByteArray temp;
             temp << *this;
             return temp.size();
         }
-        PDUByteArray& operator<<(PDUByteArray &l, const vector_t &r)
+        PDUByteArray& operator<<(PDUByteArray &l, const ident_t &r)
         {
             return l << r.ManufacturerID << r.ModuleNumber;
         }
-        PDUByteArray& operator>>(PDUByteArray &l, vector_t &r)
+        PDUByteArray& operator>>(PDUByteArray &l, ident_t &r)
         {
             l >> r.ManufacturerID >> r.ModuleNumber;
             return l;

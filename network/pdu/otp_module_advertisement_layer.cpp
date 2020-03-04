@@ -47,6 +47,12 @@ bool Layer::isValid()
     if (FlagsLength.Flags != FLAGS) return false;
     if (FlagsLength.PDULength == 0) return false;
     if (Vector != VECTOR) return false;
+    if (PDULength !=
+            toPDUByteArray().size()
+            - sizeof(Vector)
+            - sizeof(PDULength)
+            )
+        return false;
     if (!RANGES::ListSize.isValid(List.size() * item_t().getSize())) return false;
     return true;
 }

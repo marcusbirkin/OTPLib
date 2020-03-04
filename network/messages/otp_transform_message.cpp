@@ -159,7 +159,7 @@ Message::addModule_ret Message::addModule(addModule_t &moduleData)
             pointLayers.value(moduleData.address)->setTimestamp(moduleData.sampleTime);
     }
 
-    auto moduleLayer = std::make_shared<OTP::PDU::OTPModuleLayer::Layer>(0, moduleData.vector.ManufacturerID, moduleData.vector.ModuleNumber);
+    auto moduleLayer = std::make_shared<OTP::PDU::OTPModuleLayer::Layer>(0, moduleData.ident.ManufacturerID, moduleData.ident.ModuleNumber);
     moduleLayer->setAdditional(moduleData.additional);
 
     if ((moduleLayer->toPDUByteArray().size() + this->toByteArray().size()) > RANGES::MESSAGE_SIZE.getMax())
@@ -198,7 +198,11 @@ void Message::updatePduLength()
 
     for (auto moduleLayer : moduleLayers)
     {
-        moduleLayer->setPDULength(moduleLayer->toPDUByteArray().size());
+        /* 10.2 Length */
+        moduleLayer->setPDULength(
+                    moduleLayer->toPDUByteArray().size()
+                    - sizeof(moduleLayer->getManufacturerID())
+                    - sizeof(moduleLayer->getPDULength()));
     }
 
     for (auto pointLayer : pointLayers)
@@ -212,14 +216,24 @@ void Message::updatePduLength()
             ++iterator;
         }
 
-        pointLayer->setPDULength(pointLayer->toPDUByteArray().size() + pointPDULength);
+        /* 9.2 Length */
+        pointLayer->setPDULength(
+                    pointLayer->toPDUByteArray().size()
+                    - sizeof(pointLayer->getVector())
+                    - sizeof(pointLayer->getPDULength())
+                    + pointPDULength);
         length += pointLayer->getPDULength();
     }
 
-    length += transformLayer->toPDUByteArray().size();
+    /* 8.2 Length */
+    length +=
+            transformLayer->toPDUByteArray().size()
+            - sizeof(transformLayer->getVector())
+            - sizeof(transformLayer->getPDULength());
     transformLayer->setPDULength(length);
 
-    length += otpLayer->toPDUByteArray().size();
+    /* 6.3 Length */
+    length += otpLayer->toPDUByteArray().size() - 16;
     otpLayer->setPDULength(length);
 
     length += rootLayer->toPDUByteArray().size();

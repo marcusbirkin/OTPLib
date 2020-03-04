@@ -25,12 +25,11 @@
 
 namespace OTP::MODULES {
     namespace STANDARD {
-        additional_t getAdditional(
-                PDU::OTPModuleLayer::vector_t standardModule,
+        additional_t getAdditional(PDU::OTPModuleLayer::ident_t standardModule,
                 pointDetails_t pointDetails);
 
         timestamp_t getTimestamp(
-                PDU::OTPModuleLayer::vector_t standardModule,
+                PDU::OTPModuleLayer::ident_t standardModule,
                 pointDetails_t pointDetails);
     }
 }
