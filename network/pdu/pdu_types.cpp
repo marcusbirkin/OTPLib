@@ -249,6 +249,44 @@ namespace OTP::PDU {
     }
 
     namespace OTPPointLayer {
+        priority_t::priority_t() : priority_t(getMin() - 1) {}
+        bool priority_t::isValid() { return RANGES::Group.isValid(data); }
+        priority_t priority_t::getMin() { return static_cast<priority_t>(RANGES::Priority.getMin()); }
+        priority_t priority_t::getMax() { return static_cast<priority_t>(RANGES::Priority.getMax()); }
+        PDUByteArray& operator>>(PDUByteArray &l, priority_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
+        priority_t& priority_t::operator++()
+        {
+            if (data >= getMax())
+                data = getMin();
+            else
+                data++;
+            return *this;
+        }
+        priority_t priority_t::operator++(int)
+        {
+            priority_t tmp(*this);
+            operator++();
+            return tmp;
+        }
+        priority_t& priority_t::operator--()
+        {
+            if (data <= getMin())
+                data = getMax();
+            else
+                data--;
+            return *this;
+        }
+        priority_t priority_t::operator--(int)
+        {
+            priority_t tmp(*this);
+            operator--();
+            return tmp;
+        }
+
         group_t::group_t() : group_t(getMin() - 1) {}
         bool group_t::isValid() { return RANGES::Group.isValid(data); }
         group_t group_t::getMin() { return static_cast<group_t>(RANGES::Group.getMin()); }

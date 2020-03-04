@@ -177,6 +177,30 @@ namespace OTP::PDU
 
 
     namespace OTPPointLayer {
+        class priority_t
+        {
+            typedef quint8 type;
+        public:
+            priority_t();
+            priority_t(type value) : data(value) {}
+            explicit priority_t(quint64 value) : data(static_cast<type>(value)) {}
+            explicit priority_t(quint32 value) : data(static_cast<type>(value)) {}
+            explicit priority_t(qint64 value) : data(static_cast<type>(value)) {}
+            explicit priority_t(qint32 value) : data(static_cast<type>(value)) {}
+            explicit priority_t(qint16 value) : data(static_cast<type>(value)) {}
+            bool isValid();
+            static priority_t getMin();
+            static priority_t getMax();
+            operator type() const { return data; }
+            friend PDUByteArray& operator>>(PDUByteArray &l, priority_t &r);
+            priority_t& operator++();
+            priority_t operator++(int);
+            priority_t& operator--();
+            priority_t operator--(int);
+        private:
+            type data;
+        };
+
         class group_t
         {
             typedef quint16 type;
