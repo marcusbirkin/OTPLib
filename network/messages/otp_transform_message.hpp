@@ -34,7 +34,7 @@ class Message : public QObject
 public:
     explicit Message(
             cid_t CID,
-            name_t ProducerName,
+            name_t ComponentName,
             system_t System,
             QObject *parent = nullptr);
     explicit Message(
@@ -82,6 +82,7 @@ public:
         MessageToBig
     } addModule_ret;
     typedef struct {
+        OTP::priority_t priority;
         OTP::address_t address;
         OTP::timestamp_t sampleTime;
         OTP::PDU::OTPModuleLayer::ident_t ident;

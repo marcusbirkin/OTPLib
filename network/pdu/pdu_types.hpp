@@ -181,7 +181,7 @@ namespace OTP::PDU
         {
             typedef quint8 type;
         public:
-            priority_t();
+            priority_t() : data(defaultValue) {}
             priority_t(type value) : data(value) {}
             explicit priority_t(quint64 value) : data(static_cast<type>(value)) {}
             explicit priority_t(quint32 value) : data(static_cast<type>(value)) {}
@@ -198,6 +198,7 @@ namespace OTP::PDU
             priority_t& operator--();
             priority_t operator--(int);
         private:
+            static const type defaultValue = 100;
             type data;
         };
 
