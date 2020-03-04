@@ -31,13 +31,15 @@ class Layer : public QObject
 {
     Q_OBJECT
 public:
-    explicit Layer(flags_length_t::pduLength_t PDULength = 0,
+    explicit Layer(
             vector_t Vector = 0,
+            pduLength_t PDULength = 0,
+            cid_t CID = cid_t::createUuid(),
             sequence_t Sequence = 0,
             folio_t Folio = 0,
             page_t Page = 0,
             page_t LastPage = 0,
-            name_t ProducerName = QApplication::applicationName().toUtf8(),
+            name_t ComponentName = QApplication::applicationName().toUtf8(),
             QObject *parent = nullptr);
     explicit Layer(
             PDUByteArray layer,
@@ -46,12 +48,13 @@ public:
     PDUByteArray toPDUByteArray();
     void fromPDUByteArray(PDUByteArray layer);
 
-    const flags_length_t::flags_t &getFlags() { return FlagsLength.Flags; }
-    const flags_length_t::pduLength_t &getPDULength() { return FlagsLength.PDULength; }
-    void setPDULength(flags_length_t::pduLength_t value) { FlagsLength.PDULength = value; }
+    otpIdent_t getPacketIdent() const { return PacketIdent; }
     const vector_t &getVector() { return Vector; }
     void setVector(vector_t value) { Vector = value; }
-    const protocol_t &getProtocolVer() { return ProtocolVer; }
+    const pduLength_t &getPDULength() { return PDULength; }
+    void setPDULength(pduLength_t value) { PDULength = value; }
+    cid_t getCID() const { return CID; }
+    void setCID(cid_t value) { CID = value; }
     const sequence_t &getSequence() { return Sequence; }
     void setSequence(sequence_t value) { Sequence = value; }
     const folio_t &getFolio() { return Folio; }
@@ -62,20 +65,21 @@ public:
     void setLastPage(page_t value) { LastPage = value; }
     const options_t &getOptions() { return Options; }
     const reserved_t &getReserved() { return Reserved; }
-    const name_t &getProducerName() { return ProducerName; }
-    void setProducerName(name_t value) { ProducerName = value; }
+    const name_t &getComponentName() { return ComponentName; }
+    void setComponentName(name_t value) { ComponentName = value; }
 
 private:
-    flags_length_t FlagsLength;
+    otpIdent_t PacketIdent;
     vector_t Vector;
-    protocol_t ProtocolVer;
+    pduLength_t PDULength;
+    cid_t CID;
     sequence_t Sequence;
     folio_t Folio;
     page_t Page;
     page_t LastPage;
     options_t Options;
     reserved_t Reserved;
-    name_t ProducerName;
+    name_t ComponentName;
 };
 
 } // namespace

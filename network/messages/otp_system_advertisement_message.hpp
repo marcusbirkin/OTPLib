@@ -75,7 +75,6 @@ public:
 
     bool addItem(item_t value) { return systemAdvertisementLayer->addItem(value); }
 
-    std::shared_ptr<OTP::PDU::OTPRootLayer::Layer> getRootLayer() { return rootLayer; }
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> getOTPLayer() { return otpLayer;}
     std::shared_ptr<OTP::PDU::OTPAdvertisementLayer::Layer> getAdvertisementLayer() { return advertisementLayer; }
     std::shared_ptr<OTP::PDU::OTPSystemAdvertisementLayer::Layer> getSystemAdvertisementLayer() {return systemAdvertisementLayer; }
@@ -84,7 +83,6 @@ private:
     void updatePduLength();
     QByteArray toByteArray();
 
-    std::shared_ptr<OTP::PDU::OTPRootLayer::Layer> rootLayer;
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> otpLayer;
     std::shared_ptr<OTP::PDU::OTPAdvertisementLayer::Layer> advertisementLayer;
     std::shared_ptr<OTP::PDU::OTPSystemAdvertisementLayer::Layer> systemAdvertisementLayer;

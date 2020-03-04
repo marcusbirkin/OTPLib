@@ -20,7 +20,6 @@
 #define PDU_TYPES_HPP
 
 #include <QByteArray>
-#include <QDataStream>
 #include <QUuid>
 #include <QtEndian>
 #include <QHostAddress>
@@ -29,15 +28,8 @@ namespace OTP::PDU
 {
     class PDUByteArray;
 
-    typedef struct {
-        typedef quint8 flags_t;
-        typedef quint32 pduLength_t;
-        flags_t Flags;
-        pduLength_t PDULength;
-    } flags_length_t;
-    PDUByteArray& operator<<(PDUByteArray &l, const flags_length_t &r);
-    PDUByteArray& operator>>(PDUByteArray &l, flags_length_t &r);
-    typedef quint32 vector_t;
+    typedef quint16 pduLength_t;
+    typedef quint16 vector_t;
 
     class name_t : public QByteArray
     {
@@ -62,8 +54,8 @@ namespace OTP::PDU
     {
     public:
         PDUByteArray() : QByteArray() {}
-        inline flags_length_t::pduLength_t size() const {
-            return static_cast<flags_length_t::pduLength_t>(QByteArray::size());
+        inline pduLength_t size() const {
+            return static_cast<pduLength_t>(QByteArray::size());
         }
     };
     PDUByteArray& operator<<(PDUByteArray &l, const quint8 &r);
@@ -83,16 +75,15 @@ namespace OTP::PDU
     PDUByteArray& operator>>(PDUByteArray &l, qint32 &r);
     PDUByteArray& operator>>(PDUByteArray &l, qint64 &r);
 
-    namespace OTPRootLayer {
-        typedef quint16 ambleSize_t;
-        class acnIdent_t : public QByteArray
+    namespace OTPLayer {
+        class otpIdent_t : public QByteArray
         {
         public:
-            acnIdent_t() : QByteArray() {}
-            acnIdent_t(const QByteArray &ba) : QByteArray(ba) {}
+            otpIdent_t() : QByteArray() {}
+            otpIdent_t(const QByteArray &ba) : QByteArray(ba) {}
         };
-        PDUByteArray& operator<<(PDUByteArray &l, const acnIdent_t &r);
-        PDUByteArray& operator>>(PDUByteArray &l, acnIdent_t &r);
+        PDUByteArray& operator<<(PDUByteArray &l, const otpIdent_t &r);
+        PDUByteArray& operator>>(PDUByteArray &l, otpIdent_t &r);
         class cid_t : public QUuid
         {
         public:
@@ -101,13 +92,9 @@ namespace OTP::PDU
         };
         PDUByteArray& operator<<(PDUByteArray &l, const cid_t &r);
         PDUByteArray& operator>>(PDUByteArray &l, cid_t &r);
-    }
-
-    namespace OTPLayer {
-        typedef quint16 protocol_t;
 
         class sequence_t {
-            typedef quint16 type;
+            typedef quint32 type;
         public:
             sequence_t() : data(0) {}
             sequence_t(type value) : data(value) {}
@@ -120,7 +107,7 @@ namespace OTP::PDU
             type data;
         };
         typedef quint16 folio_t;
-        typedef quint8 page_t;
+        typedef quint16 page_t;
         typedef quint8 options_t;
         typedef quint32 reserved_t;
     }

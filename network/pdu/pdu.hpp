@@ -19,7 +19,6 @@
 #ifndef PDU_HPP
 #define PDU_HPP
 
-#include "otp_root_layer.hpp"
 #include "otp_layer.hpp"
 #include "otp_transform_layer.hpp"
 #include "otp_point_layer.hpp"

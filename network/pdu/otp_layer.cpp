@@ -18,56 +18,59 @@
 */
 #include "otp_layer.hpp"
 
+using namespace OTP::PDU;
 using namespace OTP::PDU::OTPLayer;
 
-Layer::Layer(
-        OTP::PDU::flags_length_t::pduLength_t PDULength,
-        OTP::PDU::vector_t Vector,
+Layer::Layer(vector_t Vector,
+        pduLength_t PDULength,
+        cid_t CID,
         sequence_t Sequence,
         folio_t Folio,
         page_t Page,
         page_t LastPage,
-        OTP::PDU::name_t ProducerName,
+        name_t ComponentName,
         QObject *parent) :
     QObject(parent),
-    FlagsLength({FLAGS, PDULength}),
+    PacketIdent(OTP_PACKET_IDENT),
     Vector(Vector),
-    ProtocolVer(PROTOCOL_VERSION),
+    PDULength(PDULength),
+    CID(CID),
     Sequence(Sequence),
     Folio(Folio),
     Page(Page),
     LastPage(LastPage),
     Options(OPTIONS),
     Reserved(RESERVED),
-    ProducerName(ProducerName)
+    ComponentName(ComponentName)
 {}
 
 Layer::Layer(
         OTP::PDU::PDUByteArray layer,
         QObject *parent) :
     QObject(parent),
-    FlagsLength({0, 0}),
+    PacketIdent(QByteArray()),
     Vector(0),
-    ProtocolVer(0),
+    PDULength(0),
+    CID(cid_t()),
     Sequence(0),
     Folio(0),
     Page(0),
     LastPage(0),
     Options(0),
     Reserved(0),
-    ProducerName(name_t())
+    ComponentName(name_t())
 {
     fromPDUByteArray(layer);
 }
 
 bool Layer::isValid()
 {
-    if (FlagsLength.Flags != FLAGS) return false;
-    if (FlagsLength.PDULength == 0) return false;
+    if (PacketIdent != OTP_PACKET_IDENT) return false;
     if (!VECTOR.contains(Vector)) return false;
-    if (ProtocolVer != PROTOCOL_VERSION) return false;
+    if (PDULength <= toPDUByteArray().size() - LENGTHOFFSET) return false;
+    if (CID.isNull()) return false;
     if (Page > LastPage) return false;
-    if (ProducerName.length() != NAME_LENGTH) return false;
+    if (ComponentName.length() != NAME_LENGTH) return false;
     return true;
 }
 
@@ -75,43 +78,46 @@ OTP::PDU::PDUByteArray Layer::toPDUByteArray()
 {
     PDUByteArray ret;
     return ret
-        << FlagsLength
+        << PacketIdent
         << Vector
-        << ProtocolVer
+        << PDULength
+        << CID
         << Sequence
         << Folio
         << Page
         << LastPage
         << Options
         << Reserved
-        << ProducerName;
+        << ComponentName;
 }
 
 
 void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
 {
-    FlagsLength = {0,0};
+    PacketIdent = QByteArray();
     Vector = 0;
-    ProtocolVer = 0;
+    PDULength = 0;
+    CID = cid_t();
     Sequence = 0;
     Folio = 0;
     Page = 0;
     LastPage = 0;
     Options = 0;
     Reserved = 0;
-    ProducerName = name_t();
+    ComponentName = name_t();
 
     if (layer.size() != Layer().toPDUByteArray().size())
         return;
 
-    layer >> FlagsLength
+    layer >> PacketIdent
         >> Vector
-        >> ProtocolVer
+        >> PDULength
+        >> CID
         >> Sequence
         >> Folio
         >> Page
         >> LastPage
         >> Options
         >> Reserved
-        >> ProducerName;
+        >> ComponentName;
 }

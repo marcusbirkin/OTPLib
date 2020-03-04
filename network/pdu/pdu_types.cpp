@@ -155,18 +155,18 @@ namespace OTP::PDU {
         return l;
     }
 
-    namespace OTPRootLayer {
-        PDUByteArray& operator<<(PDUByteArray &l, const acnIdent_t &r)
+    namespace OTPLayer {
+        PDUByteArray& operator<<(PDUByteArray &l, const otpIdent_t &r)
         {
             auto r_copy = r;
-            r_copy.resize(ACN_PACKET_IDENT_LENGTH);
+            r_copy.resize(OTP_PACKET_IDENT.size());
             l.append(r_copy);
             return l;
         }
-        PDUByteArray& operator>>(PDUByteArray &l, acnIdent_t &r)
+        PDUByteArray& operator>>(PDUByteArray &l, otpIdent_t &r)
         {
-            r = l.left(ACN_PACKET_IDENT_LENGTH);
-            l.remove(0, ACN_PACKET_IDENT_LENGTH);
+            r = l.left(OTP_PACKET_IDENT.size());
+            l.remove(0, OTP_PACKET_IDENT.size());
             return l;
         }
 
@@ -177,13 +177,11 @@ namespace OTP::PDU {
         }
         PDUByteArray& operator>>(PDUByteArray &l, cid_t &r)
         {
-            r = QUuid::fromRfc4122(l);
+            r = QUuid::fromRfc4122(l.left(r.toRfc4122().length()));
             l.remove(0, r.toRfc4122().length());
             return l;
         }
-    }
 
-    namespace OTPLayer {
         bool sequence_t::checkSequence(sequence_t value)
         {
             /* 7.4 Sequence Number

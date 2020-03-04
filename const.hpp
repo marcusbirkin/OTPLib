@@ -24,17 +24,6 @@
 #include "types.hpp"
 #include "network/pdu/pdu_types.hpp"
 
-namespace ACN {
-    namespace PDU {
-        /* E1.17 CP/2003-1007R4
-         * Section 2.4 */
-        const flags_t FLAGS_LENGTH = 1 << 3;
-        const flags_t FLAGS_VECTOR = 1 << 2;
-        const flags_t FLAGS_HEADER = 1 << 1;
-        const flags_t FLAGS_DATA = 1;
-    }
-}
-
 namespace OTP {
 
     /* Table 6-2: Address Numbering */
@@ -54,8 +43,6 @@ namespace OTP {
 
     namespace PDU {
         /* Table A-1: Vector Defines */
-        // OTP Root
-        const vector_t VECTOR_ROOT_OTP = 0x00000009;
         // OTP
         const vector_t VECTOR_OTP_TRANSFORM_MESSAGE = 0xFF000001;
         const vector_t VECTOR_OTP_ADVERTISEMENT_MESSAGE = 0xFF000002;

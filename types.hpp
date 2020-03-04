@@ -30,14 +30,10 @@
 #include <QTimer>
 #include <QNetworkDatagram>
 
-namespace ACN::PDU {
-    typedef quint8 flags_t;
-}
-
 namespace OTP
 {
     typedef OTP::PDU::name_t name_t;
-    typedef OTP::PDU::OTPRootLayer::cid_t cid_t;
+    typedef OTP::PDU::OTPLayer::cid_t cid_t;
     typedef OTP::PDU::OTPLayer::sequence_t sequence_t;
     typedef OTP::PDU::OTPPointLayer::point_t point_t;
     typedef OTP::PDU::OTPPointLayer::group_t group_t;

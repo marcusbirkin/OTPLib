@@ -89,7 +89,6 @@ public:
     } addModule_t;
     addModule_ret addModule(addModule_t &moduleData);
 
-    std::shared_ptr<OTP::PDU::OTPRootLayer::Layer> getRootLayer() { return rootLayer; }
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> getOTPLayer() { return otpLayer; }
     std::shared_ptr<OTP::PDU::OTPTransformLayer::Layer> getTransformLayer() { return transformLayer; }
     QMap<address_t, std::shared_ptr<OTP::PDU::OTPPointLayer::Layer>> getPointLayers() { return pointLayers; }
@@ -99,7 +98,6 @@ private:
     void updatePduLength();
     QByteArray toByteArray();
 
-    std::shared_ptr<OTP::PDU::OTPRootLayer::Layer> rootLayer;
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> otpLayer;
     std::shared_ptr<OTP::PDU::OTPTransformLayer::Layer> transformLayer;
     QMap<address_t, std::shared_ptr<OTP::PDU::OTPPointLayer::Layer>> pointLayers;

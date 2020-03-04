@@ -9,7 +9,6 @@ SOURCES += \
     $$PWD/socket.cpp \
     $$PWD/network/pdu/pdu.cpp \
     $$PWD/network/pdu/pdu_types.cpp \
-    $$PWD/network/pdu/otp_root_layer.cpp \
     $$PWD/network/pdu/otp_layer.cpp \
     $$PWD/network/pdu/otp_transform_layer.cpp \
     $$PWD/network/pdu/otp_point_layer.cpp \
@@ -35,7 +34,6 @@ HEADERS += \
     $$PWD/network/pdu/pdu.hpp \
     $$PWD/network/pdu/pdu_const.hpp \
     $$PWD/network/pdu/pdu_types.hpp \
-    $$PWD/network/pdu/otp_root_layer.hpp \
     $$PWD/network/pdu/otp_layer.hpp \
     $$PWD/network/pdu/otp_transform_layer.hpp \
     $$PWD/network/pdu/otp_point_layer.hpp \
