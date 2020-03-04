@@ -110,21 +110,6 @@ namespace OTP::PDU {
         return l;
     }
 
-    PDUByteArray& operator<<(PDUByteArray &l, const flags_length_t &r)
-    {
-        quint8 MSB = quint8(r.Flags << 4) | (quint8((r.PDULength & 0xF00) >> 8));
-        quint8 LSB = quint8(r.PDULength & 0x0FF);
-        return l << MSB << LSB;
-    }
-    PDUByteArray& operator>>(PDUByteArray &l, flags_length_t &r)
-    {
-        quint8 MSB, LSB;
-        l >> MSB >> LSB;
-        r.Flags = quint8((MSB & 0xF0) >> 4);
-        r.PDULength = LSB | ((MSB & 0x0F) >> 8);
-        return l;
-    }
-
     int name_t::maxSize() { return NAME_LENGTH; }
 
     name_t& name_t::operator=(const name_t& r)

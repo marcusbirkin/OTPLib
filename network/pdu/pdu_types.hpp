@@ -23,6 +23,7 @@
 #include <QUuid>
 #include <QtEndian>
 #include <QHostAddress>
+#include <bitset>
 
 namespace OTP::PDU
 {
@@ -145,64 +146,32 @@ namespace OTP::PDU
             return l;
         }
 
-        /* TODO Check this value size with ratified standard
-         *
-         * For some unholy reason, a timestamp is 16 bytes aka 128bit
-         * 2_128 = 340,282,366,920,938,463,463,374,607,431,768,211,456uS
-         * Wolfram tells me that ≈ 7.8×10^14 × age of the universe
-         */
-        #ifdef __SIZEOF_INT128__ // GCC and Clang Extension
-            typedef struct timestamp_s
-            {
-                typedef __uint128_t type;
-            public:
-                timestamp_s() : data(0){}
-                timestamp_s(type value) : data(value) {}
-                operator type() const { return data; }
-                operator QString() const { return QString::number(quint64(data)); } // Hacky, but enough
-                friend PDUByteArray& operator<<(PDUByteArray &l, const timestamp_s &r)
-                {
-                    return l << quint64(r >> 64) << quint64(r);
-                }
-                friend PDUByteArray& operator>>(PDUByteArray &l, timestamp_s &r)
-                {
-                    __uint128_t hi = qFromBigEndian<quint64>(l.data()) << (sizeof(quint64) / 2);
-                    l.remove(0, sizeof(quint64));
-                    __uint128_t lo = qFromBigEndian<quint64>(l.data());
-                    l.remove(0, sizeof(quint64));
-                    r = hi | lo;
-                    return l;
-                }
-            private:
-                type data;
-            } timestamp_t;
-        #else
-            typedef struct timestamp_s
-            {
-                typedef quint64 type;
-            public:
-                timestamp_s() : hi(0), lo(0) {}
-                timestamp_s(type value) : hi(0), lo(value) {}
-                timestamp_s(type hi, type lo) : hi(hi), lo(lo) {}
-                operator type() const { return lo; }
-                operator QString() const { return QString::number(lo); } // Hacky, but enough
-                friend PDUByteArray& operator<<(PDUByteArray &l, const timestamp_s &r)
-                {
-                    return l << r.hi << r.lo;
-                }
-                friend PDUByteArray& operator>>(PDUByteArray &l, timestamp_s &r)
-                {
-                    l >> r.hi;
-                    l >> r.lo;
-                    return l;
-                }
-            private:
-                type hi;
-                type lo;
-            } timestamp_t;
-        #endif
-
-        typedef quint8 options_t;
+        typedef quint64 timestamp_t;
+        typedef struct options_s
+        {
+            options_s() : data(0) {}
+            bool isFullPointSet() const { return data[FULL_POINT_SET_BIT]; }
+            void setFullPointSet(bool value) { data[FULL_POINT_SET_BIT] = value; }
+            friend PDUByteArray& operator<<(PDUByteArray &l, const options_s &r) {
+                l << type(r.data.to_ulong());
+                return l;
+            }
+            friend PDUByteArray& operator>>(PDUByteArray &l, options_s &r) {
+                type temp;
+                l >> temp;
+                r.data = std::bitset<bitWidth>(temp);
+                return l;
+            }
+            options_s& operator=(const options_s& r) {this->data = r.data; return *this; }
+            options_s& operator=(const unsigned int& r) {this->data = static_cast<type>(r); return *this; }
+        private:
+            typedef quint8 type;
+            static const quint8 bitWidth = sizeof(type) * 8;
+            enum {
+                FULL_POINT_SET_BIT = 7
+            };
+            std::bitset<bitWidth> data;
+        } options_t;
         typedef quint32 reserved_t;
     }
 

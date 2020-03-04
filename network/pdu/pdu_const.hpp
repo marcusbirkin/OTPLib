@@ -43,7 +43,6 @@ namespace OTP::PDU {
         const size_t LENGTHOFFSET = sizeof(vector_t) + sizeof(pduLength_t);
 
         const vector_t VECTOR = VECTOR_OTP_POINT;
-        const options_t OPTIONS = 0x0;
         const reserved_t RESERVED = 0x0;
     }
 
