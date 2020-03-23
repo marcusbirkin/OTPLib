@@ -181,6 +181,9 @@ QList<point_t> Producer::getProducerPoints(system_t system, group_t group) const
 void Producer::addProducerPoint(address_t address, priority_t priority)
 {
     otpNetwork->addPoint(getProducerCID(), address, priority);
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent.setSystem(address.system, 0);
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent.setGroup(address.group, 0);
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent.setPoint(address.point, 0);
 }
 
 void Producer::removeProducerPoint(address_t address)
@@ -350,7 +353,7 @@ Producer::PositionValue_t Producer::getProducerPosition(address_t address, axis_
     if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getLocation(axis);
+    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getPosition(axis);
     ret.scale = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getScaling();
     ret.unit = getUnitString(ret.scale, VALUES::POSITION);
     ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getTimestamp();
@@ -360,7 +363,7 @@ Producer::PositionValue_t Producer::getProducerPosition(address_t address, axis_
 void Producer::setProducerPosition(address_t address, axis_t axis, PositionValue_t position)
 {
     if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.setLocation(
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.setPosition(
                 axis, position.value, position.timestamp);
     otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.setScaling(
                 position.scale);
@@ -484,6 +487,55 @@ void Producer::setProducerRotationAcceleration(address_t address, axis_t axis, R
                 axis, rotationAccel.value, rotationAccel.timestamp);
 
     emit updatedRotationAcceleration(address, axis);
+}
+
+Producer::Scale_t Producer::getProducerScale(address_t address, axis_t axis) const
+{
+    using namespace MODULES::STANDARD;
+    Producer::Scale_t ret;
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.scale.getScale(axis);
+    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.scale.getTimestamp();
+    return ret;
+}
+
+void Producer::setProducerScale(address_t address, axis_t axis, Scale_t scale)
+{
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.scale.setScale(
+                axis, scale.value, scale.timestamp);
+
+    emit updatedScale(address, axis);
+}
+
+Producer::Parent_t Producer::getProducerParent(address_t address) const
+{
+    using namespace MODULES::STANDARD;
+    Producer::Parent_t ret;
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+        return ret;
+
+    auto module = &otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent;
+    ret.value = {module->getSystem(), module->getGroup(), module->getPoint()};
+    ret.relative = module->isRelative();
+    ret.timestamp = module->getTimestamp();
+    return ret;
+}
+
+void Producer::setProducerParent(address_t address, Parent_t parent)
+{
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+
+    auto module = &otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent;
+    module->setSystem(parent.value.system, parent.timestamp);
+    module->setGroup(parent.value.group, parent.timestamp);
+    module->setPoint(parent.value.point, parent.timestamp);
+    module->setRelative(parent.relative, parent.timestamp);
+
+    emit updatedParent(address);
 }
 
 void Producer::setupListener()

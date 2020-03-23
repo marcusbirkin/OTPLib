@@ -233,6 +233,26 @@ bool Consumer::isGroupExpired(cid_t cid, system_t system, group_t group) const
 }
 
 /* Points */
+bool Consumer::isPointValid(address_t address) const
+{
+    if (!address.isValid())
+        return false;
+    if (!getPoints(address.system, address.group).contains(address.point))
+        return false;
+
+    return true;
+}
+
+bool Consumer::isPointValid(cid_t cid, address_t address) const
+{
+    if (!address.isValid())
+        return false;
+    if (!getPoints(cid, address.system, address.group).contains(address.point))
+        return false;
+
+    return true;
+}
+
 QList<point_t> Consumer::getPoints(system_t system, group_t group) const
 {
     return otpNetwork->getPointList(system, group);
@@ -251,7 +271,7 @@ QString Consumer::getPointName(cid_t cid, address_t address) const
         QDateTime lastSeen;
         for (auto cid : getComponents())
         {
-            if (getPoints(cid, address.system, address.group).contains(address.point))
+            if (isPointValid(cid, address))
             {
                 auto tempSeen = otpNetwork->PointDetails(cid, address)->getLastSeen();
                 if (tempSeen > lastSeen)
@@ -264,7 +284,7 @@ QString Consumer::getPointName(cid_t cid, address_t address) const
         return otpNetwork->PointDetails(newestCid, address)->getName();
     }
 
-    if (!getPoints(cid, address.system, address.group).contains(address.point)) return QString();
+    if (!isPointValid(cid, address)) return QString();
     return otpNetwork->PointDetails(cid, address)->getName();
 }
 
@@ -275,7 +295,7 @@ QDateTime Consumer::getPointLastSeen(cid_t cid, address_t address) const
         QDateTime ret;
         for (auto cid : getComponents())
         {
-            if (getPoints(cid, address.system, address.group).contains(address.point))
+            if (isPointValid(cid, address))
             {
                 auto temp = otpNetwork->PointDetails(cid, address)->getLastSeen();
                 if (temp > ret) ret = temp;
@@ -284,7 +304,7 @@ QDateTime Consumer::getPointLastSeen(cid_t cid, address_t address) const
         return ret;
     }
 
-    if (!getPoints(cid, address.system, address.group).contains(address.point)) return QDateTime();
+    if (!isPointValid(cid, address)) return QDateTime();
     return otpNetwork->PointDetails(cid, address)->getLastSeen();
 }
 
@@ -293,12 +313,12 @@ bool Consumer::isPointExpired(cid_t cid, address_t address) const
     if (cid.isNull())
     {
         for (auto cid : getComponents())
-            if (getPoints(cid, address.system, address.group).contains(address.point))
+            if (isPointValid(cid, address))
                 if (!otpNetwork->PointDetails(cid, address)->isExpired()) return false;
         return true;
     }
 
-    if (!getPoints(cid, address.system, address.group).contains(address.point)) return true;
+    if (!isPointValid(cid, address)) return true;
     return otpNetwork->PointDetails(cid, address)->isExpired();
 }
 
@@ -354,17 +374,25 @@ QString Consumer::getUnitString(
 }
 
 /* Standard Modules - Position */
-Consumer::PositionValue_t Consumer::getPosition(cid_t cid, address_t address, axis_t axis) const
+Consumer::PositionValue_t Consumer::getPosition(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
     Consumer::PositionValue_t ret;
-    if (!getPoints(cid, address.system, address.group).contains(address.point))
+    if (!isPointValid(cid, address))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.position.getLocation(axis);
-    ret.scale = otpNetwork->PointDetails(cid, address)->standardModules.position.getScaling();
+    auto module = otpNetwork->PointDetails(cid, address)->standardModules.position;
+    if (respectRelative &&
+        isPointValid(cid, getParent(cid, address).value) &&
+        getParent(cid, address).relative &&
+        getParent(cid, address).value != address)
+    {
+        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.position;
+    }
+    ret.value = module.getPosition(axis);
+    ret.scale = module.getScaling();
     ret.unit = getUnitString(ret.scale, VALUES::POSITION);
-    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.position.getTimestamp();
+    ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
     return ret;
 }
@@ -395,16 +423,24 @@ Consumer::PositionValue_t Consumer::getPosition(address_t address, axis_t axis, 
 }
 
 /* Standard Modules - Position Velocity/Acceleration */
-Consumer::PositionVelocity_t Consumer::getPositionVelocity(cid_t cid, address_t address, axis_t axis) const
+Consumer::PositionVelocity_t Consumer::getPositionVelocity(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
     Consumer::PositionVelocity_t ret;
-    if (!getPoints(cid, address.system, address.group).contains(address.point))
+    if (!isPointValid(cid, address))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getVelocity(axis);
+    auto module = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc;
+    if (respectRelative &&
+        isPointValid(cid, getParent(cid, address).value) &&
+        getParent(cid, address).relative &&
+        getParent(cid, address).value != address)
+    {
+        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.positionVelAcc;
+    }
+    ret.value = module.getVelocity(axis);
     ret.unit = getUnitString(VALUES::POSITION_VELOCITY);
-    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getTimestamp();
+    ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
     return ret;
 }
@@ -434,16 +470,24 @@ Consumer::PositionVelocity_t Consumer::getPositionVelocity(address_t address, ax
     return ret;
 }
 
-Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(cid_t cid, address_t address, axis_t axis) const
+Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
     Consumer::PositionAcceleration_t ret;
-    if (!getPoints(cid, address.system, address.group).contains(address.point))
+    if (!isPointValid(cid, address))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getAcceleration(axis);
+    auto module = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc;
+    if (respectRelative &&
+        isPointValid(cid, getParent(cid, address).value) &&
+        getParent(cid, address).relative &&
+        getParent(cid, address).value != address)
+    {
+        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.positionVelAcc;
+    }
+    ret.value = module.getAcceleration(axis);
     ret.unit = getUnitString(VALUES::POSITION_ACCELERATION);
-    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc.getTimestamp();
+    ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
     return ret;
 }
@@ -474,16 +518,24 @@ Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(address_t add
 }
 
 /* Standard Modules - Rotation */
-Consumer::RotationValue_t Consumer::getRotation(cid_t cid, address_t address, axis_t axis) const
+Consumer::RotationValue_t Consumer::getRotation(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
     Consumer::RotationValue_t ret;
-    if (!getPoints(cid, address.system, address.group).contains(address.point))
+    if (!isPointValid(cid, address))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.rotation.getRotation(axis);
+    auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotation;
+    if (respectRelative &&
+        isPointValid(cid, getParent(cid, address).value) &&
+        getParent(cid, address).relative &&
+        getParent(cid, address).value != address)
+    {
+        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.rotation;
+    }
+    ret.value = module.getRotation(axis);
     ret.unit = getUnitString(VALUES::ROTATION);
-    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.rotation.getTimestamp();
+    ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
     return ret;
 }
@@ -514,16 +566,24 @@ Consumer::RotationValue_t Consumer::getRotation(address_t address, axis_t axis, 
 }
 
 /* Standard Modules - Position Velocity/Acceleration */
-Consumer::RotationVelocity_t Consumer::getRotationVelocity(cid_t cid, address_t address, axis_t axis) const
+Consumer::RotationVelocity_t Consumer::getRotationVelocity(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
     Consumer::RotationVelocity_t ret;
-    if (!getPoints(cid, address.system, address.group).contains(address.point))
+    if (!isPointValid(cid, address))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getVelocity(axis);
+    auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc;
+    if (respectRelative &&
+        isPointValid(cid, getParent(cid, address).value) &&
+        getParent(cid, address).relative &&
+        getParent(cid, address).value != address)
+    {
+        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.rotationVelAcc;
+    }
+    ret.value = module.getVelocity(axis);
     ret.unit = getUnitString(VALUES::ROTATION_VELOCITY);
-    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getTimestamp();
+    ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
     return ret;
 }
@@ -553,16 +613,24 @@ Consumer::RotationVelocity_t Consumer::getRotationVelocity(address_t address, ax
     return ret;
 }
 
-Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(cid_t cid, address_t address, axis_t axis) const
+Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
     Consumer::RotationAcceleration_t ret;
-    if (!getPoints(cid, address.system, address.group).contains(address.point))
+    if (!isPointValid(cid, address))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getAcceleration(axis);
+    auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc;
+    if (respectRelative &&
+        isPointValid(cid, getParent(cid, address).value) &&
+        getParent(cid, address).relative &&
+        getParent(cid, address).value != address)
+    {
+        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.rotationVelAcc;
+    }
+    ret.value = module.getAcceleration(axis);
     ret.unit = getUnitString(VALUES::ROTATION_ACCELERATION);
-    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc.getTimestamp();
+    ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
     return ret;
 }
@@ -574,6 +642,85 @@ Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(address_t add
     {
         auto temp = getRotationAcceleration(cid, address, axis);
         if (ret.sourceCID.isNull()) ret = temp;
+        switch (resolution) {
+            case Newest:
+            {
+                if (temp.timestamp > ret.timestamp) ret = temp;
+            } break;
+            case Largest:
+            {
+                if (temp.value > ret.value) ret = temp;
+            } break;
+            case Smallest:
+            {
+                if (temp.value < ret.value) ret = temp;
+            } break;
+        }
+    }
+    return ret;
+}
+
+Consumer::Scale_t Consumer::getScale(cid_t cid, address_t address, axis_t axis) const
+{
+    using namespace MODULES::STANDARD;
+    Consumer::Scale_t ret;
+    if (!isPointValid(cid, address))
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(cid, address)->standardModules.scale.getScale(axis);
+    ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.scale.getTimestamp();
+    ret.sourceCID = cid;
+    return ret;
+}
+
+Consumer::Scale_t Consumer::getScale(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
+{
+    Scale_t ret;
+    for (auto cid : getComponents())
+    {
+        auto temp = getScale(cid, address, axis);
+        if (ret.sourceCID.isNull()) ret = temp;
+        switch (resolution) {
+            case Newest:
+            {
+                if (temp.timestamp > ret.timestamp) ret = temp;
+            } break;
+            case Largest:
+            {
+                if (temp.value > ret.value) ret = temp;
+            } break;
+            case Smallest:
+            {
+                if (temp.value < ret.value) ret = temp;
+            } break;
+        }
+    }
+    return ret;
+}
+
+Consumer::Parent_t Consumer::getParent(cid_t cid, address_t address) const
+{
+    using namespace MODULES::STANDARD;
+    Consumer::Parent_t ret;
+    if (!isPointValid(cid, address))
+        return ret;
+
+    auto module = otpNetwork->PointDetails(cid, address)->standardModules.parent;
+    ret.value = {module.getSystem(), module.getGroup(), module.getPoint()};
+    ret.relative = module.isRelative();
+    ret.timestamp = module.getTimestamp();
+    ret.sourceCID = cid;
+    return ret;
+}
+
+Consumer::Parent_t Consumer::getParent(address_t address, multipleProducerResolution_e resolution) const
+{
+    Parent_t ret;
+    for (auto cid : getComponents())
+    {
+        auto temp = getParent(cid, address);
+        if (ret.sourceCID.isNull()) ret = temp;
+        if (!ret.value.isValid()) ret = temp;
         switch (resolution) {
             case Newest:
             {
@@ -624,7 +771,16 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
     /* Unicast packets to self have no senderAddress */
     if (datagram.senderAddress().isNull()) datagram.setSender(datagram.destinationAddress());
 
-    // Transform Message
+    // Transform Messages
+    if (receiveOTPTransformMessage(datagram)) return;
+
+    // Advertisement Messages
+    if (receiveOTPNameAdvertisementMessage(datagram)) return;
+    if (receiveOTPSystemAdvertisementMessage(datagram)) return;
+}
+
+bool Consumer::receiveOTPTransformMessage(QNetworkDatagram datagram)
+{
     if (
         ((datagram.destinationAddress().toIPv4Address() >= OTP_Transform_Message_IPv4.toIPv4Address()) &&
             (datagram.destinationAddress().toIPv4Address() <= OTP_Transform_Message_IPv4.toIPv4Address()
@@ -642,7 +798,7 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
                         transformMessage.getOTPLayer()->getSequence()))
             {
                 qDebug() << this << "- Out of Sequence OTP Transform Message Request Received From" << datagram.senderAddress();
-                return;
+                return true;
             }
 
             otpNetwork->addComponent(
@@ -651,95 +807,130 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
                     transformMessage.getOTPLayer()->getComponentName(),
                     component_t::type_t::produder);
 
-            for (auto pointLayer : transformMessage.getPointLayers())
+            // Add page to folio map
+            folioMap.addPage(
+                        cid,
+                        PDU::VECTOR_OTP_TRANSFORM_MESSAGE,
+                        transformMessage.getOTPLayer()->getFolio(),
+                        transformMessage.getOTPLayer()->getPage(),
+                        datagram);
+
+            // Last page?
+            if (folioMap.checkAllPages(
+                        cid,
+                        PDU::VECTOR_OTP_TRANSFORM_MESSAGE,
+                        transformMessage.getOTPLayer()->getFolio(),
+                        transformMessage.getOTPLayer()->getLastPage()))
             {
-                auto address = address_t{
-                    transformMessage.getTransformLayer()->getSystem(),
-                    pointLayer->getGroup(),
-                    pointLayer->getPoint()};
-                auto timestamp = pointLayer->getTimestamp();
-                otpNetwork->addPoint(cid, address, priority_t());  //TODO Priority
-                for (auto moduleLayer : transformMessage.getModuleLayers().values(address))
+                // Process each Point layer
+                for (auto pointLayer : transformMessage.getPointLayers())
                 {
-                    switch (moduleLayer->getManufacturerID())
+                    auto address = address_t{
+                        transformMessage.getTransformLayer()->getSystem(),
+                        pointLayer->getGroup(),
+                        pointLayer->getPoint()};
+                    auto timestamp = pointLayer->getTimestamp();
+                    otpNetwork->addPoint(cid, address, priority_t());  //TODO Priority
+
+                    pointDetails::standardModules_t newStandardModules;
+                    for (auto moduleLayer : transformMessage.getModuleLayers().values(address))
                     {
-                        case ESTA_MANUFACTURER_ID:
+                        switch (moduleLayer->getManufacturerID())
                         {
-                            switch (moduleLayer->getModuleNumber()) {
-                                case MODULES::STANDARD::POSITION:
-                                {
-                                    auto oldModule = otpNetwork->PointDetails(cid, address)->standardModules.position;
-                                    auto newModule = MODULES::STANDARD::PositionModule_t(moduleLayer->getAdditional(), timestamp);
-                                    otpNetwork->PointDetails(cid, address)->standardModules.position = newModule;
-                                    for (auto axis = axis_t::first; axis < axis_t::count; axis++)
-                                        if (oldModule.getLocation(axis) != newModule.getLocation(axis))
-                                            emit updatedPosition(cid, address, axis);
-                                } break;
+                            case ESTA_MANUFACTURER_ID:
+                            {
+                                switch (moduleLayer->getModuleNumber()) {
+                                    case MODULES::STANDARD::POSITION:
+                                        newStandardModules.position = MODULES::STANDARD::PositionModule_t(moduleLayer->getAdditional(), timestamp);
+                                        break;
 
-                                case MODULES::STANDARD::POSITION_VELOCITY_ACCELERATION:
-                                {
-                                    auto oldModule = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc;
-                                    auto newModule = MODULES::STANDARD::PositionVelAccModule_t(moduleLayer->getAdditional(), timestamp);
-                                    otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc = newModule;
-                                    for (auto axis = axis_t::first; axis < axis_t::count; axis++)
+                                    case MODULES::STANDARD::POSITION_VELOCITY_ACCELERATION:
+                                        newStandardModules.positionVelAcc = MODULES::STANDARD::PositionVelAccModule_t(moduleLayer->getAdditional(), timestamp);
+                                        break;
+
+                                    case MODULES::STANDARD::ROTATION:
+                                        newStandardModules.rotation = MODULES::STANDARD::RotationModule_t(moduleLayer->getAdditional(), timestamp);
+                                        break;
+
+                                    case MODULES::STANDARD::ROTATION_VELOCITY_ACCELERATION:
+                                        newStandardModules.rotationVelAcc = MODULES::STANDARD::RotationVelAccModule_t(moduleLayer->getAdditional(), timestamp);
+                                        break;
+
+                                    case MODULES::STANDARD::SCALE:
+                                        newStandardModules.scale = MODULES::STANDARD::ScaleModule_t(moduleLayer->getAdditional(), timestamp);
+                                        break;
+
+                                    case MODULES::STANDARD::PARENT:
+                                        newStandardModules.parent = MODULES::STANDARD::ParentModule_t(moduleLayer->getAdditional(), timestamp);
+                                        break;
+
+                                    default:
                                     {
-                                        if (oldModule.getVelocity(axis) != newModule.getVelocity(axis))
-                                            emit updatedPositionVelocity(cid, address, axis);
-                                        if (oldModule.getAcceleration(axis) != newModule.getAcceleration(axis))
-                                            emit updatedPositionAcceleration(cid, address, axis);
-                                    }
-                                } break;
+                                    qDebug() << this << "Unknown module ID"
+                                             << moduleLayer->getManufacturerID() << moduleLayer->getModuleNumber()
+                                             << "From" << datagram.senderAddress();
+                                    } break;
+                                }
 
-                                case MODULES::STANDARD::ROTATION:
-                                {
-                                    auto oldModule = otpNetwork->PointDetails(cid, address)->standardModules.rotation;
-                                    auto newModule = MODULES::STANDARD::RotationModule_t(moduleLayer->getAdditional(), timestamp);
-                                    otpNetwork->PointDetails(cid, address)->standardModules.rotation = newModule;
-                                    for (auto axis = axis_t::first; axis < axis_t::count; axis++)
-                                        if (oldModule.getRotation(axis) != newModule.getRotation(axis))
-                                            emit updatedRotation(cid, address, axis);
-                                } break;
-
-                                case MODULES::STANDARD::ROTATION_VELOCITY_ACCELERATION:
-                                {
-                                    auto oldModule = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc;
-                                    auto newModule = MODULES::STANDARD::RotationVelAccModule_t(moduleLayer->getAdditional(), timestamp);
-                                    otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc = newModule;
-                                    for (auto axis = axis_t::first; axis < axis_t::count; axis++)
-                                    {
-                                        if (oldModule.getVelocity(axis) != newModule.getVelocity(axis))
-                                            emit updatedRotationVelocity(cid, address, axis);
-                                        if (oldModule.getAcceleration(axis) != newModule.getAcceleration(axis))
-                                            emit updatedRotationAcceleration(cid, address, axis);
-                                    }
-                                } break;
-
-                                default:
-                                {
-                                qDebug() << this << "Unknown module ID"
-                                         << moduleLayer->getManufacturerID() << moduleLayer->getModuleNumber()
+                            } break;
+                            default:
+                            {
+                                qDebug() << this << "Unknown module Manufacturer ID"
+                                         << moduleLayer->getManufacturerID()
                                          << "From" << datagram.senderAddress();
-                                } break;
-                            }
-
-                        } break;
-                        default:
-                        {
-                            qDebug() << this << "Unknown module Manufacturer ID"
-                                     << moduleLayer->getManufacturerID()
-                                     << "From" << datagram.senderAddress();
-                        } break;
+                            } break;
+                        }
                     }
 
+                    // Update standard module details
+                    auto const oldStandardModules = otpNetwork->PointDetails(cid, address)->standardModules;
+                    for (auto axis = axis_t::first; axis < axis_t::count; axis++)
+                    {
+                        // - MODULES::STANDARD::POSITION
+                        otpNetwork->PointDetails(cid, address)->standardModules.position = newStandardModules.position;
+                        if (oldStandardModules.position.getPosition(axis) != newStandardModules.position.getPosition(axis))
+                            emit updatedPosition(cid, address, axis);
+
+                        // - MODULES::STANDARD::POSITION_VELOCITY_ACCELERATION
+                        otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc = newStandardModules.positionVelAcc;
+                        if (oldStandardModules.positionVelAcc.getVelocity(axis) != newStandardModules.positionVelAcc.getVelocity(axis))
+                            emit updatedPositionVelocity(cid, address, axis);
+                        if (oldStandardModules.positionVelAcc.getAcceleration(axis) != newStandardModules.positionVelAcc.getAcceleration(axis))
+                            emit updatedPositionAcceleration(cid, address, axis);
+
+                        // - MODULES::STANDARD::ROTATION
+                        otpNetwork->PointDetails(cid, address)->standardModules.rotation = newStandardModules.rotation;
+                        if (oldStandardModules.rotation.getRotation(axis) != newStandardModules.rotation.getRotation(axis))
+                            emit updatedRotation(cid, address, axis);
+
+                        // - MODULES::STANDARD::ROTATION_VELOCITY_ACCELERATION
+                        otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc = newStandardModules.rotationVelAcc;
+                        if (oldStandardModules.rotationVelAcc.getVelocity(axis) != newStandardModules.rotationVelAcc.getVelocity(axis))
+                            emit updatedRotationVelocity(cid, address, axis);
+                        if (oldStandardModules.rotationVelAcc.getAcceleration(axis) != newStandardModules.rotationVelAcc.getAcceleration(axis))
+                            emit updatedRotationAcceleration(cid, address, axis);
+
+                        // - MODULES::STANDARD::SCALE
+                        otpNetwork->PointDetails(cid, address)->standardModules.scale = newStandardModules.scale;
+                        if (oldStandardModules.scale.getScale(axis) != newStandardModules.scale.getScale(axis))
+                            emit updatedScale(cid, address, axis);
+
+                        // - MODULES::STANDARD::PARENT
+                        otpNetwork->PointDetails(cid, address)->standardModules.parent = newStandardModules.parent;
+                        if (oldStandardModules.parent != newStandardModules.parent)
+                                emit updatedParent(cid, address);
+                    }
                 }
             }
         }
-        return;
+        return true;
     }
+    return false;
+}
 
-    //  Advertisement Message
+bool Consumer::receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram)
+{
     MESSAGES::OTPNameAdvertisementMessage::Message nameAdvert(datagram);
-    MESSAGES::OTPSystemAdvertisementMessage::Message systemAdvert(datagram);
 
     // Name Advertisement Message?
     if (nameAdvert.isValid())
@@ -750,7 +941,7 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
                     nameAdvert.getOTPLayer()->getSequence()))
         {
             qDebug() << this << "- Out of Sequence OTP Name Advertisement Message Request Received From" << datagram.senderAddress();
-            return;
+            return true;
         }
 
         auto type = (nameAdvert.getNameAdvertisementLayer()->getOptions().isResponse()) ? component_t::type_t::produder : component_t::type_t::consumer;
@@ -784,7 +975,7 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
             MESSAGES::OTPNameAdvertisementMessage::list_t list;
             for (auto datagram : folioMap.getDatagrams(cid,
                                                        PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
-                                                       systemAdvert.getOTPLayer()->getFolio()))
+                                                       nameAdvert.getOTPLayer()->getFolio()))
             {
                 MESSAGES::OTPNameAdvertisementMessage::Message nameAdvert(datagram);
                 list.append(nameAdvert.getNameAdvertisementLayer()->getList());
@@ -798,8 +989,14 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
                 otpNetwork->PointDetails(cid, address)->setName(point.PointName);
             }
         }
-        return;
+        return true;
     }
+    return false;
+}
+
+bool Consumer::receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram)
+{
+    MESSAGES::OTPSystemAdvertisementMessage::Message systemAdvert(datagram);
 
     // System Advertisement Message?
     if (systemAdvert.isValid())
@@ -810,7 +1007,7 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
                     systemAdvert.getOTPLayer()->getSequence()))
         {
             qDebug() << this << "- Out of Sequence OTP Name Advertisement Message Request Received From" << datagram.senderAddress();
-            return;
+            return true;
         }
 
         auto type = (systemAdvert.getSystemAdvertisementLayer()->getOptions().isResponse()) ? component_t::type_t::produder : component_t::type_t::consumer;
@@ -867,8 +1064,9 @@ void Consumer::newDatagram(QNetworkDatagram datagram)
                             system);
             }
         }
-        return;
+        return true;
     }
+    return false;
 }
 
 void Consumer::sendOTPModuleAdvertisementMessage()

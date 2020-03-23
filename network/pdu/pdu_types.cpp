@@ -205,15 +205,15 @@ namespace OTP::PDU {
 
     namespace OTPTransformLayer {
         system_t::system_t() : system_t(getMin() - 1) {}
-        bool system_t::isValid() { return RANGES::System.isValid(data); }
+        bool system_t::isValid() const { return RANGES::System.isValid(data); }
         system_t system_t::getMin() { return static_cast<system_t>(RANGES::System.getMin()); }
         system_t system_t::getMax() { return static_cast<system_t>(RANGES::System.getMax()); }
-        size_t system_t::getSize() {
-            PDUByteArray temp;
-            temp << *this;
-            return temp.size();
-        }
         PDUByteArray& operator>>(PDUByteArray &l, system_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
+        OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, system_t &r)
         {
             l >> r.data;
             return l;
@@ -249,7 +249,7 @@ namespace OTP::PDU {
     }
 
     namespace OTPPointLayer {
-        bool priority_t::isValid() { return RANGES::Priority.isValid(data); }
+        bool priority_t::isValid() const { return RANGES::Priority.isValid(data); }
         priority_t priority_t::getMin() { return static_cast<priority_t>(RANGES::Priority.getMin()); }
         priority_t priority_t::getMax() { return static_cast<priority_t>(RANGES::Priority.getMax()); }
         PDUByteArray& operator>>(PDUByteArray &l, priority_t &r)
@@ -287,10 +287,15 @@ namespace OTP::PDU {
         }
 
         group_t::group_t() : group_t(getMin() - 1) {}
-        bool group_t::isValid() { return RANGES::Group.isValid(data); }
+        bool group_t::isValid() const { return RANGES::Group.isValid(data); }
         group_t group_t::getMin() { return static_cast<group_t>(RANGES::Group.getMin()); }
         group_t group_t::getMax() { return static_cast<group_t>(RANGES::Group.getMax()); }
         PDUByteArray& operator>>(PDUByteArray &l, group_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
+        OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, group_t &r)
         {
             l >> r.data;
             return l;
@@ -329,6 +334,11 @@ namespace OTP::PDU {
         point_t point_t::getMin() { return static_cast<point_t>(RANGES::Point.getMin()); }
         point_t point_t::getMax() { return static_cast<point_t>(RANGES::Point.getMax()); }
         PDUByteArray& operator>>(PDUByteArray &l, point_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
+        OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, point_t &r)
         {
             l >> r.data;
             return l;

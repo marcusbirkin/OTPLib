@@ -198,7 +198,7 @@ namespace OTP
         public:
             typedef struct PositionValue_s
             {
-                MODULES::STANDARD::PositionModule_t::location_t value = 0;
+                MODULES::STANDARD::PositionModule_t::position_t value = 0;
                 QString unit;
                 timestamp_t timestamp = static_cast<timestamp_t>(QDateTime::currentDateTime().toMSecsSinceEpoch());
                 MODULES::STANDARD::PositionModule_t::scale_t scale;
@@ -214,7 +214,7 @@ namespace OTP
             {
                 MODULES::STANDARD::PositionVelAccModule_t::velocity_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
             } PositionVelocity_t;
             PositionVelocity_t getProducerPositionVelocity(address_t, axis_t) const;
             void setProducerPositionVelocity(address_t, axis_t, PositionVelocity_t);
@@ -223,7 +223,7 @@ namespace OTP
             {
                 MODULES::STANDARD::PositionVelAccModule_t::acceleration_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
             } PositionAcceleration_t;
             PositionAcceleration_t getProducerPositionAcceleration( address_t, axis_t) const;
             void setProducerPositionAcceleration(address_t, axis_t, PositionAcceleration_t);
@@ -237,7 +237,7 @@ namespace OTP
             {
                 MODULES::STANDARD::RotationModule_t::rotation_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
             } RotationValue_t;
             RotationValue_t getProducerRotation(address_t, axis_t) const;
             void setProducerRotation(address_t, axis_t, RotationValue_t);
@@ -250,7 +250,7 @@ namespace OTP
             {
                 MODULES::STANDARD::RotationVelAccModule_t::velocity_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
             } RotationVelocity_t;
             RotationVelocity_t getProducerRotationVelocity(address_t, axis_t) const;
             void setProducerRotationVelocity(address_t, axis_t, RotationVelocity_t);
@@ -259,13 +259,39 @@ namespace OTP
             {
                 MODULES::STANDARD::RotationVelAccModule_t::acceleration_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
             } RotationAcceleration_t;
             RotationAcceleration_t getProducerRotationAcceleration(address_t, axis_t) const;
             void setProducerRotationAcceleration(address_t, axis_t, RotationAcceleration_t);
         signals:
             void updatedRotationVelocity(address_t, axis_t);
             void updatedRotationAcceleration(address_t, axis_t);
+
+        /* -Scale */
+        public:
+        typedef struct Scale_s
+            {
+                MODULES::STANDARD::ScaleModule_t::scale_t value = 0;
+                timestamp_t timestamp = 0;
+            } Scale_t;
+            Scale_t getProducerScale(address_t, axis_t) const;
+            void setProducerScale(address_t, axis_t, Scale_t);
+        signals:
+            void updatedScale(address_t, axis_t);
+
+        /* -Parent */
+        public:
+        typedef struct Parent_s
+            {
+                address_t value;
+                bool relative;
+                timestamp_t timestamp = 0;
+                cid_t sourceCID;
+            } Parent_t;
+            Parent_t getProducerParent(address_t) const;
+            void setProducerParent(address_t, Parent_t);
+        signals:
+            void updatedParent(address_t);
 
     signals:
         void newCID(cid_t);
@@ -393,6 +419,8 @@ namespace OTP
 
         /* Points */
         public:
+            bool isPointValid(address_t) const;
+            bool isPointValid(cid_t, address_t) const;
             QList<point_t> getPoints(system_t, group_t) const;
             QList<point_t> getPoints(cid_t, system_t, group_t) const;
 
@@ -446,13 +474,13 @@ namespace OTP
         public:
             typedef struct PositionValue_s
             {
-                MODULES::STANDARD::PositionModule_t::location_t value = 0;
+                MODULES::STANDARD::PositionModule_t::position_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 MODULES::STANDARD::PositionModule_t::scale_t scale;
                 cid_t sourceCID;
             } PositionValue_t;
-            PositionValue_t getPosition(cid_t, address_t, axis_t) const;
+            PositionValue_t getPosition(cid_t, address_t, axis_t, bool respectRelative = true) const;
             PositionValue_t getPosition(address_t, axis_t, multipleProducerResolution_e) const;
 
         signals:
@@ -464,20 +492,20 @@ namespace OTP
             {
                 MODULES::STANDARD::PositionVelAccModule_t::velocity_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 cid_t sourceCID;
             } PositionVelocity_t;
-            PositionVelocity_t getPositionVelocity(cid_t, address_t, axis_t) const;
+            PositionVelocity_t getPositionVelocity(cid_t, address_t, axis_t, bool respectRelative = true) const;
             PositionVelocity_t getPositionVelocity(address_t, axis_t, multipleProducerResolution_e) const;
 
             typedef struct PositionAcceleration_s
             {
                 MODULES::STANDARD::PositionVelAccModule_t::acceleration_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 cid_t sourceCID;
             } PositionAcceleration_t;
-            PositionAcceleration_t getPositionAcceleration(cid_t, address_t, axis_t) const;
+            PositionAcceleration_t getPositionAcceleration(cid_t, address_t, axis_t, bool respectRelative = true) const;
             PositionAcceleration_t getPositionAcceleration(address_t, axis_t, multipleProducerResolution_e) const;
         signals:
             void updatedPositionVelocity(cid_t, address_t, axis_t);
@@ -489,10 +517,10 @@ namespace OTP
             {
                 MODULES::STANDARD::RotationModule_t::rotation_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 cid_t sourceCID;
             } RotationValue_t;
-            RotationValue_t getRotation(cid_t, address_t, axis_t) const;
+            RotationValue_t getRotation(cid_t, address_t, axis_t, bool respectRelative = true) const;
             RotationValue_t getRotation(address_t, axis_t, multipleProducerResolution_e) const;
         signals:
             void updatedRotation(cid_t, address_t, axis_t);
@@ -503,30 +531,61 @@ namespace OTP
             {
                 MODULES::STANDARD::RotationVelAccModule_t::velocity_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 cid_t sourceCID;
             } RotationVelocity_t;
-            RotationVelocity_t getRotationVelocity(cid_t, address_t, axis_t) const;
+            RotationVelocity_t getRotationVelocity(cid_t, address_t, axis_t, bool respectRelative = true) const;
             RotationVelocity_t getRotationVelocity(address_t, axis_t, multipleProducerResolution_e) const;
 
             typedef struct RotationAcceleration_s
             {
                 MODULES::STANDARD::RotationVelAccModule_t::acceleration_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 cid_t sourceCID;
             } RotationAcceleration_t;
-            RotationAcceleration_t getRotationAcceleration(cid_t, address_t, axis_t) const;
+            RotationAcceleration_t getRotationAcceleration(cid_t, address_t, axis_t, bool respectRelative = true) const;
             RotationAcceleration_t getRotationAcceleration(address_t, axis_t, multipleProducerResolution_e) const;
         signals:
             void updatedRotationVelocity(cid_t, address_t, axis_t);
             void updatedRotationAcceleration(cid_t, address_t, axis_t);
+
+        /* -Scale */
+        public:
+            typedef struct Scale_s
+            {
+                MODULES::STANDARD::ScaleModule_t::scale_t value = 0;
+                timestamp_t timestamp = 0;
+                cid_t sourceCID;
+            } Scale_t;
+            Scale_t getScale(cid_t, address_t, axis_t) const;
+            Scale_t getScale(address_t, axis_t, multipleProducerResolution_e) const;
+        signals:
+            void updatedScale(cid_t, address_t, axis_t);
+
+        /* -Parent */
+        public:
+            typedef struct Parent_s
+            {
+                address_t value;
+                bool relative;
+                timestamp_t timestamp = 0;
+                cid_t sourceCID;
+            } Parent_t;
+            Parent_t getParent(cid_t, address_t) const;
+            Parent_t getParent(address_t, multipleProducerResolution_e) const;
+        signals:
+            void updatedParent(cid_t, address_t);
 
     private slots:
         void newDatagram(QNetworkDatagram datagram);
 
     private:
         void setupListener();
+
+        bool receiveOTPTransformMessage(QNetworkDatagram datagram);
+        bool receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram);
+        bool receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram);
 
         void sendOTPModuleAdvertisementMessage();
         PDU::OTPLayer::folio_t ModuleAdvertisementMessage_Folio = 0;

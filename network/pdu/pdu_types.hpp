@@ -28,6 +28,9 @@
 namespace OTP::PDU
 {
     class PDUByteArray;
+    namespace OTPModuleLayer{
+        class additional_t;
+    }
 
     typedef quint16 pduLength_t;
     typedef quint16 vector_t;
@@ -127,12 +130,13 @@ namespace OTP::PDU
             explicit system_t(qint32 value) : data(static_cast<type>(value)) {}
             explicit system_t(qint16 value) : data(static_cast<type>(value)) {}
             explicit system_t(qint8 value) : data(static_cast<type>(value)) {}
-            bool isValid();
+            bool isValid() const;
             static system_t getMin();
             static system_t getMax();
-            size_t getSize();
+            size_t getSize() const { return sizeof(type); }
             operator type() const { return data; }
             friend PDUByteArray& operator>>(PDUByteArray &l, system_t &r);
+            friend OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, system_t &r);
             system_t& operator++();
             system_t operator++(int);
             system_t& operator--();
@@ -188,9 +192,10 @@ namespace OTP::PDU
             explicit priority_t(qint64 value) : data(static_cast<type>(value)) {}
             explicit priority_t(qint32 value) : data(static_cast<type>(value)) {}
             explicit priority_t(qint16 value) : data(static_cast<type>(value)) {}
-            bool isValid();
+            bool isValid() const;
             static priority_t getMin();
             static priority_t getMax();
+            size_t getSize() const { return sizeof(type); }
             operator type() const { return data; }
             friend PDUByteArray& operator>>(PDUByteArray &l, priority_t &r);
             priority_t& operator++();
@@ -213,11 +218,13 @@ namespace OTP::PDU
             explicit group_t(qint64 value) : data(static_cast<type>(value)) {}
             explicit group_t(qint32 value) : data(static_cast<type>(value)) {}
             explicit group_t(qint16 value) : data(static_cast<type>(value)) {}
-            bool isValid();
+            bool isValid() const;
             static group_t getMin();
             static group_t getMax();
+            size_t getSize() const { return sizeof(type); }
             operator type() const { return data; }
             friend PDUByteArray& operator>>(PDUByteArray &l, group_t &r);
+            friend OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, group_t &r);
             group_t& operator++();
             group_t operator++(int);
             group_t& operator--();
@@ -239,8 +246,10 @@ namespace OTP::PDU
             bool isValid();
             static point_t getMin();
             static point_t getMax();
+            size_t getSize() const { return sizeof(type); }
             operator type() const { return data; }
             friend PDUByteArray& operator>>(PDUByteArray &l, point_t &r);
+            friend OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, point_t &r);
             point_t& operator++();
             point_t operator++(int);
             point_t& operator--();

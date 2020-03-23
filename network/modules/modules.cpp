@@ -46,8 +46,13 @@ STANDARD::additional_t STANDARD::getAdditional(
             additional << pointDetails->standardModules.rotationVelAcc;
             return additional;
 
-        case STANDARD::ORIENTATION: break;
-        case STANDARD::ORIENTATION_VELOCITY_ACCELERATION: break;
+        case STANDARD::SCALE:
+            additional << pointDetails->standardModules.scale;
+            return additional;
+
+        case STANDARD::PARENT:
+            additional << pointDetails->standardModules.parent;
+            return additional;
     }
     return additional;
 }
@@ -62,8 +67,8 @@ timestamp_t STANDARD::getTimestamp(
         case STANDARD::POSITION_VELOCITY_ACCELERATION: return pointDetails->standardModules.positionVelAcc.getTimestamp();
         case STANDARD::ROTATION: return pointDetails->standardModules.rotation.getTimestamp();
         case STANDARD::ROTATION_VELOCITY_ACCELERATION: return pointDetails->standardModules.rotationVelAcc.getTimestamp();
-        case STANDARD::ORIENTATION: break;
-        case STANDARD::ORIENTATION_VELOCITY_ACCELERATION: break;
+        case STANDARD::SCALE: return pointDetails->standardModules.scale.getTimestamp();
+        case STANDARD::PARENT: return pointDetails->standardModules.parent.getTimestamp();
     }
     return 0;
 }

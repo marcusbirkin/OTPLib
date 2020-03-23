@@ -65,10 +65,8 @@ namespace OTP::MODULES {
         ret.append(STANDARD::modules.value(STANDARD::POSITION_VELOCITY_ACCELERATION).ident);
         ret.append(STANDARD::modules.value(STANDARD::ROTATION).ident);
         ret.append(STANDARD::modules.value(STANDARD::ROTATION_VELOCITY_ACCELERATION).ident);
-        /* Not documented in draft *
-        ret.append(STANDARD::modules.value(STANDARD::ORIENTATION).vector);
-        ret.append(STANDARD::modules.value(STANDARD::ORIENTATION_VELOCITY_ACCELERATION).vector);
-        */
+        ret.append(STANDARD::modules.value(STANDARD::SCALE).ident);
+        ret.append(STANDARD::modules.value(STANDARD::PARENT).ident);
         return ret;
     }
 
