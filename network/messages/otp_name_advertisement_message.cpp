@@ -18,28 +18,26 @@
 */
 #include "otp_name_advertisement_message.hpp"
 
-using namespace ACN::OTP::MESSAGES::OTPNameAdvertisementMessage;
+using namespace OTP::PDU;
+using namespace OTP::MESSAGES::OTPNameAdvertisementMessage;
 
-Message::Message(ACN::OTP::mode_e mode,
-        ACN::OTP::cid_t CID,
-        ACN::OTP::name_t ProducerName,
-        ACN::OTP::PDU::OTPNameAdvertisementLayer::list_t PointDescriptionList,
+Message::Message(OTP::mode_e mode,
+        OTP::cid_t CID,
+        OTP::name_t ComponentName,
+        OTP::PDU::OTPNameAdvertisementLayer::list_t PointDescriptionList,
         QObject *parent) :
     QObject(parent),
-    rootLayer(
-        new OTP::PDU::OTPRootLayer::Layer(
-            0, CID, this)),
     otpLayer(
-        new OTP::PDU::OTPLayer::Layer(
-            0, ACN::OTP::PDU::VECTOR_OTP_ADVERTISEMENT_MESSAGE, 0, 0, 0, 0, ProducerName, this)),
+        new OTPLayer::Layer(
+            VECTOR_OTP_ADVERTISEMENT_MESSAGE, 0, CID, 0, 0, 0, 0, ComponentName, this)),
     advertisementLayer(
         new OTP::PDU::OTPAdvertisementLayer::Layer(
-            0, ACN::OTP::PDU::VECTOR_OTP_ADVERTISEMENT_NAME, this)),
+            OTP::PDU::VECTOR_OTP_ADVERTISEMENT_NAME, 0, this)),
     nameAdvertisementLayer(
         new OTP::PDU::OTPNameAdvertisementLayer::Layer(
-            0, ACN::OTP::PDU::OTPNameAdvertisementLayer::options_t(), PointDescriptionList, this))
+            0, OTP::PDU::OTPNameAdvertisementLayer::options_t(), PointDescriptionList, this))
 {
-    ACN::OTP::PDU::OTPNameAdvertisementLayer::options_t options;
+    OTP::PDU::OTPNameAdvertisementLayer::options_t options;
     switch (mode) {
         case Producer: options.setResponse(); break;
         case Consumer: options.setRequest(); break;
@@ -53,19 +51,11 @@ Message::Message(
         QNetworkDatagram message,
         QObject *parent) :
     QObject(parent),
-    rootLayer(new OTP::PDU::OTPRootLayer::Layer()),
     otpLayer(new OTP::PDU::OTPLayer::Layer()),
     advertisementLayer(new OTP::PDU::OTPAdvertisementLayer::Layer()),
     nameAdvertisementLayer(new OTP::PDU::OTPNameAdvertisementLayer::Layer())
 {
     int idx = 0;
-    // Root layer
-    {
-        PDU::PDUByteArray layer;
-        idx += layer.append(message.data().mid(idx, rootLayer->toPDUByteArray().size())).size();
-        rootLayer->fromPDUByteArray(layer);
-        if (!rootLayer->isValid()) return;
-    }
 
     // OTP Layer
     {
@@ -95,9 +85,20 @@ Message::Message(
 
 bool Message::isValid()
 {
-    if (!rootLayer->isValid()) return false;
+    auto lengthCheck = toByteArray().length();
+    if (lengthCheck != otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET)
+        return false;
     if (!otpLayer->isValid()) return false;
+
+    lengthCheck -= otpLayer->toPDUByteArray().length();
+    if (lengthCheck != advertisementLayer->getPDULength() + OTPAdvertisementLayer::LENGTHOFFSET)
+        return false;
+    if (advertisementLayer->getVector() != PDU::VECTOR_OTP_ADVERTISEMENT_NAME) return false;
     if (!advertisementLayer->isValid()) return false;
+
+    lengthCheck -= advertisementLayer->toPDUByteArray().length();
+    if (lengthCheck != nameAdvertisementLayer->getPDULength() + OTPNameAdvertisementLayer::LENGTHOFFSET)
+        return false;
     if (!nameAdvertisementLayer->isValid()) return false;
     if (!RANGES::MESSAGE_SIZE.isValid(toByteArray().size())) return false;
     return true;
@@ -115,13 +116,12 @@ QNetworkDatagram Message::toQNetworkDatagram(
     otpLayer->setPage(thisPage);
     otpLayer->setLastPage(lastPage);
     updatePduLength();
-    return QNetworkDatagram(toByteArray(), destAddr, ACN_SDT_MULTICAST_PORT);
+    return QNetworkDatagram(toByteArray(), destAddr, OTP_PORT);
 }
 
 QByteArray Message::toByteArray()
 {
     QByteArray ba;
-    ba.append(rootLayer->toPDUByteArray());
     ba.append(otpLayer->toPDUByteArray());
     ba.append(advertisementLayer->toPDUByteArray());
     ba.append(nameAdvertisementLayer->toPDUByteArray());
@@ -131,15 +131,15 @@ QByteArray Message::toByteArray()
 
 void Message::updatePduLength()
 {
-    ACN::OTP::PDU::flags_length_t::pduLength_t length = nameAdvertisementLayer->toPDUByteArray().size();
-    nameAdvertisementLayer->setPDULength(length);
+    /* 13.2 Length */
+    pduLength_t length = nameAdvertisementLayer->toPDUByteArray().size();
+    nameAdvertisementLayer->setPDULength(length - OTPNameAdvertisementLayer::LENGTHOFFSET);
 
+    /* 11.2 Length */
     length += advertisementLayer->toPDUByteArray().size();
-    advertisementLayer->setPDULength(length);
+    advertisementLayer->setPDULength(length - OTPAdvertisementLayer::LENGTHOFFSET);
 
+    /* 6.3 Length */
     length += otpLayer->toPDUByteArray().size();
-    otpLayer->setPDULength(length);
-
-    length += rootLayer->toPDUByteArray().size();
-    rootLayer->setPDULength(length - ACN::OTP::PDU::OTPRootLayer::PREAMBLE_SIZE);
+    otpLayer->setPDULength(length - OTPLayer::LENGTHOFFSET);
 }

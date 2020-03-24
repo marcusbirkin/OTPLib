@@ -24,7 +24,7 @@
 #include "pdu_types.hpp"
 #include "pdu_const.hpp"
 
-namespace ACN::OTP::PDU::OTPPointLayer
+namespace OTP::PDU::OTPPointLayer
 {
 
 class Layer : public QObject
@@ -32,7 +32,8 @@ class Layer : public QObject
     Q_OBJECT
 public:
     explicit Layer(
-            flags_length_t::pduLength_t PDULength = 0,
+            pduLength_t PDULength = 0,
+            priority_t Priority = 100,
             group_t Group = 0,
             point_t Point = 0,
             timestamp_t Timestamp = static_cast<timestamp_t>(QDateTime::currentMSecsSinceEpoch() * 1000),
@@ -44,10 +45,11 @@ public:
     PDUByteArray toPDUByteArray();
     void fromPDUByteArray(PDUByteArray layer);
 
-    const flags_length_t::flags_t &getFlags() const { return FlagsLength.Flags; }
-    const flags_length_t::pduLength_t &getPDULength() const { return FlagsLength.PDULength; }
-    void setPDULength(flags_length_t::pduLength_t value) { FlagsLength.PDULength = value; }
     const vector_t &getVector() { return Vector; }
+    const pduLength_t &getPDULength() const { return PDULength; }
+    void setPDULength(pduLength_t value) { PDULength = value; }
+    const priority_t &getPriority() { return Priority; }
+    void setPriority(priority_t value) { Priority = value; }
     const group_t &getGroup() { return Group; }
     void setGroup(group_t value) { Group = value; }
     const point_t &getPoint() { return Point; }
@@ -58,8 +60,9 @@ public:
     const reserved_t &getReserved() { return Reserved; }
 
 private:
-    flags_length_t FlagsLength;
     vector_t Vector;
+    pduLength_t PDULength;
+    priority_t Priority;
     group_t Group;
     point_t Point;
     timestamp_t Timestamp;

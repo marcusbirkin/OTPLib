@@ -19,7 +19,7 @@
 #ifndef ENUMS_H
 #define ENUMS_H
 
-namespace ACN::OTP
+namespace OTP
 {
     enum mode_e
     {

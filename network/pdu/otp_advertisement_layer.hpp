@@ -23,7 +23,7 @@
 #include "pdu_types.hpp"
 #include "pdu_const.hpp"
 
-namespace ACN::OTP::PDU::OTPAdvertisementLayer
+namespace OTP::PDU::OTPAdvertisementLayer
 {
 
 class Layer : public QObject
@@ -31,8 +31,8 @@ class Layer : public QObject
     Q_OBJECT
 public:
     explicit Layer(
-            flags_length_t::pduLength_t PDULength = 0,
             vector_t Vector = 0,
+            pduLength_t PDULength = 0,
             QObject *parent = nullptr);
     explicit Layer(
             PDUByteArray layer,
@@ -41,17 +41,15 @@ public:
     PDUByteArray toPDUByteArray();
     void fromPDUByteArray(PDUByteArray layer);
 
-    const flags_length_t::flags_t &getFlags() { return FlagsLength.Flags; }
-    const flags_length_t::pduLength_t &getPDULength() { return FlagsLength.PDULength; }
-    void setPDULength(flags_length_t::pduLength_t value) { FlagsLength.PDULength = value; }
+    const pduLength_t &getPDULength() { return PDULength; }
+    void setPDULength(pduLength_t value) { PDULength = value; }
     const vector_t &getVector() { return Vector; }
     void setVector(vector_t value) { Vector = value; }
 
 private:
-    flags_length_t FlagsLength;
     vector_t Vector;
+    pduLength_t PDULength;
     reserved_t Reserved;
-
 };
 
 } // namespace

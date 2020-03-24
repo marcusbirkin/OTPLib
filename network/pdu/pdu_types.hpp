@@ -20,24 +20,20 @@
 #define PDU_TYPES_HPP
 
 #include <QByteArray>
-#include <QDataStream>
 #include <QUuid>
 #include <QtEndian>
 #include <QHostAddress>
+#include <bitset>
 
-namespace ACN::OTP::PDU
+namespace OTP::PDU
 {
     class PDUByteArray;
+    namespace OTPModuleLayer{
+        class additional_t;
+    }
 
-    typedef struct {
-        typedef quint8 flags_t;
-        typedef quint32 pduLength_t;
-        flags_t Flags;
-        pduLength_t PDULength;
-    } flags_length_t;
-    PDUByteArray& operator<<(PDUByteArray &l, const flags_length_t &r);
-    PDUByteArray& operator>>(PDUByteArray &l, flags_length_t &r);
-    typedef quint32 vector_t;
+    typedef quint16 pduLength_t;
+    typedef quint16 vector_t;
 
     class name_t : public QByteArray
     {
@@ -62,8 +58,8 @@ namespace ACN::OTP::PDU
     {
     public:
         PDUByteArray() : QByteArray() {}
-        inline flags_length_t::pduLength_t size() const {
-            return static_cast<flags_length_t::pduLength_t>(QByteArray::size());
+        inline pduLength_t size() const {
+            return static_cast<pduLength_t>(QByteArray::size());
         }
     };
     PDUByteArray& operator<<(PDUByteArray &l, const quint8 &r);
@@ -83,16 +79,15 @@ namespace ACN::OTP::PDU
     PDUByteArray& operator>>(PDUByteArray &l, qint32 &r);
     PDUByteArray& operator>>(PDUByteArray &l, qint64 &r);
 
-    namespace OTPRootLayer {
-        typedef quint16 ambleSize_t;
-        class acnIdent_t : public QByteArray
+    namespace OTPLayer {
+        class otpIdent_t : public QByteArray
         {
         public:
-            acnIdent_t() : QByteArray() {}
-            acnIdent_t(const QByteArray &ba) : QByteArray(ba) {}
+            otpIdent_t() : QByteArray() {}
+            otpIdent_t(const QByteArray &ba) : QByteArray(ba) {}
         };
-        PDUByteArray& operator<<(PDUByteArray &l, const acnIdent_t &r);
-        PDUByteArray& operator>>(PDUByteArray &l, acnIdent_t &r);
+        PDUByteArray& operator<<(PDUByteArray &l, const otpIdent_t &r);
+        PDUByteArray& operator>>(PDUByteArray &l, otpIdent_t &r);
         class cid_t : public QUuid
         {
         public:
@@ -101,13 +96,9 @@ namespace ACN::OTP::PDU
         };
         PDUByteArray& operator<<(PDUByteArray &l, const cid_t &r);
         PDUByteArray& operator>>(PDUByteArray &l, cid_t &r);
-    }
-
-    namespace OTPLayer {
-        typedef quint16 protocol_t;
 
         class sequence_t {
-            typedef quint16 type;
+            typedef quint32 type;
         public:
             sequence_t() : data(0) {}
             sequence_t(type value) : data(value) {}
@@ -120,7 +111,7 @@ namespace ACN::OTP::PDU
             type data;
         };
         typedef quint16 folio_t;
-        typedef quint8 page_t;
+        typedef quint16 page_t;
         typedef quint8 options_t;
         typedef quint32 reserved_t;
     }
@@ -139,12 +130,13 @@ namespace ACN::OTP::PDU
             explicit system_t(qint32 value) : data(static_cast<type>(value)) {}
             explicit system_t(qint16 value) : data(static_cast<type>(value)) {}
             explicit system_t(qint8 value) : data(static_cast<type>(value)) {}
-            bool isValid();
+            bool isValid() const;
             static system_t getMin();
             static system_t getMax();
-            size_t getSize();
+            size_t getSize() const { return sizeof(type); }
             operator type() const { return data; }
             friend PDUByteArray& operator>>(PDUByteArray &l, system_t &r);
+            friend OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, system_t &r);
             system_t& operator++();
             system_t operator++(int);
             system_t& operator--();
@@ -158,69 +150,63 @@ namespace ACN::OTP::PDU
             return l;
         }
 
-        /* TODO Check this value size with ratified standard
-         *
-         * For some unholy reason, a timestamp is 16 bytes aka 128bit
-         * 2_128 = 340,282,366,920,938,463,463,374,607,431,768,211,456uS
-         * Wolfram tells me that ≈ 7.8×10^14 × age of the universe
-         */
-        #ifdef __SIZEOF_INT128__ // GCC and Clang Extension
-            typedef struct timestamp_s
-            {
-                typedef __uint128_t type;
-            public:
-                timestamp_s() : data(0){}
-                timestamp_s(type value) : data(value) {}
-                operator type() const { return data; }
-                operator QString() const { return QString::number(quint64(data)); } // Hacky, but enough
-                friend PDUByteArray& operator<<(PDUByteArray &l, const timestamp_s &r)
-                {
-                    return l << quint64(r >> 64) << quint64(r);
-                }
-                friend PDUByteArray& operator>>(PDUByteArray &l, timestamp_s &r)
-                {
-                    __uint128_t hi = qFromBigEndian<quint64>(l.data()) << (sizeof(quint64) / 2);
-                    l.remove(0, sizeof(quint64));
-                    __uint128_t lo = qFromBigEndian<quint64>(l.data());
-                    l.remove(0, sizeof(quint64));
-                    r = hi | lo;
-                    return l;
-                }
-            private:
-                type data;
-            } timestamp_t;
-        #else
-            typedef struct timestamp_s
-            {
-                typedef quint64 type;
-            public:
-                timestamp_s() : hi(0), lo(0) {}
-                timestamp_s(type value) : hi(0), lo(value) {}
-                timestamp_s(type hi, type lo) : hi(hi), lo(lo) {}
-                operator type() const { return lo; }
-                operator QString() const { return QString::number(lo); } // Hacky, but enough
-                friend PDUByteArray& operator<<(PDUByteArray &l, const timestamp_s &r)
-                {
-                    return l << r.hi << r.lo;
-                }
-                friend PDUByteArray& operator>>(PDUByteArray &l, timestamp_s &r)
-                {
-                    l >> r.hi;
-                    l >> r.lo;
-                    return l;
-                }
-            private:
-                type hi;
-                type lo;
-            } timestamp_t;
-        #endif
-
-        typedef quint8 options_t;
+        typedef quint64 timestamp_t;
+        typedef struct options_s
+        {
+            options_s() : data(0) {}
+            bool isFullPointSet() const { return data[FULL_POINT_SET_BIT]; }
+            void setFullPointSet(bool value) { data[FULL_POINT_SET_BIT] = value; }
+            friend PDUByteArray& operator<<(PDUByteArray &l, const options_s &r) {
+                l << type(r.data.to_ulong());
+                return l;
+            }
+            friend PDUByteArray& operator>>(PDUByteArray &l, options_s &r) {
+                type temp;
+                l >> temp;
+                r.data = std::bitset<bitWidth>(temp);
+                return l;
+            }
+            options_s& operator=(const options_s& r) {this->data = r.data; return *this; }
+            options_s& operator=(const unsigned int& r) {this->data = static_cast<type>(r); return *this; }
+        private:
+            typedef quint8 type;
+            static const quint8 bitWidth = sizeof(type) * 8;
+            enum {
+                FULL_POINT_SET_BIT = 7
+            };
+            std::bitset<bitWidth> data;
+        } options_t;
         typedef quint32 reserved_t;
     }
 
 
     namespace OTPPointLayer {
+        class priority_t
+        {
+            typedef quint8 type;
+        public:
+            priority_t() : data(defaultValue) {}
+            priority_t(type value) : data(value) {}
+            explicit priority_t(quint64 value) : data(static_cast<type>(value)) {}
+            explicit priority_t(quint32 value) : data(static_cast<type>(value)) {}
+            explicit priority_t(qint64 value) : data(static_cast<type>(value)) {}
+            explicit priority_t(qint32 value) : data(static_cast<type>(value)) {}
+            explicit priority_t(qint16 value) : data(static_cast<type>(value)) {}
+            bool isValid() const;
+            static priority_t getMin();
+            static priority_t getMax();
+            size_t getSize() const { return sizeof(type); }
+            operator type() const { return data; }
+            friend PDUByteArray& operator>>(PDUByteArray &l, priority_t &r);
+            priority_t& operator++();
+            priority_t operator++(int);
+            priority_t& operator--();
+            priority_t operator--(int);
+        private:
+            static const type defaultValue = 100;
+            type data;
+        };
+
         class group_t
         {
             typedef quint16 type;
@@ -232,11 +218,13 @@ namespace ACN::OTP::PDU
             explicit group_t(qint64 value) : data(static_cast<type>(value)) {}
             explicit group_t(qint32 value) : data(static_cast<type>(value)) {}
             explicit group_t(qint16 value) : data(static_cast<type>(value)) {}
-            bool isValid();
+            bool isValid() const;
             static group_t getMin();
             static group_t getMax();
+            size_t getSize() const { return sizeof(type); }
             operator type() const { return data; }
             friend PDUByteArray& operator>>(PDUByteArray &l, group_t &r);
+            friend OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, group_t &r);
             group_t& operator++();
             group_t operator++(int);
             group_t& operator--();
@@ -258,8 +246,10 @@ namespace ACN::OTP::PDU
             bool isValid();
             static point_t getMin();
             static point_t getMax();
+            size_t getSize() const { return sizeof(type); }
             operator type() const { return data; }
             friend PDUByteArray& operator>>(PDUByteArray &l, point_t &r);
+            friend OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, point_t &r);
             point_t& operator++();
             point_t operator++(int);
             point_t& operator--();
@@ -274,29 +264,29 @@ namespace ACN::OTP::PDU
     }
 
     namespace OTPModuleLayer {
-        typedef struct vector_s
+        typedef struct ident_s
         {
             typedef quint16 manufacturerID_t;
             typedef quint16 moduleNumber_t;
-            vector_s() :
+            ident_s() :
                 ManufacturerID(0),
                 ModuleNumber(0) {}
-            vector_s(manufacturerID_t ManufacturerID, moduleNumber_t ModuleNumber) :
+            ident_s(manufacturerID_t ManufacturerID, moduleNumber_t ModuleNumber) :
                 ManufacturerID(ManufacturerID),
                 ModuleNumber(ModuleNumber) {}
             size_t getSize();
             manufacturerID_t ManufacturerID;
             moduleNumber_t ModuleNumber;
-        } vector_t;
-        PDUByteArray& operator<<(PDUByteArray &l, const vector_t &r);
-        PDUByteArray& operator>>(PDUByteArray &l, vector_t &r);
-        inline bool operator==(const vector_t &l, const vector_t &r) {
+        } ident_t;
+        PDUByteArray& operator<<(PDUByteArray &l, const ident_t &r);
+        PDUByteArray& operator>>(PDUByteArray &l, ident_t &r);
+        inline bool operator==(const ident_t &l, const ident_t &r) {
             return (
                 (l.ModuleNumber == r.ModuleNumber) &&
                 (l.ManufacturerID == r.ManufacturerID));
         }
-        inline bool operator!=(const vector_t &l, const vector_t &r) { return !(l == r); };
-        inline bool operator< (const vector_t& l, const vector_t& r){
+        inline bool operator!=(const ident_t &l, const ident_t &r) { return !(l == r); };
+        inline bool operator< (const ident_t& l, const ident_t& r){
             return ((l.ManufacturerID < r.ManufacturerID) || (l.ModuleNumber < r.ModuleNumber));
         }
 
@@ -332,7 +322,7 @@ namespace ACN::OTP::PDU
 
     namespace OTPModuleAdvertisementLayer {
         typedef quint32 reserved_t;
-        typedef OTPModuleLayer::vector_t item_t;
+        typedef OTPModuleLayer::ident_t item_t;
         typedef QList<item_t> list_t;
         PDUByteArray& operator<<(PDUByteArray &l, const list_t &r);
         PDUByteArray& operator>>(PDUByteArray &l, list_t &r);
@@ -347,23 +337,35 @@ namespace ACN::OTP::PDU
     namespace OTPNameAdvertisementLayer {
         typedef struct options_s
         {
-            options_s() : options(0) {}
-            bool isRequest() const {return ((options & REQUEST_RESPONSE_MASK) >> REQUEST_RESPONSE_SHIFT) == REQUEST;}
-            void setRequest() {options &= ~REQUEST_RESPONSE_MASK; }
-            bool isResponse() const { return ((options & REQUEST_RESPONSE_MASK) >> REQUEST_RESPONSE_SHIFT) == RESPONSE;}
-            void setResponse() {options |= REQUEST_RESPONSE_MASK; }
-            friend PDUByteArray& operator<<(PDUByteArray &l, const options_s &r) { l << r.options; return l; }
-            friend PDUByteArray& operator>>(PDUByteArray &l, options_s &r) { l >> r.options; return l; }
-            options_s& operator=(const options_s& r) {this->options = r.options; return *this; }
+            options_s() : data(0) {}
+            bool isRequest() const { return data[REQUEST_RESPONSE_BIT] == REQUEST; }
+            void setRequest() { data[REQUEST_RESPONSE_BIT] = REQUEST; }
+            bool isResponse() const { return data[REQUEST_RESPONSE_BIT] == RESPONSE;}
+            void setResponse() { data[REQUEST_RESPONSE_BIT] = RESPONSE; }
+            friend PDUByteArray& operator<<(PDUByteArray &l, const options_s &r) {
+                l << type(r.data.to_ulong());
+                return l;
+            }
+            friend PDUByteArray& operator>>(PDUByteArray &l, options_s &r) {
+                type temp;
+                l >> temp;
+                r.data = std::bitset<bitWidth>(temp);
+                return l;
+            }
+            options_s& operator=(const options_s& r) {this->data = r.data; return *this; }
+            options_s& operator=(const unsigned int& r) {this->data = static_cast<type>(r); return *this; }
         private:
-            const quint8 REQUEST_RESPONSE_SHIFT = 7;
-            const quint8 REQUEST_RESPONSE_MASK = 1 << REQUEST_RESPONSE_SHIFT;
-            enum : quint8
+            typedef quint8 type;
+            static const quint8 bitWidth = sizeof(type) * 8;
+            enum {
+                REQUEST_RESPONSE_BIT = 7
+            };
+            enum
             {
                 REQUEST = 0,
                 RESPONSE = 1
             };
-            quint8 options;
+            std::bitset<bitWidth> data;
         } options_t;
 
         typedef quint32 reserved_t;

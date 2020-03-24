@@ -23,7 +23,7 @@
 #include "pdu_types.hpp"
 #include "pdu_const.hpp"
 
-namespace ACN::OTP::PDU::OTPNameAdvertisementLayer
+namespace OTP::PDU::OTPNameAdvertisementLayer
 {
 
 class Layer : public QObject
@@ -31,7 +31,7 @@ class Layer : public QObject
     Q_OBJECT
 public:
     explicit Layer(
-            flags_length_t::pduLength_t PDULength = 0,
+            pduLength_t PDULength = 0,
             options_t Options = options_t(),
             list_t List = list_t(),
             QObject *parent = nullptr);
@@ -42,9 +42,8 @@ public:
     PDUByteArray toPDUByteArray();
     void fromPDUByteArray(PDUByteArray layer);
 
-    const flags_length_t::flags_t &getFlags() { return FlagsLength.Flags; }
-    const flags_length_t::pduLength_t &getPDULength() { return FlagsLength.PDULength; }
-    void setPDULength(flags_length_t::pduLength_t value) { FlagsLength.PDULength = value; }
+    const pduLength_t &getPDULength() { return PDULength; }
+    void setPDULength(pduLength_t value) { PDULength = value; }
     const vector_t &getVector() { return Vector; }
     const options_t &getOptions() { return Options; }
     void setOptions(options_t value) { Options = value; }
@@ -53,8 +52,8 @@ public:
     bool addItem(item_t value);
 
 private:
-    flags_length_t FlagsLength;
     vector_t Vector;
+    pduLength_t PDULength;
     options_t Options;
     reserved_t Reserved;
     list_t List;

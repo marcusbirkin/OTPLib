@@ -30,17 +30,14 @@
 #include <QTimer>
 #include <QNetworkDatagram>
 
-namespace ACN::PDU {
-    typedef quint8 flags_t;
-}
-
-namespace ACN::OTP
+namespace OTP
 {
     typedef OTP::PDU::name_t name_t;
-    typedef OTP::PDU::OTPRootLayer::cid_t cid_t;
+    typedef OTP::PDU::OTPLayer::cid_t cid_t;
     typedef OTP::PDU::OTPLayer::sequence_t sequence_t;
     typedef OTP::PDU::OTPPointLayer::point_t point_t;
     typedef OTP::PDU::OTPPointLayer::group_t group_t;
+    typedef OTP::PDU::OTPPointLayer::priority_t priority_t;
     typedef OTP::PDU::OTPTransformLayer::system_t system_t;
     typedef OTP::PDU::OTPTransformLayer::timestamp_t timestamp_t;
     typedef OTP::MESSAGES::OTPModuleAdvertisementMessage::list_t moduleList_t;
@@ -64,8 +61,8 @@ namespace ACN::OTP
         void setIPAddr(QHostAddress value) { ipAddr = value; updateLastSeen(); }
 
 
-        typedef ACN::OTP::MESSAGES::OTPModuleAdvertisementMessage::item_t ModuleItem_t;
-        typedef ACN::OTP::MESSAGES::OTPModuleAdvertisementMessage::list_t ModuleList_t;
+        typedef OTP::MESSAGES::OTPModuleAdvertisementMessage::item_t ModuleItem_t;
+        typedef OTP::MESSAGES::OTPModuleAdvertisementMessage::list_t ModuleList_t;
         ModuleList_t getModuleList() const {
             return moduleList.keys();
         }
@@ -91,9 +88,9 @@ namespace ACN::OTP
     typedef QMap<cid_t, component_t> componentMap_t;
 
     typedef struct sequenceMap_s {
-        sequence_t getLastSequence(ACN::OTP::PDU::vector_t vector) { return sequenceMap[vector]; }
-        sequence_t getNextSequence(ACN::OTP::PDU::vector_t vector) { return ++sequenceMap[vector]; }
-        bool checkSequence(ACN::OTP::PDU::vector_t vector, sequence_t value)
+        sequence_t getLastSequence(OTP::PDU::vector_t vector) { return sequenceMap[vector]; }
+        sequence_t getNextSequence(OTP::PDU::vector_t vector) { return ++sequenceMap[vector]; }
+        bool checkSequence(OTP::PDU::vector_t vector, sequence_t value)
         {
             auto sequence = sequenceMap[vector];
             auto ret = sequence.checkSequence(value);
@@ -101,37 +98,37 @@ namespace ACN::OTP
             return ret;
         }
     private:
-        QMap<ACN::OTP::PDU::vector_t, sequence_t> sequenceMap;
+        QMap<OTP::PDU::vector_t, sequence_t> sequenceMap;
     } sequenceMap_t;
 
     typedef struct folioMap_s {
         void addPage(
                 cid_t cid,
-                ACN::OTP::PDU::vector_t vector,
-                ACN::OTP::PDU::OTPLayer::folio_t folio,
-                ACN::OTP::PDU::OTPLayer::page_t page,
+                OTP::PDU::vector_t vector,
+                OTP::PDU::OTPLayer::folio_t folio,
+                OTP::PDU::OTPLayer::page_t page,
                 QNetworkDatagram datagram);
 
         bool checkAllPages(
                 cid_t cid,
-                ACN::OTP::PDU::vector_t vector,
-                ACN::OTP::PDU::OTPLayer::folio_t folio,
-                ACN::OTP::PDU::OTPLayer::page_t lastPage);
+                OTP::PDU::vector_t vector,
+                OTP::PDU::OTPLayer::folio_t folio,
+                OTP::PDU::OTPLayer::page_t lastPage);
 
         QVector<QNetworkDatagram> getDatagrams(
                 cid_t cid,
-                ACN::OTP::PDU::vector_t vector,
-                ACN::OTP::PDU::OTPLayer::folio_t folio);
+                OTP::PDU::vector_t vector,
+                OTP::PDU::OTPLayer::folio_t folio);
 
     private:
-        typedef std::pair<cid_t, ACN::OTP::PDU::vector_t> key_t;
+        typedef std::pair<cid_t, OTP::PDU::vector_t> key_t;
         struct folioMapPrivate_s {
             folioMapPrivate_s() : folio(0) {}
-            folioMapPrivate_s(ACN::OTP::PDU::OTPLayer::folio_t folio)
+            folioMapPrivate_s(OTP::PDU::OTPLayer::folio_t folio)
                 : folio(folio) {}
 
-            ACN::OTP::PDU::OTPLayer::folio_t folio;
-            QVector<ACN::OTP::PDU::OTPLayer::page_t> pages;
+            OTP::PDU::OTPLayer::folio_t folio;
+            QVector<OTP::PDU::OTPLayer::page_t> pages;
             QVector<QNetworkDatagram> datagrams;
         };
         QMap<key_t, folioMapPrivate_s> folioMap;
@@ -141,7 +138,13 @@ namespace ACN::OTP
     {
     public:
         pointDetails() : lastSeen(QDateTime::currentDateTime()) {}
-        pointDetails(QString name) : name(name), lastSeen(QDateTime::currentDateTime()) {}
+        pointDetails(priority_t priority) :
+            lastSeen(QDateTime::currentDateTime()),
+            priority(priority) {}
+        pointDetails(QString name, priority_t priority) :
+            name(name),
+            lastSeen(QDateTime::currentDateTime()),
+            priority(priority) {}
 
         name_t getName() const { return name; }
         void setName(name_t value) { name = value; updateLastSeen(); }
@@ -149,6 +152,9 @@ namespace ACN::OTP
         QDateTime getLastSeen() const { return std::max(lastSeen, standardModules.getLastSeen()); }
         void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
         bool isExpired();
+
+        priority_t getPriority() const { return priority; }
+        void setPriority(priority_t value) { priority = value; updateLastSeen(); }
 
         typedef struct standardModules {
         public:
@@ -159,6 +165,8 @@ namespace ACN::OTP
                 ret = std::max(ret, positionVelAcc.getTimestamp());
                 ret = std::max(ret, rotation.getTimestamp());
                 ret = std::max(ret, rotationVelAcc.getTimestamp());
+                ret = std::max(ret, scale.getTimestamp());
+                ret = std::max(ret, parent.getTimestamp());
                 return ret;
             }
 
@@ -169,6 +177,8 @@ namespace ACN::OTP
                 ret = std::max(ret, positionVelAcc.getLastSeen());
                 ret = std::max(ret, rotation.getLastSeen());
                 ret = std::max(ret, rotationVelAcc.getLastSeen());
+                ret = std::max(ret, scale.getLastSeen());
+                ret = std::max(ret, parent.getLastSeen());
                 return ret;
             }
 
@@ -176,6 +186,8 @@ namespace ACN::OTP
             MODULES::STANDARD::PositionVelAccModule_t positionVelAcc;
             MODULES::STANDARD::RotationModule_t rotation;
             MODULES::STANDARD::RotationVelAccModule_t rotationVelAcc;
+            MODULES::STANDARD::ScaleModule_t scale;
+            MODULES::STANDARD::ParentModule_t parent;
         } standardModules_t;
 
         standardModules_t standardModules;
@@ -183,6 +195,7 @@ namespace ACN::OTP
     private:
         QString name;
         QDateTime lastSeen;
+        priority_t priority;
     };
     typedef std::shared_ptr<pointDetails> pointDetails_t;
 
@@ -197,7 +210,7 @@ namespace ACN::OTP
             point(point) {}
 
         bool isValid();
-        QString toString() {return QString("%1/%2/%3").arg(system).arg(group).arg(point); }
+        QString toString() { return QString("%1/%2/%3").arg(system).arg(group).arg(point); }
 
         system_t system;
         group_t group;

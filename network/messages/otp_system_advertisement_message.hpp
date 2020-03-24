@@ -25,7 +25,7 @@
 #include "message_const.hpp"
 #include "../pdu/pdu.hpp"
 
-namespace ACN::OTP::MESSAGES::OTPSystemAdvertisementMessage
+namespace OTP::MESSAGES::OTPSystemAdvertisementMessage
 {
 
 class Message : public QObject
@@ -33,9 +33,9 @@ class Message : public QObject
     Q_OBJECT
 public:
     explicit Message(
-            ACN::OTP::mode_e mode,
+            OTP::mode_e mode,
             cid_t CID,
-            name_t ProducerName,
+            name_t ComponentName,
             list_t SystemList,
             QObject *parent = nullptr);
     explicit Message(
@@ -73,9 +73,12 @@ public:
         return ret;
     }
 
-    bool addItem(item_t value) { return systemAdvertisementLayer->addItem(value); }
+    bool addItem(item_t value) {
+        auto ret = systemAdvertisementLayer->addItem(value);
+        updatePduLength();
+        return ret;
+    }
 
-    std::shared_ptr<OTP::PDU::OTPRootLayer::Layer> getRootLayer() { return rootLayer; }
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> getOTPLayer() { return otpLayer;}
     std::shared_ptr<OTP::PDU::OTPAdvertisementLayer::Layer> getAdvertisementLayer() { return advertisementLayer; }
     std::shared_ptr<OTP::PDU::OTPSystemAdvertisementLayer::Layer> getSystemAdvertisementLayer() {return systemAdvertisementLayer; }
@@ -84,7 +87,6 @@ private:
     void updatePduLength();
     QByteArray toByteArray();
 
-    std::shared_ptr<OTP::PDU::OTPRootLayer::Layer> rootLayer;
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> otpLayer;
     std::shared_ptr<OTP::PDU::OTPAdvertisementLayer::Layer> advertisementLayer;
     std::shared_ptr<OTP::PDU::OTPSystemAdvertisementLayer::Layer> systemAdvertisementLayer;

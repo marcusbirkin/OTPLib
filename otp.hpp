@@ -19,6 +19,7 @@
 #ifndef OTP_HPP
 #define OTP_HPP
 
+#include "bugs.hpp"
 #include <QObject>
 #include <QNetworkInterface>
 #include <QAbstractSocket>
@@ -36,7 +37,7 @@ namespace OTPLib {
     void displayAbout(QWidget *parent);
 }
 
-namespace ACN::OTP
+namespace OTP
 {
     class Container;
 
@@ -111,9 +112,9 @@ namespace ACN::OTP
         /* Producer Points */
         public:
             QList<point_t> getProducerPoints(system_t, group_t) const;
-            void addProducerPoint(address_t);
-            void addProducerPoint(system_t system, group_t group, point_t point)
-                { addProducerPoint(address_t(system, group, point)); }
+            void addProducerPoint(address_t, priority_t);
+            void addProducerPoint(system_t system, group_t group, point_t point, priority_t priority)
+                { addProducerPoint(address_t(system, group, point), priority); }
             void removeProducerPoint(address_t);
             void removeProducerPoint(system_t system, group_t group, point_t point)
                 { removeProducerPoint(address_t(system, group, point)); }
@@ -131,6 +132,16 @@ namespace ACN::OTP
         signals:
             void newProducerPointName(name_t);
 
+        public:
+            priority_t getProducerPointPriority(address_t) const;
+            priority_t getProducerPointPriority(system_t system, group_t group, point_t point)
+                { return getProducerPointPriority(address_t(system, group, point)); }
+            void setProducerPointPriority(address_t, priority_t);
+            void setProducerPointPriority(system_t system, group_t group, point_t point, priority_t priority)
+                { setProducerPointPriority(address_t(system, group, point), priority); }
+        signals:
+            void newProducerPointPriority(priority_t);
+
         /* Producer Addresses */
         public:
             QList<address_t> getProducerAddresses();
@@ -144,10 +155,10 @@ namespace ACN::OTP
         signals:
             void newComponent(cid_t);
             void removedComponent(cid_t);
-            void updatedComponent(const ACN::OTP::cid_t&, const ACN::OTP::name_t&);
-            void updatedComponent(const ACN::OTP::cid_t&, const QHostAddress&);
-            void updatedComponent(const ACN::OTP::cid_t&, const ACN::OTP::moduleList_t &);
-            void updatedComponent(const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t);
+            void updatedComponent(const OTP::cid_t&, const OTP::name_t&);
+            void updatedComponent(const OTP::cid_t&, const QHostAddress&);
+            void updatedComponent(const OTP::cid_t&, const OTP::moduleList_t &);
+            void updatedComponent(const OTP::cid_t&, OTP::component_t::type_t);
 
         /* Systems */
         public:
@@ -197,7 +208,7 @@ namespace ACN::OTP
         public:
             typedef struct PositionValue_s
             {
-                MODULES::STANDARD::PositionModule_t::location_t value = 0;
+                MODULES::STANDARD::PositionModule_t::position_t value = 0;
                 QString unit;
                 timestamp_t timestamp = static_cast<timestamp_t>(QDateTime::currentDateTime().toMSecsSinceEpoch());
                 MODULES::STANDARD::PositionModule_t::scale_t scale;
@@ -213,7 +224,7 @@ namespace ACN::OTP
             {
                 MODULES::STANDARD::PositionVelAccModule_t::velocity_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
             } PositionVelocity_t;
             PositionVelocity_t getProducerPositionVelocity(address_t, axis_t) const;
             void setProducerPositionVelocity(address_t, axis_t, PositionVelocity_t);
@@ -222,7 +233,7 @@ namespace ACN::OTP
             {
                 MODULES::STANDARD::PositionVelAccModule_t::acceleration_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
             } PositionAcceleration_t;
             PositionAcceleration_t getProducerPositionAcceleration( address_t, axis_t) const;
             void setProducerPositionAcceleration(address_t, axis_t, PositionAcceleration_t);
@@ -236,7 +247,7 @@ namespace ACN::OTP
             {
                 MODULES::STANDARD::RotationModule_t::rotation_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
             } RotationValue_t;
             RotationValue_t getProducerRotation(address_t, axis_t) const;
             void setProducerRotation(address_t, axis_t, RotationValue_t);
@@ -249,7 +260,7 @@ namespace ACN::OTP
             {
                 MODULES::STANDARD::RotationVelAccModule_t::velocity_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
             } RotationVelocity_t;
             RotationVelocity_t getProducerRotationVelocity(address_t, axis_t) const;
             void setProducerRotationVelocity(address_t, axis_t, RotationVelocity_t);
@@ -258,13 +269,39 @@ namespace ACN::OTP
             {
                 MODULES::STANDARD::RotationVelAccModule_t::acceleration_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
             } RotationAcceleration_t;
             RotationAcceleration_t getProducerRotationAcceleration(address_t, axis_t) const;
             void setProducerRotationAcceleration(address_t, axis_t, RotationAcceleration_t);
         signals:
             void updatedRotationVelocity(address_t, axis_t);
             void updatedRotationAcceleration(address_t, axis_t);
+
+        /* -Scale */
+        public:
+        typedef struct Scale_s
+            {
+                MODULES::STANDARD::ScaleModule_t::scale_t value = 0;
+                timestamp_t timestamp = 0;
+            } Scale_t;
+            Scale_t getProducerScale(address_t, axis_t) const;
+            void setProducerScale(address_t, axis_t, Scale_t);
+        signals:
+            void updatedScale(address_t, axis_t);
+
+        /* -Parent */
+        public:
+        typedef struct Parent_s
+            {
+                address_t value;
+                bool relative;
+                timestamp_t timestamp = 0;
+                cid_t sourceCID;
+            } Parent_t;
+            Parent_t getProducerParent(address_t) const;
+            void setProducerParent(address_t, Parent_t);
+        signals:
+            void updatedParent(address_t);
 
     signals:
         void newCID(cid_t);
@@ -365,10 +402,10 @@ namespace ACN::OTP
         signals:
             void newComponent(cid_t);
             void removedComponent(cid_t);
-            void updatedComponent(const ACN::OTP::cid_t&, const ACN::OTP::name_t&);
-            void updatedComponent(const ACN::OTP::cid_t&, const QHostAddress&);
-            void updatedComponent(const ACN::OTP::cid_t&, const ACN::OTP::moduleList_t &);
-            void updatedComponent(const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t);
+            void updatedComponent(const OTP::cid_t&, const OTP::name_t&);
+            void updatedComponent(const OTP::cid_t&, const QHostAddress&);
+            void updatedComponent(const OTP::cid_t&, const OTP::moduleList_t &);
+            void updatedComponent(const OTP::cid_t&, OTP::component_t::type_t);
 
         /* Systems */
         public:
@@ -392,6 +429,8 @@ namespace ACN::OTP
 
         /* Points */
         public:
+            bool isPointValid(address_t) const;
+            bool isPointValid(cid_t, address_t) const;
             QList<point_t> getPoints(system_t, group_t) const;
             QList<point_t> getPoints(cid_t, system_t, group_t) const;
 
@@ -432,12 +471,6 @@ namespace ACN::OTP
 
         /* Standard Modules */
         public:
-            enum multipleProducerResolution_e
-            {
-                Newest,
-                Largest,
-                Smallest
-            };
             QString getScaleString(MODULES::STANDARD::PositionModule_t::scale_t,  bool html = false) const;
             QString getUnitString(MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
             QString getUnitString(MODULES::STANDARD::PositionModule_t::scale_t, MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
@@ -445,14 +478,15 @@ namespace ACN::OTP
         public:
             typedef struct PositionValue_s
             {
-                MODULES::STANDARD::PositionModule_t::location_t value = 0;
+                MODULES::STANDARD::PositionModule_t::position_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 MODULES::STANDARD::PositionModule_t::scale_t scale;
                 cid_t sourceCID;
+                priority_t priority;
             } PositionValue_t;
-            PositionValue_t getPosition(cid_t, address_t, axis_t) const;
-            PositionValue_t getPosition(address_t, axis_t, multipleProducerResolution_e) const;
+            PositionValue_t getPosition(cid_t, address_t, axis_t, bool respectRelative = true) const;
+            PositionValue_t getPosition(address_t, axis_t, bool respectRelative = true) const;
 
         signals:
             void updatedPosition(cid_t, address_t, axis_t);
@@ -463,21 +497,23 @@ namespace ACN::OTP
             {
                 MODULES::STANDARD::PositionVelAccModule_t::velocity_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } PositionVelocity_t;
-            PositionVelocity_t getPositionVelocity(cid_t, address_t, axis_t) const;
-            PositionVelocity_t getPositionVelocity(address_t, axis_t, multipleProducerResolution_e) const;
+            PositionVelocity_t getPositionVelocity(cid_t, address_t, axis_t, bool respectRelative = true) const;
+            PositionVelocity_t getPositionVelocity(address_t, axis_t, bool respectRelative = true) const;
 
             typedef struct PositionAcceleration_s
             {
                 MODULES::STANDARD::PositionVelAccModule_t::acceleration_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } PositionAcceleration_t;
-            PositionAcceleration_t getPositionAcceleration(cid_t, address_t, axis_t) const;
-            PositionAcceleration_t getPositionAcceleration(address_t, axis_t, multipleProducerResolution_e) const;
+            PositionAcceleration_t getPositionAcceleration(cid_t, address_t, axis_t, bool respectRelative = true) const;
+            PositionAcceleration_t getPositionAcceleration(address_t, axis_t, bool respectRelative = true) const;
         signals:
             void updatedPositionVelocity(cid_t, address_t, axis_t);
             void updatedPositionAcceleration(cid_t, address_t, axis_t);
@@ -488,11 +524,12 @@ namespace ACN::OTP
             {
                 MODULES::STANDARD::RotationModule_t::rotation_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } RotationValue_t;
-            RotationValue_t getRotation(cid_t, address_t, axis_t) const;
-            RotationValue_t getRotation(address_t, axis_t, multipleProducerResolution_e) const;
+            RotationValue_t getRotation(cid_t, address_t, axis_t, bool respectRelative = true) const;
+            RotationValue_t getRotation(address_t, axis_t, bool respectRelative = true) const;
         signals:
             void updatedRotation(cid_t, address_t, axis_t);
 
@@ -502,30 +539,65 @@ namespace ACN::OTP
             {
                 MODULES::STANDARD::RotationVelAccModule_t::velocity_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } RotationVelocity_t;
-            RotationVelocity_t getRotationVelocity(cid_t, address_t, axis_t) const;
-            RotationVelocity_t getRotationVelocity(address_t, axis_t, multipleProducerResolution_e) const;
+            RotationVelocity_t getRotationVelocity(cid_t, address_t, axis_t, bool respectRelative = true) const;
+            RotationVelocity_t getRotationVelocity(address_t, axis_t, bool respectRelative = true) const;
 
             typedef struct RotationAcceleration_s
             {
                 MODULES::STANDARD::RotationVelAccModule_t::acceleration_t value = 0;
                 QString unit;
-                timestamp_t timestamp;
+                timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } RotationAcceleration_t;
-            RotationAcceleration_t getRotationAcceleration(cid_t, address_t, axis_t) const;
-            RotationAcceleration_t getRotationAcceleration(address_t, axis_t, multipleProducerResolution_e) const;
+            RotationAcceleration_t getRotationAcceleration(cid_t, address_t, axis_t, bool respectRelative = true) const;
+            RotationAcceleration_t getRotationAcceleration(address_t, axis_t, bool respectRelative = true) const;
         signals:
             void updatedRotationVelocity(cid_t, address_t, axis_t);
             void updatedRotationAcceleration(cid_t, address_t, axis_t);
+
+        /* -Scale */
+        public:
+            typedef struct Scale_s
+            {
+                MODULES::STANDARD::ScaleModule_t::scale_t value = 0;
+                timestamp_t timestamp = 0;
+                cid_t sourceCID;
+                priority_t priority;
+            } Scale_t;
+            Scale_t getScale(cid_t, address_t, axis_t) const;
+            Scale_t getScale(address_t, axis_t) const;
+        signals:
+            void updatedScale(cid_t, address_t, axis_t);
+
+        /* -Parent */
+        public:
+            typedef struct Parent_s
+            {
+                address_t value;
+                bool relative;
+                timestamp_t timestamp = 0;
+                cid_t sourceCID;
+                priority_t priority;
+            } Parent_t;
+            Parent_t getParent(cid_t, address_t) const;
+            Parent_t getParent(address_t) const;
+        signals:
+            void updatedParent(cid_t, address_t);
 
     private slots:
         void newDatagram(QNetworkDatagram datagram);
 
     private:
         void setupListener();
+
+        bool receiveOTPTransformMessage(QNetworkDatagram datagram);
+        bool receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram);
+        bool receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram);
 
         void sendOTPModuleAdvertisementMessage();
         PDU::OTPLayer::folio_t ModuleAdvertisementMessage_Folio = 0;

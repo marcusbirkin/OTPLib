@@ -24,33 +24,33 @@
 #include "../../enums.hpp"
 #include "../pdu/pdu_const.hpp"
 
-namespace ACN::OTP::MESSAGES
+namespace OTP::MESSAGES
 {
     /*
-     * 7.1 Flags & Length
+     * 6.3 Length
      */
 
     namespace OTPTransformMessage {
         namespace RANGES {
-            const range_t MESSAGE_SIZE = {157, 1472};
-        }
-    }
-
-    namespace OTPModuleAdvertisementMessage {
-        namespace RANGES {
-            const range_t MESSAGE_SIZE = {113, 1469};
-        }
-    }
-
-    namespace OTPNameAdvertisementMessage {
-        namespace RANGES {
-            const range_t MESSAGE_SIZE = {110, 1436};
+            const range_t MESSAGE_SIZE = {135, 1472};
         }
     }
 
     namespace OTPSystemAdvertisementMessage {
         namespace RANGES {
-            const range_t MESSAGE_SIZE = {110, 310};
+            const range_t MESSAGE_SIZE = {96, 296};
+        }
+    }
+
+    namespace OTPNameAdvertisementMessage {
+        namespace RANGES {
+            const range_t MESSAGE_SIZE = {96, 1461};
+        }
+    }
+
+    namespace OTPModuleAdvertisementMessage {
+        namespace RANGES {
+            const range_t MESSAGE_SIZE = {96, 1471};
         }
     }
 }

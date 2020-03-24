@@ -21,7 +21,7 @@
 #include "../../const.hpp"
 #include <QtEndian>
 
-namespace ACN::OTP::PDU {
+namespace OTP::PDU {
 
     PDUByteArray& operator<<(PDUByteArray &l, const quint8 &r)
     {
@@ -110,21 +110,6 @@ namespace ACN::OTP::PDU {
         return l;
     }
 
-    PDUByteArray& operator<<(PDUByteArray &l, const flags_length_t &r)
-    {
-        quint8 MSB = quint8(r.Flags << 4) | (quint8((r.PDULength & 0xF00) >> 8));
-        quint8 LSB = quint8(r.PDULength & 0x0FF);
-        return l << MSB << LSB;
-    }
-    PDUByteArray& operator>>(PDUByteArray &l, flags_length_t &r)
-    {
-        quint8 MSB, LSB;
-        l >> MSB >> LSB;
-        r.Flags = quint8((MSB & 0xF0) >> 4);
-        r.PDULength = LSB | ((MSB & 0x0F) >> 8);
-        return l;
-    }
-
     int name_t::maxSize() { return NAME_LENGTH; }
 
     name_t& name_t::operator=(const name_t& r)
@@ -155,18 +140,18 @@ namespace ACN::OTP::PDU {
         return l;
     }
 
-    namespace OTPRootLayer {
-        PDUByteArray& operator<<(PDUByteArray &l, const acnIdent_t &r)
+    namespace OTPLayer {
+        PDUByteArray& operator<<(PDUByteArray &l, const otpIdent_t &r)
         {
             auto r_copy = r;
-            r_copy.resize(ACN_PACKET_IDENT_LENGTH);
+            r_copy.resize(OTP_PACKET_IDENT.size());
             l.append(r_copy);
             return l;
         }
-        PDUByteArray& operator>>(PDUByteArray &l, acnIdent_t &r)
+        PDUByteArray& operator>>(PDUByteArray &l, otpIdent_t &r)
         {
-            r = l.left(ACN_PACKET_IDENT_LENGTH);
-            l.remove(0, ACN_PACKET_IDENT_LENGTH);
+            r = l.left(OTP_PACKET_IDENT.size());
+            l.remove(0, OTP_PACKET_IDENT.size());
             return l;
         }
 
@@ -177,26 +162,27 @@ namespace ACN::OTP::PDU {
         }
         PDUByteArray& operator>>(PDUByteArray &l, cid_t &r)
         {
-            r = QUuid::fromRfc4122(l);
+            r = QUuid::fromRfc4122(l.left(r.toRfc4122().length()));
             l.remove(0, r.toRfc4122().length());
             return l;
         }
-    }
 
-    namespace OTPLayer {
         bool sequence_t::checkSequence(sequence_t value)
         {
-            /* 7.4 Sequence Number
-                Components shall process messages in the order that they are received, with the exception that they shall
-                be discarded if they are deemed out-of-sequence according to the algorithm below:
-                1. A component receives a message of OTP type X with a sequence number A.
-                2. That same component receives a message of OTP type X with a sequence number B.
-                3. If, using signed 16-bit binary arithmetic, (B – A) is between –20 and 1, exclusive,
-                    then the message containing sequence number B shall be deemed out-of-sequence.
+            /* 6.5 Sequence Number
+            Components shall process messages in the order that they are received,
+            using the following algorithm to determine whether an OTP message is part of the current communication:
+            Having first received a message of OTP type X with sequence number A,
+            a Component then receives another message of OTP type X with sequence number B.
+            If, using unsigned 32-bit binary arithmetic, (A - B) falls within the range [0 - 65535], inclusive,
+            then the message containing sequence number B shall be discarded. Otherwise,
+            the message containing sequence number B shall be processed.
             */
-            auto A = quint16(data);
-            auto B = quint16(value);
-            return !(((B - A) > -20) && ((B - A) < 1));
+            sequence_t::type A = data;
+            sequence_t::type B = value;
+            quint32 test = A-B;
+
+            return !((test >= 0) && (test <= 63335));
         }
 
         PDUByteArray& operator>>(PDUByteArray &l, sequence_t &r)
@@ -219,15 +205,15 @@ namespace ACN::OTP::PDU {
 
     namespace OTPTransformLayer {
         system_t::system_t() : system_t(getMin() - 1) {}
-        bool system_t::isValid() { return RANGES::System.isValid(data); }
+        bool system_t::isValid() const { return RANGES::System.isValid(data); }
         system_t system_t::getMin() { return static_cast<system_t>(RANGES::System.getMin()); }
         system_t system_t::getMax() { return static_cast<system_t>(RANGES::System.getMax()); }
-        size_t system_t::getSize() {
-            PDUByteArray temp;
-            temp << *this;
-            return temp.size();
-        }
         PDUByteArray& operator>>(PDUByteArray &l, system_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
+        OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, system_t &r)
         {
             l >> r.data;
             return l;
@@ -263,11 +249,53 @@ namespace ACN::OTP::PDU {
     }
 
     namespace OTPPointLayer {
+        bool priority_t::isValid() const { return RANGES::Priority.isValid(data); }
+        priority_t priority_t::getMin() { return static_cast<priority_t>(RANGES::Priority.getMin()); }
+        priority_t priority_t::getMax() { return static_cast<priority_t>(RANGES::Priority.getMax()); }
+        PDUByteArray& operator>>(PDUByteArray &l, priority_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
+        priority_t& priority_t::operator++()
+        {
+            if (data >= getMax())
+                data = getMin();
+            else
+                data++;
+            return *this;
+        }
+        priority_t priority_t::operator++(int)
+        {
+            priority_t tmp(*this);
+            operator++();
+            return tmp;
+        }
+        priority_t& priority_t::operator--()
+        {
+            if (data <= getMin())
+                data = getMax();
+            else
+                data--;
+            return *this;
+        }
+        priority_t priority_t::operator--(int)
+        {
+            priority_t tmp(*this);
+            operator--();
+            return tmp;
+        }
+
         group_t::group_t() : group_t(getMin() - 1) {}
-        bool group_t::isValid() { return RANGES::Group.isValid(data); }
+        bool group_t::isValid() const { return RANGES::Group.isValid(data); }
         group_t group_t::getMin() { return static_cast<group_t>(RANGES::Group.getMin()); }
         group_t group_t::getMax() { return static_cast<group_t>(RANGES::Group.getMax()); }
         PDUByteArray& operator>>(PDUByteArray &l, group_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
+        OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, group_t &r)
         {
             l >> r.data;
             return l;
@@ -310,6 +338,11 @@ namespace ACN::OTP::PDU {
             l >> r.data;
             return l;
         }
+        OTPModuleLayer::additional_t& operator>>(OTPModuleLayer::additional_t &l, point_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
         point_t& point_t::operator++()
         {
             if (data >= getMax())
@@ -341,16 +374,16 @@ namespace ACN::OTP::PDU {
     }
 
     namespace OTPModuleLayer {
-        size_t vector_t::getSize() {
+        size_t ident_t::getSize() {
             PDUByteArray temp;
             temp << *this;
             return temp.size();
         }
-        PDUByteArray& operator<<(PDUByteArray &l, const vector_t &r)
+        PDUByteArray& operator<<(PDUByteArray &l, const ident_t &r)
         {
             return l << r.ManufacturerID << r.ModuleNumber;
         }
-        PDUByteArray& operator>>(PDUByteArray &l, vector_t &r)
+        PDUByteArray& operator>>(PDUByteArray &l, ident_t &r)
         {
             l >> r.ManufacturerID >> r.ModuleNumber;
             return l;

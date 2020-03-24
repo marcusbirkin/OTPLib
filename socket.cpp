@@ -20,7 +20,7 @@
 #include <QNetworkDatagram>
 #include "network/pdu/pdu_const.hpp"
 
-using namespace ACN::OTP;
+using namespace OTP;
 
 SocketManager::SocketManager(QNetworkInterface interface, QAbstractSocket::NetworkLayerProtocol transport) : QObject(),
     interface(interface), transport(transport)
@@ -32,12 +32,12 @@ SocketManager::SocketManager(QNetworkInterface interface, QAbstractSocket::Netwo
     switch (transport) {
         case QAbstractSocket::IPv4Protocol:
         {
-            RXSocket->bind(QHostAddress::AnyIPv4, ACN::OTP::ACN_SDT_MULTICAST_PORT);
+            RXSocket->bind(QHostAddress::AnyIPv4, OTP::OTP_PORT);
         } break;
 
         case QAbstractSocket::IPv6Protocol:
         {
-            RXSocket->bind(QHostAddress::AnyIPv6, ACN::OTP::ACN_SDT_MULTICAST_PORT);
+            RXSocket->bind(QHostAddress::AnyIPv6, OTP::OTP_PORT);
         } break;
 
         default: return;

@@ -18,17 +18,20 @@
 */
 #include "otp_point_layer.hpp"
 
-using namespace ACN::OTP::PDU::OTPPointLayer;
+using namespace OTP::PDU;
+using namespace OTP::PDU::OTPPointLayer;
 
 Layer::Layer(
-        ACN::OTP::PDU::flags_length_t::pduLength_t PDULength,
+        pduLength_t PDULength,
+        priority_t Priority,
         group_t Group,
         point_t Point,
         timestamp_t Timestamp,
         QObject *parent) :
     QObject(parent),
-    FlagsLength({FLAGS, PDULength}),
     Vector(VECTOR),
+    PDULength(PDULength),
+    Priority(Priority),
     Group(Group),
     Point(Point),
     Timestamp(Timestamp),
@@ -37,11 +40,12 @@ Layer::Layer(
 {}
 
 Layer::Layer(
-        ACN::OTP::PDU::PDUByteArray layer,
+        OTP::PDU::PDUByteArray layer,
         QObject *parent) :
     QObject(parent),
-    FlagsLength({0, 0}),
     Vector(0),
+    PDULength(0),
+    Priority(0),
     Group(0),
     Point(0),
     Options(0),
@@ -50,8 +54,9 @@ Layer::Layer(
     if (layer.size() != Layer().toPDUByteArray().size())
         return;
 
-    layer >> FlagsLength
-        >> Vector
+    layer >> Vector
+        >> PDULength
+        >> Priority
         >> Group
         >> Point
         >> Timestamp
@@ -61,20 +66,21 @@ Layer::Layer(
 
 bool Layer::isValid()
 {
-    if (FlagsLength.Flags != FLAGS) return false;
-    if (FlagsLength.PDULength == 0) return false;
     if (Vector != VECTOR) return false;
+    if (PDULength <= toPDUByteArray().size() - LENGTHOFFSET) return false;
+    if (!Priority.isValid()) return false;
     if (!Group.isValid()) return false;
     if (!Point.isValid()) return false;
     if (Timestamp == 0) return false;
     return true;
 }
 
-ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
+OTP::PDU::PDUByteArray Layer::toPDUByteArray()
 {
     PDUByteArray ret;
-    return ret << FlagsLength
-        << Vector
+    return ret << Vector
+        << PDULength
+        << Priority
         << Group
         << Point
         << Timestamp
@@ -82,20 +88,23 @@ ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
         << Reserved;
 }
 
-void Layer::fromPDUByteArray(ACN::OTP::PDU::PDUByteArray layer)
+void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
 {
-    FlagsLength = {0,0};
     Vector = 0;
+    PDULength = 0;
+    Priority = 0;
     Group = 0;
     Point = 0;
     Timestamp = 0;
     Options = 0;
     Reserved = 0;
+
     if (layer.size() != Layer().toPDUByteArray().size())
         return;
 
-    layer >> FlagsLength
-        >> Vector
+    layer >> Vector
+        >> PDULength
+        >> Priority
         >> Group
         >> Point
         >> Timestamp

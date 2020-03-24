@@ -18,60 +18,71 @@
 */
 #include "otp_module_layer.hpp"
 
-using namespace ACN::OTP::PDU::OTPModuleLayer;
+using namespace OTP::PDU;
+using namespace OTP::PDU::OTPModuleLayer;
 
-Layer::Layer(
-        ACN::OTP::PDU::flags_length_t::pduLength_t PDULength,
-        vector_t::manufacturerID_t ManufacturerID,
-        vector_t::moduleNumber_t ModuleNumber,
-        QObject *parent) :
+Layer::Layer(QObject *parent) :
     QObject(parent),
-    FlagsLength({FLAGS, PDULength}),
-    Vector({ManufacturerID, ModuleNumber}),
+    ModuleIdent(ident_t()),
+    PDULength(0),
     Additional(QByteArray())
 {}
 
 Layer::Layer(
-        ACN::OTP::PDU::PDUByteArray layer,
+        ident_t::manufacturerID_t ManufacturerID,
+        pduLength_t PDULength,
+        ident_t::moduleNumber_t ModuleNumber,
         QObject *parent) :
     QObject(parent),
-    FlagsLength({0, 0}),
-    Vector({0,0}),
+    ModuleIdent({ManufacturerID, ModuleNumber}),
+    PDULength(PDULength),
+    Additional(QByteArray())
+{}
+
+Layer::Layer(
+        OTP::PDU::PDUByteArray layer,
+        QObject *parent) :
+    QObject(parent),
+    ModuleIdent(ident_t()),
+    PDULength(0),
     Additional(QByteArray())
 {
     if (layer.size() != Layer().toPDUByteArray().size())
         return;
 
-    layer >> FlagsLength
-        >> Vector
+    layer >> ModuleIdent.ManufacturerID
+        >> PDULength
+        >> ModuleIdent.ModuleNumber
         >> Additional;
 }
 
 bool Layer::isValid()
 {
-    if (FlagsLength.Flags != FLAGS) return false;
-    if (FlagsLength.PDULength == 0) return false;
+    if (PDULength != toPDUByteArray().size() - LENGTHOFFSET) return false;
     if (Additional.isNull()) return false;
     return true;
 }
 
-ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
+OTP::PDU::PDUByteArray Layer::toPDUByteArray()
 {
     PDUByteArray ret;
-    return ret << FlagsLength
-        << Vector
+    return ret << ModuleIdent.ManufacturerID
+        << PDULength
+        << ModuleIdent.ModuleNumber
         << Additional;
 }
 
-void Layer::fromPDUByteArray(ACN::OTP::PDU::PDUByteArray layer)
+void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
 {
-    FlagsLength = {0,0};
-    Vector = {0,0};
+    ModuleIdent = {0,0};
+    PDULength = 0;
     Additional.clear();
-    if (layer.size() != getPDULength(layer))
+
+    if (layer.size() < Layer().toPDUByteArray().size())
         return;
 
-    layer >> FlagsLength
-        >> Vector
+    layer >> ModuleIdent.ManufacturerID
+        >> PDULength
+        >> ModuleIdent.ModuleNumber
         >> Additional;
 }

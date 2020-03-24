@@ -25,7 +25,7 @@
 #include "message_const.hpp"
 #include "../pdu/pdu.hpp"
 
-namespace ACN::OTP::MESSAGES::OTPTransformMessage
+namespace OTP::MESSAGES::OTPTransformMessage
 {
 
 class Message : public QObject
@@ -34,7 +34,7 @@ class Message : public QObject
 public:
     explicit Message(
             cid_t CID,
-            name_t ProducerName,
+            name_t ComponentName,
             system_t System,
             QObject *parent = nullptr);
     explicit Message(
@@ -82,28 +82,27 @@ public:
         MessageToBig
     } addModule_ret;
     typedef struct {
-        ACN::OTP::address_t address;
-        ACN::OTP::timestamp_t sampleTime;
-        ACN::OTP::PDU::OTPModuleLayer::vector_t vector;
-        ACN::OTP::PDU::OTPModuleLayer::additional_t additional;
+        OTP::priority_t priority;
+        OTP::address_t address;
+        OTP::timestamp_t sampleTime;
+        OTP::PDU::OTPModuleLayer::ident_t ident;
+        OTP::PDU::OTPModuleLayer::additional_t additional;
     } addModule_t;
     addModule_ret addModule(addModule_t &moduleData);
 
-    std::shared_ptr<OTP::PDU::OTPRootLayer::Layer> getRootLayer() { return rootLayer; }
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> getOTPLayer() { return otpLayer; }
     std::shared_ptr<OTP::PDU::OTPTransformLayer::Layer> getTransformLayer() { return transformLayer; }
-    QMap<address_t, std::shared_ptr<ACN::OTP::PDU::OTPPointLayer::Layer>> getPointLayers() { return pointLayers; }
-    QMultiMap<address_t, std::shared_ptr<ACN::OTP::PDU::OTPModuleLayer::Layer>> getModuleLayers() { return moduleLayers; }
+    QMap<address_t, std::shared_ptr<OTP::PDU::OTPPointLayer::Layer>> getPointLayers() { return pointLayers; }
+    QMultiMap<address_t, std::shared_ptr<OTP::PDU::OTPModuleLayer::Layer>> getModuleLayers() { return moduleLayers; }
 
 private:
     void updatePduLength();
     QByteArray toByteArray();
 
-    std::shared_ptr<OTP::PDU::OTPRootLayer::Layer> rootLayer;
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> otpLayer;
     std::shared_ptr<OTP::PDU::OTPTransformLayer::Layer> transformLayer;
-    QMap<address_t, std::shared_ptr<ACN::OTP::PDU::OTPPointLayer::Layer>> pointLayers;
-    QMultiMap<address_t, std::shared_ptr<ACN::OTP::PDU::OTPModuleLayer::Layer>> moduleLayers;
+    QMap<address_t, std::shared_ptr<OTP::PDU::OTPPointLayer::Layer>> pointLayers;
+    QMultiMap<address_t, std::shared_ptr<OTP::PDU::OTPModuleLayer::Layer>> moduleLayers;
 };
 
 } // namespace

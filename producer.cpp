@@ -1,6 +1,6 @@
 /*
     OTPLib
-    A QT interface for E1.59 (Entertainment Technology Object Transform Protocol (OTP)) 
+    A QT interface for E1.59 (Entertainment Technology Object Transform Protocol (OTP))
     Copyright (C) 2019  Marcus Birkin
 
     This program is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@
 
 #include <QDebug>
 
-using namespace ACN::OTP;
+using namespace OTP;
 
 Producer::Producer(
         QNetworkInterface iface,
@@ -73,12 +73,12 @@ Producer::Producer(
 
     connect(otpNetwork.get(), qOverload<const cid_t&, const name_t&>(&Container::updatedComponent),
             this, qOverload<const cid_t&, const name_t&>(&Producer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const ACN::OTP::cid_t&, const QHostAddress&>(&Container::updatedComponent),
-            this, qOverload<const ACN::OTP::cid_t&, const QHostAddress&>(&Producer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const ACN::OTP::cid_t&, const moduleList_t &>(&Container::updatedComponent),
-            this, qOverload<const ACN::OTP::cid_t&, const moduleList_t &>(&Producer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t>(&Container::updatedComponent),
-            this, qOverload<const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t>(&Producer::updatedComponent));
+    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, const QHostAddress&>(&Container::updatedComponent),
+            this, qOverload<const OTP::cid_t&, const QHostAddress&>(&Producer::updatedComponent));
+    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, const moduleList_t &>(&Container::updatedComponent),
+            this, qOverload<const OTP::cid_t&, const moduleList_t &>(&Producer::updatedComponent));
+    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, OTP::component_t::type_t>(&Container::updatedComponent),
+            this, qOverload<const OTP::cid_t&, OTP::component_t::type_t>(&Producer::updatedComponent));
 
     connect(otpNetwork.get(), &Container::newSystem, this, &Producer::newSystem);
     connect(otpNetwork.get(), &Container::removedSystem, this, &Producer::removedSystem);
@@ -178,9 +178,12 @@ QList<point_t> Producer::getProducerPoints(system_t system, group_t group) const
     return otpNetwork->getPointList(CID, system, group);
 }
 
-void Producer::addProducerPoint(address_t address)
+void Producer::addProducerPoint(address_t address, priority_t priority)
 {
-    otpNetwork->addPoint(getProducerCID(), address);
+    otpNetwork->addPoint(getProducerCID(), address, priority);
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent.setSystem(address.system, 0);
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent.setGroup(address.group, 0);
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent.setPoint(address.point, 0);
 }
 
 void Producer::removeProducerPoint(address_t address)
@@ -199,6 +202,19 @@ void Producer::setProducerPointName(address_t address, QString name)
     if (!getProducerPoints(address.system, address.group).contains(address.point)) return;
     otpNetwork->PointDetails(getProducerCID(), address)->setName(name);
     emit newProducerPointName(name);
+}
+
+priority_t Producer::getProducerPointPriority(address_t address) const
+{
+    if (!getProducerPoints(address.system, address.group).contains(address.point)) return priority_t();
+    return otpNetwork->PointDetails(getProducerCID(), address)->getPriority();
+}
+
+void Producer::setProducerPointPriority(address_t address, priority_t priority)
+{
+    if (!getProducerPoints(address.system, address.group).contains(address.point)) return;
+    otpNetwork->PointDetails(getProducerCID(), address)->setPriority(priority);
+    emit newProducerPointPriority(priority);
 }
 
 /* Producer Addesses */
@@ -350,7 +366,7 @@ Producer::PositionValue_t Producer::getProducerPosition(address_t address, axis_
     if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getLocation(axis);
+    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getPosition(axis);
     ret.scale = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getScaling();
     ret.unit = getUnitString(ret.scale, VALUES::POSITION);
     ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getTimestamp();
@@ -360,7 +376,7 @@ Producer::PositionValue_t Producer::getProducerPosition(address_t address, axis_
 void Producer::setProducerPosition(address_t address, axis_t axis, PositionValue_t position)
 {
     if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.setLocation(
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.setPosition(
                 axis, position.value, position.timestamp);
     otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.setScaling(
                 position.scale);
@@ -486,6 +502,55 @@ void Producer::setProducerRotationAcceleration(address_t address, axis_t axis, R
     emit updatedRotationAcceleration(address, axis);
 }
 
+Producer::Scale_t Producer::getProducerScale(address_t address, axis_t axis) const
+{
+    using namespace MODULES::STANDARD;
+    Producer::Scale_t ret;
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+        return ret;
+
+    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.scale.getScale(axis);
+    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.scale.getTimestamp();
+    return ret;
+}
+
+void Producer::setProducerScale(address_t address, axis_t axis, Scale_t scale)
+{
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.scale.setScale(
+                axis, scale.value, scale.timestamp);
+
+    emit updatedScale(address, axis);
+}
+
+Producer::Parent_t Producer::getProducerParent(address_t address) const
+{
+    using namespace MODULES::STANDARD;
+    Producer::Parent_t ret;
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+        return ret;
+
+    auto module = &otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent;
+    ret.value = {module->getSystem(), module->getGroup(), module->getPoint()};
+    ret.relative = module->isRelative();
+    ret.timestamp = module->getTimestamp();
+    return ret;
+}
+
+void Producer::setProducerParent(address_t address, Parent_t parent)
+{
+    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+
+    auto module = &otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent;
+    module->setSystem(parent.value.system, parent.timestamp);
+    module->setGroup(parent.value.group, parent.timestamp);
+    module->setPoint(parent.value.point, parent.timestamp);
+    module->setRelative(parent.relative, parent.timestamp);
+
+    emit updatedParent(address);
+}
+
 void Producer::setupListener()
 {
     qDebug() << this << "- Starting on interface" << iface.humanReadableName() << iface.hardwareAddress();
@@ -537,7 +602,7 @@ void Producer::newDatagram(QNetworkDatagram datagram)
         // Module Advertisement Message?
         if (moduleAdvert.isValid())
         {
-            auto cid = moduleAdvert.getRootLayer()->getCID();
+            auto cid = moduleAdvert.getOTPLayer()->getCID();
             if (!sequenceMap[cid].checkSequence(
                         PDU::VECTOR_OTP_ADVERTISEMENT_MODULE,
                         moduleAdvert.getOTPLayer()->getSequence()))
@@ -549,9 +614,9 @@ void Producer::newDatagram(QNetworkDatagram datagram)
             qDebug() << this << "- OTP Module Advertisement Message Request Received From" << datagram.senderAddress();
 
             otpNetwork->addComponent(
-                        moduleAdvert.getRootLayer()->getCID(),
+                        cid,
                         datagram.senderAddress(),
-                        moduleAdvert.getOTPLayer()->getProducerName(),
+                        moduleAdvert.getOTPLayer()->getComponentName(),
                         component_t::type_t::consumer,
                         moduleAdvert.getModuleAdvertisementLayer()->getList());
             return;
@@ -560,7 +625,7 @@ void Producer::newDatagram(QNetworkDatagram datagram)
         // Name Advertisement Message?
         if (nameAdvert.isValid())
         {
-            auto cid = nameAdvert.getRootLayer()->getCID();
+            auto cid = nameAdvert.getOTPLayer()->getCID();
             if (!sequenceMap[cid].checkSequence(
                         PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
                         nameAdvert.getOTPLayer()->getSequence()))
@@ -576,9 +641,9 @@ void Producer::newDatagram(QNetworkDatagram datagram)
                 qDebug() << this << "- OTP Name Advertisement Message Request Received From" << datagram.senderAddress();
 
             otpNetwork->addComponent(
-                    nameAdvert.getRootLayer()->getCID(),
+                    cid,
                     datagram.senderAddress(),
-                    nameAdvert.getOTPLayer()->getProducerName(),
+                    nameAdvert.getOTPLayer()->getComponentName(),
                     type);
 
             if (type == component_t::type_t::consumer)
@@ -589,7 +654,7 @@ void Producer::newDatagram(QNetworkDatagram datagram)
         // System Advertisement Message?
         if (systemAdvert.isValid() && systemAdvert.getSystemAdvertisementLayer()->getOptions().isRequest())
         {
-            auto cid = systemAdvert.getRootLayer()->getCID();
+            auto cid = systemAdvert.getOTPLayer()->getCID();
             if (!sequenceMap[cid].checkSequence(
                         PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
                         systemAdvert.getOTPLayer()->getSequence()))
@@ -607,13 +672,13 @@ void Producer::newDatagram(QNetworkDatagram datagram)
             for (auto system : systemAdvert.getSystemAdvertisementLayer()->getList())
             {
                 otpNetwork->addComponent(
-                        systemAdvert.getRootLayer()->getCID(),
+                        cid,
                         datagram.senderAddress(),
-                        systemAdvert.getOTPLayer()->getProducerName(),
+                        systemAdvert.getOTPLayer()->getComponentName(),
                         type);
 
                 otpNetwork->addSystem(
-                        systemAdvert.getRootLayer()->getCID(),
+                        cid,
                         system);
             }
 
@@ -626,7 +691,7 @@ void Producer::newDatagram(QNetworkDatagram datagram)
 
 void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio)
 {
-    using namespace ACN::OTP::MESSAGES::OTPNameAdvertisementMessage;
+    using namespace OTP::MESSAGES::OTPNameAdvertisementMessage;
 
     // Create a List of Address Point Descriptions
     list_t list;
@@ -663,14 +728,15 @@ void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MES
     }
 
     // Send messages
-    for (int n = 0; n < folioMessages.count(); n++)
+    page_t lastPage = static_cast<page_t>(folioMessages.count()) - 1;
+    for (page_t page = 0; page < folioMessages.count(); page++)
     {
-        auto datagram = folioMessages[n]->toQNetworkDatagram(
+        auto datagram = folioMessages[page]->toQNetworkDatagram(
                     destinationAddr,
                     sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_NAME),
                     folio,
-                    n,
-                    folioMessages.count() - 1);
+                    page,
+                    lastPage);
         if (SocketManager::getInstance(iface, destinationAddr.protocol())->writeDatagram(datagram))
             qDebug() << this << "- OTP Name Advertisement Message Response Sent to" << destinationAddr;
         else
@@ -680,7 +746,7 @@ void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MES
 
 void Producer::sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio)
 {
-    using namespace ACN::OTP::MESSAGES::OTPSystemAdvertisementMessage;
+    using namespace OTP::MESSAGES::OTPSystemAdvertisementMessage;
 
     // Get list of systems
     list_t list = otpNetwork->getSystemList(getProducerCID());
@@ -711,14 +777,15 @@ void Producer::sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, M
     }
 
     // Send messages
-    for (int n = 0; n < folioMessages.count(); n++)
+    page_t lastPage = static_cast<page_t>(folioMessages.count()) - 1;
+    for (page_t page = 0; page < folioMessages.count(); page++)
     {
-        auto datagram = folioMessages[n]->toQNetworkDatagram(
+        auto datagram = folioMessages[page]->toQNetworkDatagram(
                     destinationAddr,
                     sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM),
                     folio,
-                    n,
-                    folioMessages.count() - 1);
+                    page,
+                    lastPage);
 
         if (SocketManager::getInstance(iface, destinationAddr.protocol())->writeDatagram(datagram))
             qDebug() << this << "- OTP System Advertisement Message Response Sent To" << datagram.destinationAddress();
@@ -729,11 +796,11 @@ void Producer::sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, M
 
 void Producer::sendOTPTransformMessage(system_t system)
 {
-    using namespace ACN::OTP::MESSAGES::OTPTransformMessage;
+    using namespace OTP::MESSAGES::OTPTransformMessage;
     auto folio = TransformMessage_Folio++;
 
     // Establish requested modules for system
-    QVector<PDU::OTPModuleLayer::vector_t> requestedModules;
+    QVector<PDU::OTPModuleLayer::ident_t> requestedModules;
     for (auto cid : otpNetwork->getComponentList())
     {
         if (otpNetwork->getSystemList(cid).contains(system))
@@ -752,6 +819,7 @@ void Producer::sendOTPTransformMessage(system_t system)
     QVector<Message::addModule_t> folioModuleData;
     for (auto address: getProducerAddresses(system))
     {
+        auto pointDetails = otpNetwork->PointDetails(getProducerCID(), address);
         for (auto module : requestedModules)
         {
             switch (module.ManufacturerID)
@@ -759,10 +827,11 @@ void Producer::sendOTPTransformMessage(system_t system)
                 case ESTA_MANUFACTURER_ID:
                 {
                     folioModuleData.append(
-                        {address,
-                         MODULES::STANDARD::getTimestamp(module, otpNetwork->PointDetails(getProducerCID(), address)),
+                        {pointDetails->getPriority(),
+                         address,
+                         MODULES::STANDARD::getTimestamp(module, pointDetails),
                          {module.ManufacturerID, module.ModuleNumber},
-                         MODULES::STANDARD::getAdditional(module, otpNetwork->PointDetails(getProducerCID(), address))});
+                         MODULES::STANDARD::getAdditional(module, pointDetails)});
                 } break;
                 default:
                 {
@@ -792,14 +861,15 @@ void Producer::sendOTPTransformMessage(system_t system)
     }
 
     // Send messages
-    for (int n = 0; n < folioMessages.count(); n++)
+    page_t lastPage = static_cast<page_t>(folioMessages.count()) - 1;
+    for (page_t page = 0; page < folioMessages.count(); page++)
     {
-        auto datagrams = folioMessages[n]->toQNetworkDatagrams(
+        auto datagrams = folioMessages[page]->toQNetworkDatagrams(
                     transport,
                     sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_TRANSFORM_MESSAGE),
                     folio,
-                    n,
-                    folioMessages.count() - 1);
+                    page,
+                    lastPage);
 
         if (!SocketManager::writeDatagrams(iface, datagrams))
             qDebug() << this << "- OTP Transform Message Failed";

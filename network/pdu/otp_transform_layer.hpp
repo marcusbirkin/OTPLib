@@ -24,17 +24,17 @@
 #include "pdu_types.hpp"
 #include "pdu_const.hpp"
 
-namespace ACN::OTP::PDU::OTPTransformLayer
+namespace OTP::PDU::OTPTransformLayer
 {
 
 class Layer : public QObject
 {
     Q_OBJECT
 public:
-    explicit Layer(
-            flags_length_t::pduLength_t PDULength = 0,
+    explicit Layer(pduLength_t PDULength = 0,
             system_t System = 0,
             timestamp_t Timestamp = static_cast<timestamp_t>(QDateTime::currentMSecsSinceEpoch() * 1000),
+            options_t Options = options_t(),
             QObject *parent = nullptr);
     explicit Layer(
             PDUByteArray layer,
@@ -43,9 +43,8 @@ public:
     PDUByteArray toPDUByteArray();
     void fromPDUByteArray(PDUByteArray layer);
 
-    const flags_length_t::flags_t &getFlags() { return FlagsLength.Flags; }
-    const flags_length_t::pduLength_t &getPDULength() { return FlagsLength.PDULength; }
-    void setPDULength(flags_length_t::pduLength_t value) { FlagsLength.PDULength = value; }
+    const pduLength_t &getPDULength() { return PDULength; }
+    void setPDULength(pduLength_t value) { PDULength = value; }
     const vector_t &getVector() { return Vector; }
     const system_t &getSystem() { return System; }
     void setSystem(system_t value) { System = value; }
@@ -55,8 +54,8 @@ public:
     const reserved_t &getReserved() { return Reserved; }
 
 private:
-    flags_length_t FlagsLength;
     vector_t Vector;
+    pduLength_t PDULength;
     system_t System;
     timestamp_t Timestamp;
     options_t Options;

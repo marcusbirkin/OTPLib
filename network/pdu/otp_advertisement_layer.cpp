@@ -18,24 +18,25 @@
 */
 #include "otp_advertisement_layer.hpp"
 
-using namespace ACN::OTP::PDU::OTPAdvertisementLayer;
+using namespace OTP::PDU;
+using namespace OTP::PDU::OTPAdvertisementLayer;
 
 Layer::Layer(
-        ACN::OTP::PDU::flags_length_t::pduLength_t PDULength,
-        ACN::OTP::PDU::vector_t Vector,
+        vector_t Vector,
+        pduLength_t PDULength,
         QObject *parent) :
     QObject(parent),
-    FlagsLength({FLAGS, PDULength}),
     Vector(Vector),
+    PDULength(PDULength),
     Reserved(RESERVED)
 {}
 
 Layer::Layer(
-        ACN::OTP::PDU::PDUByteArray layer,
+        OTP::PDU::PDUByteArray layer,
         QObject *parent) :
     QObject(parent),
-    FlagsLength({0, 0}),
     Vector(0),
+    PDULength(0),
     Reserved(0)
 {
     fromPDUByteArray(layer);
@@ -43,30 +44,29 @@ Layer::Layer(
 
 bool Layer::isValid()
 {
-    if (FlagsLength.Flags != FLAGS) return false;
-    if (FlagsLength.PDULength == 0) return false;
     if (!VECTOR.contains(Vector)) return false;
+    if (PDULength <= toPDUByteArray().size() - LENGTHOFFSET) return false;
     return true;
 }
 
-ACN::OTP::PDU::PDUByteArray Layer::toPDUByteArray()
+OTP::PDU::PDUByteArray Layer::toPDUByteArray()
 {
     PDUByteArray ret;
-    return ret << FlagsLength
-        << Vector
+    return ret << Vector
+        << PDULength
         << Reserved;
 }
 
-void Layer::fromPDUByteArray(ACN::OTP::PDU::PDUByteArray layer)
+void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
 {
-    FlagsLength = {0,0};
     Vector = 0;
+    PDULength = 0;
     Reserved = 0;
 
     if (layer.size() != Layer().toPDUByteArray().size())
         return;
 
-    layer >> FlagsLength
-        >> Vector
+    layer >> Vector
+        >> PDULength
         >> Reserved;
 }

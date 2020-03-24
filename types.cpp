@@ -20,13 +20,13 @@
 #include "const.hpp"
 #include "network/modules/modules_const.hpp"
 
-namespace ACN::OTP
+namespace OTP
 {
     void folioMap_s::addPage(
         cid_t cid,
-        ACN::OTP::PDU::vector_t vector,
-        ACN::OTP::PDU::OTPLayer::folio_t folio,
-        ACN::OTP::PDU::OTPLayer::page_t page,
+        OTP::PDU::vector_t vector,
+        OTP::PDU::OTPLayer::folio_t folio,
+        OTP::PDU::OTPLayer::page_t page,
         QNetworkDatagram datagram)
     {
         key_t key = {cid, vector};
@@ -42,9 +42,9 @@ namespace ACN::OTP
 
     bool folioMap_s::checkAllPages(
             cid_t cid,
-            ACN::OTP::PDU::vector_t vector,
-            ACN::OTP::PDU::OTPLayer::folio_t folio,
-            ACN::OTP::PDU::OTPLayer::page_t lastPage)
+            OTP::PDU::vector_t vector,
+            OTP::PDU::OTPLayer::folio_t folio,
+            OTP::PDU::OTPLayer::page_t lastPage)
     {
         key_t key = {cid, vector};
         if (folioMap[key].folio != folio) return false;
@@ -58,8 +58,8 @@ namespace ACN::OTP
 
     QVector<QNetworkDatagram> folioMap_s::getDatagrams(
             cid_t cid,
-            ACN::OTP::PDU::vector_t vector,
-            ACN::OTP::PDU::OTPLayer::folio_t folio)
+            OTP::PDU::vector_t vector,
+            OTP::PDU::OTPLayer::folio_t folio)
     {
         key_t key = {cid, vector};
         if (folioMap[key].folio != folio) return QVector<QNetworkDatagram>();
@@ -85,7 +85,7 @@ namespace ACN::OTP
     }
 
     QString component_s::getModuleString(ModuleItem_t item, bool includeManf) {
-        for (auto module : ACN::OTP::MODULES::getSupportedModules())
+        for (auto module : OTP::MODULES::getSupportedModules())
         {
             QString ret;
             if (module == item)

@@ -19,7 +19,6 @@
 #ifndef PDU_HPP
 #define PDU_HPP
 
-#include "otp_root_layer.hpp"
 #include "otp_layer.hpp"
 #include "otp_transform_layer.hpp"
 #include "otp_point_layer.hpp"
@@ -28,10 +27,5 @@
 #include "otp_module_advertisement_layer.hpp"
 #include "otp_name_advertisement_layer.hpp"
 #include "otp_system_advertisement_layer.hpp"
-
-namespace ACN::OTP::PDU {
-    vector_t extractVector(PDUByteArray ba);
-    flags_length_t::pduLength_t extractLength(PDUByteArray ba);
-}
 
 #endif // PDU_HPP

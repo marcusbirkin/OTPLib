@@ -18,23 +18,21 @@
 */
 #include "otp_transform_message.hpp"
 
-using namespace ACN::OTP::MESSAGES::OTPTransformMessage;
+using namespace OTP::PDU;
+using namespace OTP::MESSAGES::OTPTransformMessage;
 
 Message::Message(
-        ACN::OTP::cid_t CID,
-        ACN::OTP::name_t ProducerName,
-        ACN::OTP::system_t System,
+        OTP::cid_t CID,
+        OTP::name_t ComponentName,
+        OTP::system_t System,
         QObject *parent) :
     QObject(parent),
-    rootLayer(
-        new OTP::PDU::OTPRootLayer::Layer(
-            0, CID, this)),
     otpLayer(
-        new OTP::PDU::OTPLayer::Layer(
-            0, ACN::OTP::PDU::VECTOR_OTP_TRANSFORM_MESSAGE, 0, 0, 0, 0, ProducerName, this)),
+        new OTPLayer::Layer(
+            VECTOR_OTP_TRANSFORM_MESSAGE, 0, CID, 0, 0, 0, 0, ComponentName, this)),
     transformLayer(
-        new OTP::PDU::OTPTransformLayer::Layer(
-            0, System, static_cast<timestamp_t>(QDateTime::currentMSecsSinceEpoch() * 1000), this))
+        new OTPTransformLayer::Layer(
+            0, System, static_cast<timestamp_t>(QDateTime::currentMSecsSinceEpoch() * 1000), OTPTransformLayer::options_t(), this))
 {
     updatePduLength();
 }
@@ -43,19 +41,10 @@ Message::Message(
         QNetworkDatagram message,
         QObject *parent) :
     QObject(parent),
-    rootLayer(new OTP::PDU::OTPRootLayer::Layer()),
     otpLayer(new OTP::PDU::OTPLayer::Layer()),
     transformLayer(new OTP::PDU::OTPTransformLayer::Layer())
 {
     int idx = 0;
-    // Root layer
-    {
-        PDU::PDUByteArray layer;
-        idx += layer.append(message.data().mid(idx, rootLayer->toPDUByteArray().size())).size();
-        rootLayer->fromPDUByteArray(layer);
-        if (!rootLayer->isValid()) return;
-    }
-
     // OTP Layer
     {
         PDU::PDUByteArray layer;
@@ -87,7 +76,7 @@ Message::Message(
         }
 
         // Module Layer
-        auto pduRemaining = pointLayer->getPDULength() - pointLayer->toPDUByteArray().size();
+        int pduRemaining = (pointLayer->getPDULength() + OTPPointLayer::LENGTHOFFSET) - pointLayer->toPDUByteArray().size();
         while (pduRemaining) {
             address_t address = {transformLayer->getSystem(), pointLayer->getGroup(), pointLayer->getPoint()};
             auto moduleLayer = std::make_shared<OTP::PDU::OTPModuleLayer::Layer>();
@@ -96,7 +85,7 @@ Message::Message(
                 // Obtain, reported, layer size
                 layer.append(message.data().mid(idx, pduRemaining));
                 auto layerSize =
-                        static_cast<int>(OTP::PDU::OTPModuleLayer::Layer::getPDULength(layer));
+                        static_cast<int>(OTP::PDU::OTPModuleLayer::Layer::getPDULength(layer) + OTPModuleLayer::LENGTHOFFSET);
 
                 // Get layer
                 layer.clear();
@@ -113,11 +102,19 @@ Message::Message(
 
 bool Message::isValid()
 {
-    if (!rootLayer->isValid()) return false;
+    auto lengthCheck = toByteArray().length();
+    if (lengthCheck != otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET)
+        return false;
     if (!otpLayer->isValid()) return false;
+
+    lengthCheck -= otpLayer->toPDUByteArray().length();
+    if (lengthCheck != transformLayer->getPDULength() + OTPTransformLayer::LENGTHOFFSET)
+        return false;
     if (!transformLayer->isValid()) return false;
+
     for (auto pointLayer : pointLayers)
         if (!pointLayer->isValid()) return false;
+
     for (auto moduleLayer : moduleLayers)
         if (!moduleLayer->isValid()) return false;
     if (!RANGES::MESSAGE_SIZE.isValid(toByteArray().size())) return false;
@@ -136,7 +133,7 @@ QNetworkDatagram Message::toQNetworkDatagram(
     otpLayer->setPage(thisPage);
     otpLayer->setLastPage(lastPage);
     updatePduLength();
-    return QNetworkDatagram(toByteArray(), destAddr, ACN_SDT_MULTICAST_PORT);
+    return QNetworkDatagram(toByteArray(), destAddr, OTP_PORT);
 }
 
 Message::addModule_ret Message::addModule(addModule_t &moduleData)
@@ -148,8 +145,7 @@ Message::addModule_ret Message::addModule(addModule_t &moduleData)
     if (!pointLayers.contains(moduleData.address))
     {
         auto pointLayer = std::make_shared<OTP::PDU::OTPPointLayer::Layer>
-                (0, moduleData.address.group, moduleData.address.point, moduleData.sampleTime, this);
-
+                (0, moduleData.priority, moduleData.address.group, moduleData.address.point, moduleData.sampleTime, this);
         if ((pointLayer->toPDUByteArray().size() + this->toByteArray().size()) > RANGES::MESSAGE_SIZE.getMax())
             return MessageToBig;
         pointLayers.insert(moduleData.address, pointLayer);
@@ -159,7 +155,7 @@ Message::addModule_ret Message::addModule(addModule_t &moduleData)
             pointLayers.value(moduleData.address)->setTimestamp(moduleData.sampleTime);
     }
 
-    auto moduleLayer = std::make_shared<OTP::PDU::OTPModuleLayer::Layer>(0, moduleData.vector.ManufacturerID, moduleData.vector.ModuleNumber);
+    auto moduleLayer = std::make_shared<OTP::PDU::OTPModuleLayer::Layer>(moduleData.ident.ManufacturerID, 0, moduleData.ident.ModuleNumber);
     moduleLayer->setAdditional(moduleData.additional);
 
     if ((moduleLayer->toPDUByteArray().size() + this->toByteArray().size()) > RANGES::MESSAGE_SIZE.getMax())
@@ -174,7 +170,6 @@ Message::addModule_ret Message::addModule(addModule_t &moduleData)
 QByteArray Message::toByteArray()
 {
     QByteArray ba;
-    ba.append(rootLayer->toPDUByteArray());
     ba.append(otpLayer->toPDUByteArray());
     ba.append(transformLayer->toPDUByteArray());
     for (auto pointLayer : pointLayers)
@@ -194,34 +189,38 @@ QByteArray Message::toByteArray()
 
 void Message::updatePduLength()
 {
-    ACN::OTP::PDU::flags_length_t::pduLength_t length = 0;
-
-    for (auto moduleLayer : moduleLayers)
-    {
-        moduleLayer->setPDULength(moduleLayer->toPDUByteArray().size());
-    }
+    pduLength_t length = 0;
 
     for (auto pointLayer : pointLayers)
     {
-        ACN::OTP::PDU::flags_length_t::pduLength_t pointPDULength = 0;
+        pduLength_t modulesLength = 0;
         address_t address = {transformLayer->getSystem(), pointLayer->getGroup(), pointLayer->getPoint()};
         auto iterator = moduleLayers.find(address);
         while (iterator != moduleLayers.end() && iterator.key() == address)
         {
-            pointPDULength += iterator.value()->getPDULength();
+            auto moduleLayer = iterator.value();
+
+            /* 10.2 Length */
+            modulesLength += moduleLayer->toPDUByteArray().size();
+            moduleLayer->setPDULength(
+                        moduleLayer->toPDUByteArray().size() - OTPModuleLayer::LENGTHOFFSET);
+
             ++iterator;
         }
 
-        pointLayer->setPDULength(pointLayer->toPDUByteArray().size() + pointPDULength);
-        length += pointLayer->getPDULength();
+        /* 9.2 Length */
+        length += pointLayer->toPDUByteArray().size() + modulesLength;
+        pointLayer->setPDULength(
+                    (pointLayer->toPDUByteArray().size() - OTPPointLayer::LENGTHOFFSET)
+                    + modulesLength);
     }
 
+    /* 8.2 Length */
     length += transformLayer->toPDUByteArray().size();
-    transformLayer->setPDULength(length);
+    transformLayer->setPDULength(length - OTPTransformLayer::LENGTHOFFSET);
 
+    /* 6.3 Length */
     length += otpLayer->toPDUByteArray().size();
-    otpLayer->setPDULength(length);
-
-    length += rootLayer->toPDUByteArray().size();
-    rootLayer->setPDULength(length - ACN::OTP::PDU::OTPRootLayer::PREAMBLE_SIZE);
+    otpLayer->setPDULength(length - OTPLayer::LENGTHOFFSET);
+    auto test = toByteArray();
 }

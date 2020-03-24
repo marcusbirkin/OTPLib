@@ -21,37 +21,37 @@
 #include <QString>
 #include "../pdu/pdu_types.hpp"
 
-namespace ACN::OTP::MESSAGES
+namespace OTP::MESSAGES
 {
     namespace  OTPTransformMessage {
-        typedef ACN::OTP::PDU::OTPLayer::sequence_t sequence_t;
-        typedef ACN::OTP::PDU::OTPLayer::folio_t folio_t;
-        typedef ACN::OTP::PDU::OTPLayer::page_t page_t;
+        typedef OTP::PDU::OTPLayer::sequence_t sequence_t;
+        typedef OTP::PDU::OTPLayer::folio_t folio_t;
+        typedef OTP::PDU::OTPLayer::page_t page_t;
     }
 
     namespace OTPModuleAdvertisementMessage {
-        typedef ACN::OTP::PDU::OTPModuleAdvertisementLayer::item_t item_t;
-        typedef ACN::OTP::PDU::OTPModuleAdvertisementLayer::list_t list_t;
-        typedef ACN::OTP::PDU::OTPLayer::sequence_t sequence_t;
-        typedef ACN::OTP::PDU::OTPLayer::folio_t folio_t;
-        typedef ACN::OTP::PDU::OTPLayer::page_t page_t;
+        typedef OTP::PDU::OTPModuleAdvertisementLayer::item_t item_t;
+        typedef OTP::PDU::OTPModuleAdvertisementLayer::list_t list_t;
+        typedef OTP::PDU::OTPLayer::sequence_t sequence_t;
+        typedef OTP::PDU::OTPLayer::folio_t folio_t;
+        typedef OTP::PDU::OTPLayer::page_t page_t;
     }
 
     namespace OTPNameAdvertisementMessage {
-        typedef ACN::OTP::PDU::OTPNameAdvertisementLayer::item_t item_t;
-        typedef ACN::OTP::PDU::OTPNameAdvertisementLayer::list_t list_t;
-        typedef ACN::OTP::PDU::OTPLayer::sequence_t sequence_t;
-        typedef ACN::OTP::PDU::OTPLayer::folio_t folio_t;
-        typedef ACN::OTP::PDU::OTPLayer::page_t page_t;
+        typedef OTP::PDU::OTPNameAdvertisementLayer::item_t item_t;
+        typedef OTP::PDU::OTPNameAdvertisementLayer::list_t list_t;
+        typedef OTP::PDU::OTPLayer::sequence_t sequence_t;
+        typedef OTP::PDU::OTPLayer::folio_t folio_t;
+        typedef OTP::PDU::OTPLayer::page_t page_t;
     }
 
     namespace OTPSystemAdvertisementMessage {
-        typedef ACN::OTP::PDU::OTPSystemAdvertisementLayer::item_t item_t;
-        typedef ACN::OTP::PDU::OTPSystemAdvertisementLayer::list_t list_t;
-        typedef ACN::OTP::PDU::OTPLayer::sequence_t sequence_t;
-        typedef ACN::OTP::PDU::OTPLayer::folio_t folio_t;
-        typedef ACN::OTP::PDU::OTPLayer::page_t page_t;
-        typedef ACN::OTP::PDU::OTPLayer::page_t page_t;
+        typedef OTP::PDU::OTPSystemAdvertisementLayer::item_t item_t;
+        typedef OTP::PDU::OTPSystemAdvertisementLayer::list_t list_t;
+        typedef OTP::PDU::OTPLayer::sequence_t sequence_t;
+        typedef OTP::PDU::OTPLayer::folio_t folio_t;
+        typedef OTP::PDU::OTPLayer::page_t page_t;
+        typedef OTP::PDU::OTPLayer::page_t page_t;
     }
 }
 

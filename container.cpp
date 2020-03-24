@@ -20,7 +20,7 @@
 #include "otp.hpp"
 #include <QTimer>
 
-using namespace ACN::OTP;
+using namespace OTP;
 
 Container::Container(QObject *parent) :
     QObject(parent)
@@ -107,6 +107,23 @@ component_t Container::getComponent(cid_t cid) const
         return componentMap[cid];
 
     return component_t();
+}
+
+cid_t Container::getWinningComponent(address_t address) const
+{
+    cid_t ret;
+    pointDetails_t pdA;
+    for (auto cid : getComponentList())
+    {
+        pointDetails_t pdB = PointDetails(cid, address);
+        if (!pdB || pdB->isExpired()) continue;
+        if (!pdA || (!pdA->isExpired() && pdB->getPriority() > pdA->getPriority()))
+        {
+            ret = cid;
+            pdA = pdB;
+        }
+    }
+    return ret;
 }
 
 void Container::clearSystems()
@@ -215,9 +232,10 @@ QList<group_t> Container::getGroupList(cid_t cid, system_t system) const
 }
 
 
-void Container::addPoint(cid_t cid, address_t address)
+void Container::addPoint(cid_t cid, address_t address, priority_t priority)
 {
     if (!address.point.isValid()) return;
+    if (!priority.isValid()) return;
 
     addGroup(cid, address.system, address.group);
     bool existing = getPointList(cid, address.system, address.group).contains(address.point);
@@ -229,7 +247,7 @@ void Container::addPoint(cid_t cid, address_t address)
     {
         auto newDetails = pointDetails_t(new pointDetails);
         addressMap[cid][address.system][address.group].insert(address.point, newDetails);
-        qDebug() << parent() << "- New point" << cid << address.system << address.group << address.point;
+        qDebug() << parent() << "- New point" << cid << address.system << address.group << address.point << "(Priority: " << priority << ")";
         emit newPoint(cid, address.system, address.group, address.point);
     }
 

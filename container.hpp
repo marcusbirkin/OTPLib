@@ -22,7 +22,7 @@
 #include <QObject>
 #include "otp.hpp"
 
-namespace ACN::OTP
+namespace OTP
 {
     class Container : public QObject
     {
@@ -49,6 +49,8 @@ namespace ACN::OTP
         QList<cid_t> getComponentList() const;
         component_t getComponent(cid_t cid) const;
 
+        cid_t getWinningComponent(address_t address) const;
+
         void clearSystems();
 
         void addSystem(cid_t cid, system_t system);
@@ -61,9 +63,9 @@ namespace ACN::OTP
         QList<group_t> getGroupList(system_t system) const;
         QList<group_t> getGroupList(cid_t cid, system_t system) const;
 
-        void addPoint(cid_t cid, address_t address);
-        void addPoint(cid_t cid, system_t system, group_t group, point_t point)
-            { addPoint(cid, {system, group, point}); }
+        void addPoint(cid_t cid, address_t address, priority_t priority = priority_t());
+        void addPoint(cid_t cid, system_t system, group_t group, point_t point, priority_t priority = priority_t())
+            { addPoint(cid, {system, group, point}, priority); }
         void removePoint(cid_t cid, address_t address);
         void removePoint(cid_t cid, system_t system, group_t group, point_t point)
             { removePoint(cid, {system, group, point}); }
@@ -92,7 +94,7 @@ namespace ACN::OTP
         void updatedComponent(const cid_t&, const name_t&);
         void updatedComponent(const cid_t&, const QHostAddress&);
         void updatedComponent(const cid_t&, const moduleList_t&);
-        void updatedComponent(const ACN::OTP::cid_t&, ACN::OTP::component_t::type_t);
+        void updatedComponent(const OTP::cid_t&, OTP::component_t::type_t);
         void updatedSystem(cid_t, system_t);
         void updatedGroup(cid_t, system_t, group_t);
         void updatedPoint(cid_t, system_t, group_t, point_t);

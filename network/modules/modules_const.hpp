@@ -22,7 +22,7 @@
 #include "modules_types.hpp"
 #include "../messages/message_types.hpp"
 
-namespace ACN::OTP::MODULES {
+namespace OTP::MODULES {
     /* Section 16 Standard Modules */
     namespace STANDARD {
         enum : MODULES::moduleNumber_t
@@ -31,8 +31,8 @@ namespace ACN::OTP::MODULES {
             POSITION_VELOCITY_ACCELERATION = 0x0002,
             ROTATION = 0x0003,
             ROTATION_VELOCITY_ACCELERATION = 0x0004,
-            ORIENTATION = 0x0005,
-            ORIENTATION_VELOCITY_ACCELERATION = 0x0006
+            SCALE = 0x0005,
+            PARENT = 0x0006
         };
 
         static QMap<moduleNumber_t, module_t> modules{
@@ -40,8 +40,8 @@ namespace ACN::OTP::MODULES {
             {POSITION_VELOCITY_ACCELERATION, {{QObject::tr("ESTA"), QObject::tr("Position Velocity/Acceleration")},{ESTA_MANUFACTURER_ID, POSITION_VELOCITY_ACCELERATION}}},
             {ROTATION, {{QObject::tr("ESTA"), QObject::tr("Rotation")}, {ESTA_MANUFACTURER_ID, ROTATION}}},
             {ROTATION_VELOCITY_ACCELERATION, {{QObject::tr("ESTA"), QObject::tr("Rotation Velocity/Acceleration")}, {ESTA_MANUFACTURER_ID, ROTATION_VELOCITY_ACCELERATION}}},
-            {ORIENTATION, {{QObject::tr("ESTA"), QObject::tr("Orientation")}, {ESTA_MANUFACTURER_ID, ORIENTATION}}},
-            {ORIENTATION_VELOCITY_ACCELERATION, {{QObject::tr("ESTA"), QObject::tr("Orientation Velocity/Acceleration")}, {ESTA_MANUFACTURER_ID, ORIENTATION_VELOCITY_ACCELERATION}}},
+            {SCALE, {{QObject::tr("ESTA"), QObject::tr("Scale")}, {ESTA_MANUFACTURER_ID, SCALE}}},
+            {PARENT, {{QObject::tr("ESTA"), QObject::tr("Parent")}, {ESTA_MANUFACTURER_ID, PARENT}}},
         };
 
         namespace VALUES {
@@ -52,6 +52,8 @@ namespace ACN::OTP::MODULES {
                 ROTATION,
                 ROTATION_VELOCITY,
                 ROTATION_ACCELERATION,
+                SCALE,
+                PARENT
             } moduleValue_t;
 
             namespace UNITS {
@@ -120,13 +122,15 @@ namespace ACN::OTP::MODULES {
 
             namespace RANGES {
                 static QMap<moduleValue_t, range_t> ranges{
-                    {POSITION, {STANDARD::PositionModule_t::location_t(-2147483648LL),PositionModule_t::location_t(2147483647)}},
+                    {POSITION, {STANDARD::PositionModule_t::position_t(-2147483648LL),PositionModule_t::position_t(2147483647)}},
                     {POSITION_VELOCITY, {STANDARD::PositionVelAccModule_t::velocity_t(-2147483648LL),STANDARD::PositionVelAccModule_t::velocity_t(2147483647)}},
                     {POSITION_ACCELERATION, {STANDARD::PositionVelAccModule_t::acceleration_t(-2147483648LL),STANDARD::PositionVelAccModule_t::acceleration_t(2147483647)}},
 
                     {ROTATION, {STANDARD::RotationModule_t::rotation_t(0),STANDARD::RotationModule_t::rotation_t(359999999)}},
                     {ROTATION_VELOCITY, {STANDARD::RotationVelAccModule_t::velocity_t(-360000000),STANDARD::RotationVelAccModule_t::velocity_t(360000000)}},
-                    {ROTATION_ACCELERATION, {STANDARD::RotationVelAccModule_t::acceleration_t(-360000000),STANDARD::RotationVelAccModule_t::acceleration_t(360000000)}}
+                    {ROTATION_ACCELERATION, {STANDARD::RotationVelAccModule_t::acceleration_t(-360000000),STANDARD::RotationVelAccModule_t::acceleration_t(360000000)}},
+
+                    {SCALE, {STANDARD::ScaleModule_t::scale_t(-2147483648LL),STANDARD::ScaleModule_t::scale_t(2147483647)}}
                 };
                 range_t getRange(moduleValue_t value);
             }
@@ -134,7 +138,7 @@ namespace ACN::OTP::MODULES {
     }
 
     MESSAGES::OTPModuleAdvertisementMessage::list_t const getSupportedModules();
-    module_t::moduleDescription_t const getModuleDescription(PDU::OTPModuleLayer::vector_t vector);
+    module_t::moduleDescription_t const getModuleDescription(PDU::OTPModuleLayer::ident_t ident);
 }
 
 #endif // MODULES_CONST_HPP

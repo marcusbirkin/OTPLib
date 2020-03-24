@@ -20,10 +20,12 @@
 #define MODULES_TYPES_HPP
 
 #include <QDateTime>
+#include <bitset>
 #include "../messages/message_types.hpp"
 #include "../pdu/pdu_types.hpp"
 
-namespace ACN::OTP::MODULES {
+using namespace OTP::PDU;
+namespace OTP::MODULES {
     typedef OTP::PDU::OTPTransformLayer::timestamp_t timestamp_t;
 
     typedef struct
@@ -34,13 +36,13 @@ namespace ACN::OTP::MODULES {
             QString Name;
         } moduleDescription_t;
         moduleDescription_t description;
-        PDU::OTPModuleLayer::vector_t vector;
+        PDU::OTPModuleLayer::ident_t ident;
     } module_t;
-    typedef PDU::OTPModuleLayer::vector_t::moduleNumber_t moduleNumber_t;
+    typedef PDU::OTPModuleLayer::ident_t::moduleNumber_t moduleNumber_t;
 
     /* Section 16 Standard Modules */
     namespace STANDARD {
-        typedef ACN::OTP::PDU::OTPModuleLayer::additional_t additional_t;
+        typedef OTP::PDU::OTPModuleLayer::additional_t additional_t;
 
         typedef enum axis_e
         {
@@ -63,17 +65,41 @@ namespace ACN::OTP::MODULES {
         // 16.1 Position Module
         class PositionModule_t {
         public:
-            typedef quint8 options_t;
-            typedef qint32 location_t;
+            typedef struct options_s
+            {
+                options_s() : data(0) {}
+                bool isScaling() const { return data[SCALING_BIT]; }
+                void setScaling(bool value) { data[SCALING_BIT] = value; }
+                friend additional_t& operator<<(additional_t &l, const options_s &r) {
+                    l << type(r.data.to_ulong());
+                    return l;
+                }
+                friend additional_t& operator>>(additional_t &l, options_s &r) {
+                    type temp;
+                    l >> temp;
+                    r.data = std::bitset<bitWidth>(temp);
+                    return l;
+                }
+                options_s& operator=(const options_s& r) {this->data = r.data; return *this; }
+                options_s& operator=(const unsigned int& r) {this->data = static_cast<type>(r); return *this; }
+            private:
+                typedef quint8 type;
+                static const quint8 bitWidth = sizeof(type) * 8;
+                enum {
+                    SCALING_BIT = 7
+                };
+                std::bitset<bitWidth> data;
+            } options_t;
+            typedef qint32 position_t;
             typedef enum scale_e : quint8
             {
                 mm = 0, // Millimeters (mm)
                 um = 1 // Micrometers (μm)
             } scale_t;
 
-            PositionModule_t() : options(0), timestamp(0), lastSeen(QDateTime())
+            PositionModule_t() : options(), timestamp(0), lastSeen(QDateTime())
             {
-                std::fill(std::begin(location), std::end(location), 0);
+                std::fill(std::begin(position), std::end(position), 0);
             }
 
             PositionModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
@@ -82,7 +108,7 @@ namespace ACN::OTP::MODULES {
                 PositionModule_t temp;
                 additional >> temp;
                 options = temp.options;
-                std::copy(std::begin(temp.location), std::end(temp.location), std::begin(location));
+                std::copy(std::begin(temp.position), std::end(temp.position), std::begin(position));
             }
 
             timestamp_t getTimestamp() const { return timestamp; }
@@ -91,47 +117,60 @@ namespace ACN::OTP::MODULES {
             void setScaling(scale_t scale) {
                 switch (scale)
                 {
-                    case mm: options &= ~SCALING_MASK; break;
-                    case um: options |= SCALING_MASK; break;
+                    case mm: options.setScaling(true); break;
+                    case um: options.setScaling(false); break;
                 }
                 updateLastSeen();
             }
-            scale_t getScaling() const { return isScalingMM() ? mm : um; }
-            bool isScalingMM() const { return ((options & SCALING_MASK) >> SCALING_SHIFT) == mm; }
-            bool isScaleingUM() const { return ((options & SCALING_MASK) >> SCALING_SHIFT) == um; }
+            scale_t getScaling() const { return options.isScaling() ? mm : um; }
+            bool isScalingMM() const { return getScaling() == mm; }
+            bool isScalingUM() const { return getScaling() == um; }
 
-            location_t getLocation(axis_t axis) const { return location[std::clamp(axis, axis_t::first, axis_t::last)]; }
-            void setLocation(axis_t axis, location_t value, timestamp_t time = 0)
-                {
-                    location[std::clamp(axis, axis_t::first, axis_t::last)] = value;
-                    timestamp = time;
-                    updateLastSeen();
-                }
+            position_t getPosition(axis_t axis) const { return position[std::clamp(axis, axis_t::first, axis_t::last)]; }
+            void setPosition(axis_t axis, position_t value, timestamp_t time = 0)
+            {
+                position[std::clamp(axis, axis_t::first, axis_t::last)] = value;
+                timestamp = time;
+                updateLastSeen();
+            }
 
             friend additional_t& operator<<(additional_t &l, const PositionModule_t &r)
             {
-                return l << r.options << r.location[axis_e::X] << r.location[axis_e::Y] << r.location[axis_e::Z];
+                return l << r.options << r.position[axis_e::X] << r.position[axis_e::Y] << r.position[axis_e::Z];
             }
             friend additional_t& operator>>(additional_t &l, PositionModule_t &r)
             {
-                l >> r.options >> r.location[axis_e::X] >> r.location[axis_e::Y] >> r.location[axis_e::Z];
+                l >> r.options >> r.position[axis_e::X] >> r.position[axis_e::Y] >> r.position[axis_e::Z];
                 return l;
             }
             friend bool operator==(const PositionModule_t& l, const PositionModule_t& r)
-                {
-                    additional_t la, ra;
-                    la << l;
-                    ra << r;
-                    return (ra == la);
-                }
+            {
+                additional_t la, ra;
+                la << l;
+                ra << r;
+                return (ra == la);
+            }
             friend bool operator!=(const PositionModule_t& l, const PositionModule_t& r) { return !(l == r); }
-
+            friend PositionModule_t& operator+=(PositionModule_t& l, const PositionModule_t& r) {
+                for (auto axis = axis_t::first; axis < axis_t::count; axis++)
+                {
+                    if (l.getScaling() == r.getScaling())
+                    {
+                        l.position[axis] += r.position[axis];
+                    } else {
+                        switch (l.getScaling())
+                        {
+                            case mm: l.position[axis] += (r.position[axis] * 1000); break;
+                            case um: l.position[axis] += (r.position[axis] / 1000); break;
+                        }
+                    }
+                }
+                return l;
+            }
         private:
-            static constexpr quint8 SCALING_SHIFT = 7;
-            static constexpr quint8 SCALING_MASK = 1 << SCALING_SHIFT;
             options_t options;
-            location_t location[axis_t::count];
-            timestamp_t timestamp;
+            position_t position[axis_t::count];
+            timestamp_t timestamp = 0;
             void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
             QDateTime lastSeen;
         };
@@ -162,19 +201,19 @@ namespace ACN::OTP::MODULES {
 
             velocity_t getVelocity(axis_t axis) const { return velocity[std::clamp(axis, axis_t::first, axis_t::last)]; }
             void setVelocity(axis_t axis, velocity_t value, timestamp_t time = 0)
-                {
-                    velocity[std::clamp(axis, axis_t::first, axis_t::last)] = value;
-                    timestamp = time;
-                    updateLastSeen();
-                }
+            {
+                velocity[std::clamp(axis, axis_t::first, axis_t::last)] = value;
+                timestamp = time;
+                updateLastSeen();
+            }
 
             acceleration_t getAcceleration(axis_t axis) const { return acceleration[std::clamp(axis, axis_t::first, axis_t::last)]; }
             void setAcceleration(axis_t axis, acceleration_t value, timestamp_t time = 0)
-                {
-                    acceleration[std::clamp(axis, axis_t::first, axis_t::last)] = value;
-                    timestamp = time;
-                    updateLastSeen();
-                }
+            {
+                acceleration[std::clamp(axis, axis_t::first, axis_t::last)] = value;
+                timestamp = time;
+                updateLastSeen();
+            }
 
             friend additional_t& operator<<(additional_t &l, const PositionVelAccModule_t &r)
             {
@@ -188,18 +227,26 @@ namespace ACN::OTP::MODULES {
                 return l;
             }
             friend bool operator==(const PositionVelAccModule_t& l, const PositionVelAccModule_t& r)
-                {
-                    additional_t la, ra;
-                    la << l;
-                    ra << r;
-                    return (ra == la);
-                }
+            {
+                additional_t la, ra;
+                la << l;
+                ra << r;
+                return (ra == la);
+            }
             friend bool operator!=(const PositionVelAccModule_t& l, const PositionVelAccModule_t& r) { return !(l == r); }
+            friend PositionVelAccModule_t& operator+=(PositionVelAccModule_t& l, const PositionVelAccModule_t& r) {
+                for (auto axis = axis_t::first; axis < axis_t::count; axis++)
+                {
+                    l.velocity[axis] += r.velocity[axis];
+                    l.acceleration[axis] += r.acceleration[axis];
+                }
+                return l;
+            }
 
         private:
             velocity_t velocity[axis_t::count];
             acceleration_t acceleration[axis_t::count];
-            timestamp_t timestamp;
+            timestamp_t timestamp = 0;
             void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
             QDateTime lastSeen;
         };
@@ -227,11 +274,11 @@ namespace ACN::OTP::MODULES {
 
             rotation_t getRotation(axis_t axis) const { return rotation[std::clamp(axis, axis_t::first, axis_t::last)]; }
             void setRotation(axis_t axis, rotation_t value, timestamp_t time = 0)
-                {
-                    rotation[std::clamp(axis, axis_t::first, axis_t::last)] = value;
-                    timestamp = time;
-                    updateLastSeen();
-                }
+            {
+                rotation[std::clamp(axis, axis_t::first, axis_t::last)] = value;
+                timestamp = time;
+                updateLastSeen();
+            }
 
             friend additional_t& operator<<(additional_t &l, const RotationModule_t &r)
             {
@@ -243,17 +290,22 @@ namespace ACN::OTP::MODULES {
                 return l;
             }
             friend bool operator==(const RotationModule_t& l, const RotationModule_t& r)
-                {
-                    additional_t la, ra;
-                    la << l;
-                    ra << r;
-                    return (ra == la);
-                }
+            {
+                additional_t la, ra;
+                la << l;
+                ra << r;
+                return (ra == la);
+            }
             friend bool operator!=(const RotationModule_t& l, const RotationModule_t& r) { return !(l == r); }
+            friend RotationModule_t& operator+=(RotationModule_t& l, const RotationModule_t& r) {
+                for (auto axis = axis_t::first; axis < axis_t::count; axis++)
+                    l.rotation[axis] += r.rotation[axis];
+                return l;
+            }
 
         private:
             rotation_t rotation[axis_t::count];
-            timestamp_t timestamp;
+            timestamp_t timestamp = 0;
             void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
             QDateTime lastSeen;
         };
@@ -284,19 +336,19 @@ namespace ACN::OTP::MODULES {
 
             velocity_t getVelocity(axis_t axis) const { return velocity[std::clamp(axis, axis_t::first, axis_t::last)]; }
             void setVelocity(axis_t axis, velocity_t value, timestamp_t time = 0)
-                {
-                    velocity[std::clamp(axis, axis_t::first, axis_t::last)] = value;
-                    timestamp = time;
-                    updateLastSeen();
-                }
+            {
+                velocity[std::clamp(axis, axis_t::first, axis_t::last)] = value;
+                timestamp = time;
+                updateLastSeen();
+            }
 
             acceleration_t getAcceleration(axis_t axis) const { return acceleration[std::clamp(axis, axis_t::first, axis_t::last)]; }
             void setAcceleration(axis_t axis, acceleration_t value, timestamp_t time = 0)
-                {
-                    acceleration[std::clamp(axis, axis_t::first, axis_t::last)] = value;
-                    timestamp = time;
-                    updateLastSeen();
-                }
+            {
+                acceleration[std::clamp(axis, axis_t::first, axis_t::last)] = value;
+                timestamp = time;
+                updateLastSeen();
+            }
 
             friend additional_t& operator<<(additional_t &l, const RotationVelAccModule_t &r)
             {
@@ -310,18 +362,188 @@ namespace ACN::OTP::MODULES {
                 return l;
             }
             friend bool operator==(const RotationVelAccModule_t& l, const RotationVelAccModule_t& r)
-                {
-                    additional_t la, ra;
-                    la << l;
-                    ra << r;
-                    return (ra == la);
-                }
+            {
+                additional_t la, ra;
+                la << l;
+                ra << r;
+                return (ra == la);
+            }
             friend bool operator!=(const RotationVelAccModule_t& l, const RotationVelAccModule_t& r) { return !(l == r); }
+            friend RotationVelAccModule_t& operator+=(RotationVelAccModule_t& l, const RotationVelAccModule_t& r) {
+                for (auto axis = axis_t::first; axis < axis_t::count; axis++)
+                {
+                    l.velocity[axis] += r.velocity[axis];
+                    l.acceleration[axis] += r.acceleration[axis];
+                }
+                return l;
+            }
 
         private:
             velocity_t velocity[axis_t::count];
             acceleration_t acceleration[axis_t::count];
-            timestamp_t timestamp;
+            timestamp_t timestamp = 0;
+            void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
+            QDateTime lastSeen;
+        };
+
+        // 16.5 Scale
+        class ScaleModule_t {
+        public:
+            typedef qint32 scale_t;
+
+            ScaleModule_t() : timestamp(0), lastSeen(QDateTime())
+            {
+                std::fill(std::begin(scale), std::end(scale), 1);
+            }
+
+            ScaleModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
+            {
+                updateLastSeen();
+                ScaleModule_t temp;
+                additional >> temp;
+                std::copy(std::begin(temp.scale), std::end(temp.scale), std::begin(scale));
+            }
+
+            timestamp_t getTimestamp() const { return timestamp; }
+            QDateTime getLastSeen() const { return lastSeen; }
+
+            scale_t getScale(axis_t axis) const { return scale[std::clamp(axis, axis_t::first, axis_t::last)]; }
+            void setScale(axis_t axis, scale_t value, timestamp_t time = 0)
+            {
+                scale[std::clamp(axis, axis_t::first, axis_t::last)] = value;
+                timestamp = time;
+                updateLastSeen();
+            }
+
+            friend additional_t& operator<<(additional_t &l, const ScaleModule_t &r)
+            {
+                l << r.scale[axis_e::X] << r.scale[axis_e::Y] << r.scale[axis_e::Z];
+                return l;
+            }
+            friend additional_t& operator>>(additional_t &l, ScaleModule_t &r)
+            {
+                l >> r.scale[axis_e::X] >> r.scale[axis_e::Y] >> r.scale[axis_e::Z];
+                return l;
+            }
+            friend bool operator==(const ScaleModule_t& l, const ScaleModule_t& r)
+            {
+                additional_t la, ra;
+                la << l;
+                ra << r;
+                return (ra == la);
+            }
+            friend bool operator!=(const ScaleModule_t& l, const ScaleModule_t& r) { return !(l == r); }
+
+        private:
+            scale_t scale[axis_t::count];
+            timestamp_t timestamp = 0;
+            void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
+            QDateTime lastSeen;
+        };
+
+        // 16.6 Parent Module
+        class ParentModule_t {
+        public:
+            typedef struct options_s
+            {
+                options_s() : data(0) {}
+                bool isRelative() const { return data[RELATIVE_BIT]; }
+                void setRelative(bool value) { data[RELATIVE_BIT] = value; }
+                friend additional_t& operator<<(additional_t &l, const options_s &r) {
+                    l << type(r.data.to_ulong());
+                    return l;
+                }
+                friend additional_t& operator>>(additional_t &l, options_s &r) {
+                    type temp;
+                    l >> temp;
+                    r.data = std::bitset<bitWidth>(temp);
+                    return l;
+                }
+                options_s& operator=(const options_s& r) {this->data = r.data; return *this; }
+                options_s& operator=(const unsigned int& r) {this->data = static_cast<type>(r); return *this; }
+            private:
+                typedef quint8 type;
+                static const quint8 bitWidth = sizeof(type) * 8;
+                enum {
+                    RELATIVE_BIT = 7
+                };
+                std::bitset<bitWidth> data;
+            } options_t;
+            typedef OTPTransformLayer::system_t system_t;
+            typedef OTPPointLayer::point_t point_t;
+            typedef OTPPointLayer::group_t group_t;
+
+            ParentModule_t() : timestamp(0), lastSeen(QDateTime()) { }
+
+            ParentModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
+            {
+                updateLastSeen();
+                ParentModule_t temp;
+                additional >> temp;
+                options = temp.options;
+                system = temp.system;
+                group = temp.group;
+                point = temp.point;
+            }
+
+            timestamp_t getTimestamp() const { return timestamp; }
+            QDateTime getLastSeen() const { return lastSeen; }
+
+            void setRelative(bool value, timestamp_t time) {
+                options.setRelative(value);
+                timestamp = time;
+                updateLastSeen();
+            }
+            bool isRelative() const { return options.isRelative(); }
+
+            system_t getSystem() const { return system; }
+            void setSystem(system_t value, timestamp_t time)
+            {
+                system = value;
+                timestamp = time;
+                updateLastSeen();
+            }
+
+            group_t getGroup() const { return group; }
+            void setGroup(group_t value, timestamp_t time)
+            {
+                group = value;
+                timestamp = time;
+                updateLastSeen();
+            }
+
+            point_t getPoint() const { return point; }
+            void setPoint(point_t value, timestamp_t time)
+            {
+                point = value;
+                timestamp = time;
+                updateLastSeen();
+            }
+
+            friend additional_t& operator<<(additional_t &l, const ParentModule_t &r)
+            {
+                return l << r.options << r.system << r.group << r.point;
+            }
+            friend additional_t& operator>>(additional_t &l, ParentModule_t &r)
+            {
+                l >> r.options >> r.system >> r.group >> r.point;
+                return l;
+            }
+            friend bool operator==(const ParentModule_t& l, const ParentModule_t& r)
+            {
+                additional_t la, ra;
+                la << l;
+                ra << r;
+                return (ra == la);
+            }
+            friend bool operator!=(const ParentModule_t& l, const ParentModule_t& r) { return !(l == r); }
+
+        private:
+            options_t options;
+            system_t system;
+            group_t group;
+            point_t point;
+            timestamp_t timestamp = 0;
             void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
             QDateTime lastSeen;
         };
