@@ -382,44 +382,27 @@ Consumer::PositionValue_t Consumer::getPosition(cid_t cid, address_t address, ax
         return ret;
 
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.position;
+    auto parent = getParent(cid, address);
     if (respectRelative &&
-        isPointValid(cid, getParent(cid, address).value) &&
-        getParent(cid, address).relative &&
-        getParent(cid, address).value != address)
+        isPointValid(parent.value) &&
+        parent.relative &&
+        parent.value != address)
     {
-        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.position;
+        module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.position;
     }
     ret.value = module.getPosition(axis);
     ret.scale = module.getScaling();
     ret.unit = getUnitString(ret.scale, VALUES::POSITION);
     ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
+    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
-Consumer::PositionValue_t Consumer::getPosition(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
+Consumer::PositionValue_t Consumer::getPosition(address_t address, axis_t axis, bool respectRelative) const
 {
-    PositionValue_t ret;
-    for (auto cid : getComponents())
-    {
-        auto temp = getPosition(cid, address, axis);
-        if (ret.sourceCID.isNull()) ret = temp;
-        switch (resolution) {
-            case Newest:
-            {
-                if (temp.timestamp > ret.timestamp) ret = temp;
-            } break;
-            case Largest:
-            {
-                if (temp.value > ret.value) ret = temp;
-            } break;
-            case Smallest:
-            {
-                if (temp.value < ret.value) ret = temp;
-            } break;
-        }
-    }
-    return ret;
+    auto cid = otpNetwork->getWinningComponent(address);
+    return getPosition(cid, address, axis, respectRelative);
 }
 
 /* Standard Modules - Position Velocity/Acceleration */
@@ -431,43 +414,26 @@ Consumer::PositionVelocity_t Consumer::getPositionVelocity(cid_t cid, address_t 
         return ret;
 
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc;
+    auto parent = getParent(cid, address);
     if (respectRelative &&
-        isPointValid(cid, getParent(cid, address).value) &&
-        getParent(cid, address).relative &&
-        getParent(cid, address).value != address)
+        isPointValid(parent.value) &&
+        parent.relative &&
+        parent.value != address)
     {
-        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.positionVelAcc;
+        module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.positionVelAcc;
     }
     ret.value = module.getVelocity(axis);
     ret.unit = getUnitString(VALUES::POSITION_VELOCITY);
     ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
+    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
-Consumer::PositionVelocity_t Consumer::getPositionVelocity(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
+Consumer::PositionVelocity_t Consumer::getPositionVelocity(address_t address, axis_t axis, bool respectRelative) const
 {
-    PositionVelocity_t ret;
-    for (auto cid : getComponents())
-    {
-        auto temp = getPositionVelocity(cid, address, axis);
-        if (ret.sourceCID.isNull()) ret = temp;
-        switch (resolution) {
-            case Newest:
-            {
-                if (temp.timestamp > ret.timestamp) ret = temp;
-            } break;
-            case Largest:
-            {
-                if (temp.value > ret.value) ret = temp;
-            } break;
-            case Smallest:
-            {
-                if (temp.value < ret.value) ret = temp;
-            } break;
-        }
-    }
-    return ret;
+    auto cid = otpNetwork->getWinningComponent(address);
+    return getPositionVelocity(cid, address, axis, respectRelative);
 }
 
 Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
@@ -478,44 +444,28 @@ Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(cid_t cid, ad
         return ret;
 
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc;
+    auto parent = getParent(cid, address);
     if (respectRelative &&
-        isPointValid(cid, getParent(cid, address).value) &&
-        getParent(cid, address).relative &&
-        getParent(cid, address).value != address)
+        isPointValid(parent.value) &&
+        parent.relative &&
+        parent.value != address)
     {
-        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.positionVelAcc;
+        module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.positionVelAcc;
     }
     ret.value = module.getAcceleration(axis);
     ret.unit = getUnitString(VALUES::POSITION_ACCELERATION);
     ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
+    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
-Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
+Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(address_t address, axis_t axis, bool respectRelative) const
 {
-    PositionAcceleration_t ret;
-    for (auto cid : getComponents())
-    {
-        auto temp = getPositionAcceleration(cid, address, axis);
-        if (ret.sourceCID.isNull()) ret = temp;
-        switch (resolution) {
-            case Newest:
-            {
-                if (temp.timestamp > ret.timestamp) ret = temp;
-            } break;
-            case Largest:
-            {
-                if (temp.value > ret.value) ret = temp;
-            } break;
-            case Smallest:
-            {
-                if (temp.value < ret.value) ret = temp;
-            } break;
-        }
-    }
-    return ret;
+    auto cid = otpNetwork->getWinningComponent(address);
+    return getPositionAcceleration(cid, address, axis, respectRelative);
 }
+
 
 /* Standard Modules - Rotation */
 Consumer::RotationValue_t Consumer::getRotation(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
@@ -526,44 +476,28 @@ Consumer::RotationValue_t Consumer::getRotation(cid_t cid, address_t address, ax
         return ret;
 
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotation;
+    auto parent = getParent(cid, address);
     if (respectRelative &&
-        isPointValid(cid, getParent(cid, address).value) &&
-        getParent(cid, address).relative &&
-        getParent(cid, address).value != address)
+        isPointValid(parent.value) &&
+        parent.relative &&
+        parent.value != address)
     {
-        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.rotation;
+        module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.rotation;
     }
     ret.value = module.getRotation(axis);
     ret.unit = getUnitString(VALUES::ROTATION);
     ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
+    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
-Consumer::RotationValue_t Consumer::getRotation(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
+Consumer::RotationValue_t Consumer::getRotation(address_t address, axis_t axis, bool respectRelative) const
 {
-    RotationValue_t ret;
-    for (auto cid : getComponents())
-    {
-        auto temp = getRotation(cid, address, axis);
-        if (ret.sourceCID.isNull()) ret = temp;
-        switch (resolution) {
-            case Newest:
-            {
-                if (temp.timestamp > ret.timestamp) ret = temp;
-            } break;
-            case Largest:
-            {
-                if (temp.value > ret.value) ret = temp;
-            } break;
-            case Smallest:
-            {
-                if (temp.value < ret.value) ret = temp;
-            } break;
-        }
-    }
-    return ret;
+    auto cid = otpNetwork->getWinningComponent(address);
+    return getRotation(cid, address, axis, respectRelative);
 }
+
 
 /* Standard Modules - Position Velocity/Acceleration */
 Consumer::RotationVelocity_t Consumer::getRotationVelocity(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
@@ -574,43 +508,26 @@ Consumer::RotationVelocity_t Consumer::getRotationVelocity(cid_t cid, address_t 
         return ret;
 
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc;
+    auto parent = getParent(cid, address);
     if (respectRelative &&
-        isPointValid(cid, getParent(cid, address).value) &&
-        getParent(cid, address).relative &&
-        getParent(cid, address).value != address)
+        isPointValid(parent.value) &&
+        parent.relative &&
+        parent.value != address)
     {
-        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.rotationVelAcc;
+        module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.rotationVelAcc;
     }
     ret.value = module.getVelocity(axis);
     ret.unit = getUnitString(VALUES::ROTATION_VELOCITY);
     ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
+    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
-Consumer::RotationVelocity_t Consumer::getRotationVelocity(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
+Consumer::RotationVelocity_t Consumer::getRotationVelocity(address_t address, axis_t axis, bool respectRelative) const
 {
-    RotationVelocity_t ret;
-    for (auto cid : getComponents())
-    {
-        auto temp = getRotationVelocity(cid, address, axis);
-        if (ret.sourceCID.isNull()) ret = temp;
-        switch (resolution) {
-            case Newest:
-            {
-                if (temp.timestamp > ret.timestamp) ret = temp;
-            } break;
-            case Largest:
-            {
-                if (temp.value > ret.value) ret = temp;
-            } break;
-            case Smallest:
-            {
-                if (temp.value < ret.value) ret = temp;
-            } break;
-        }
-    }
-    return ret;
+    auto cid = otpNetwork->getWinningComponent(address);
+    return getRotationVelocity(cid, address, axis, respectRelative);
 }
 
 Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
@@ -621,43 +538,26 @@ Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(cid_t cid, ad
         return ret;
 
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc;
+    auto parent = getParent(cid, address);
     if (respectRelative &&
-        isPointValid(cid, getParent(cid, address).value) &&
-        getParent(cid, address).relative &&
-        getParent(cid, address).value != address)
+        isPointValid(parent.value) &&
+        parent.relative &&
+        parent.value != address)
     {
-        module += otpNetwork->PointDetails(cid, getParent(cid, address).value)->standardModules.rotationVelAcc;
+        module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.rotationVelAcc;
     }
     ret.value = module.getAcceleration(axis);
     ret.unit = getUnitString(VALUES::ROTATION_ACCELERATION);
     ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
+    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
-Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
+Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(address_t address, axis_t axis, bool respectRelative) const
 {
-    RotationAcceleration_t ret;
-    for (auto cid : getComponents())
-    {
-        auto temp = getRotationAcceleration(cid, address, axis);
-        if (ret.sourceCID.isNull()) ret = temp;
-        switch (resolution) {
-            case Newest:
-            {
-                if (temp.timestamp > ret.timestamp) ret = temp;
-            } break;
-            case Largest:
-            {
-                if (temp.value > ret.value) ret = temp;
-            } break;
-            case Smallest:
-            {
-                if (temp.value < ret.value) ret = temp;
-            } break;
-        }
-    }
-    return ret;
+    auto cid = otpNetwork->getWinningComponent(address);
+    return getRotationAcceleration(cid, address, axis, respectRelative);
 }
 
 Consumer::Scale_t Consumer::getScale(cid_t cid, address_t address, axis_t axis) const
@@ -670,32 +570,14 @@ Consumer::Scale_t Consumer::getScale(cid_t cid, address_t address, axis_t axis) 
     ret.value = otpNetwork->PointDetails(cid, address)->standardModules.scale.getScale(axis);
     ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.scale.getTimestamp();
     ret.sourceCID = cid;
+    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
-Consumer::Scale_t Consumer::getScale(address_t address, axis_t axis, multipleProducerResolution_e resolution) const
+Consumer::Scale_t Consumer::getScale(address_t address, axis_t axis) const
 {
-    Scale_t ret;
-    for (auto cid : getComponents())
-    {
-        auto temp = getScale(cid, address, axis);
-        if (ret.sourceCID.isNull()) ret = temp;
-        switch (resolution) {
-            case Newest:
-            {
-                if (temp.timestamp > ret.timestamp) ret = temp;
-            } break;
-            case Largest:
-            {
-                if (temp.value > ret.value) ret = temp;
-            } break;
-            case Smallest:
-            {
-                if (temp.value < ret.value) ret = temp;
-            } break;
-        }
-    }
-    return ret;
+    auto cid = otpNetwork->getWinningComponent(address);
+    return getScale(cid, address, axis);
 }
 
 Consumer::Parent_t Consumer::getParent(cid_t cid, address_t address) const
@@ -710,33 +592,14 @@ Consumer::Parent_t Consumer::getParent(cid_t cid, address_t address) const
     ret.relative = module.isRelative();
     ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
+    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
-Consumer::Parent_t Consumer::getParent(address_t address, multipleProducerResolution_e resolution) const
+Consumer::Parent_t Consumer::getParent(address_t address) const
 {
-    Parent_t ret;
-    for (auto cid : getComponents())
-    {
-        auto temp = getParent(cid, address);
-        if (ret.sourceCID.isNull()) ret = temp;
-        if (!ret.value.isValid()) ret = temp;
-        switch (resolution) {
-            case Newest:
-            {
-                if (temp.timestamp > ret.timestamp) ret = temp;
-            } break;
-            case Largest:
-            {
-                if (temp.value > ret.value) ret = temp;
-            } break;
-            case Smallest:
-            {
-                if (temp.value < ret.value) ret = temp;
-            } break;
-        }
-    }
-    return ret;
+    auto cid = otpNetwork->getWinningComponent(address);
+    return getParent(cid, address);
 }
 
 void Consumer::setupListener()
@@ -830,7 +693,8 @@ bool Consumer::receiveOTPTransformMessage(QNetworkDatagram datagram)
                         pointLayer->getGroup(),
                         pointLayer->getPoint()};
                     auto timestamp = pointLayer->getTimestamp();
-                    otpNetwork->addPoint(cid, address, priority_t());  //TODO Priority
+                    otpNetwork->addPoint(cid, address, pointLayer->getPriority());
+                    otpNetwork->PointDetails(cid, address)->setPriority(pointLayer->getPriority());
 
                     pointDetails::standardModules_t newStandardModules;
                     for (auto moduleLayer : transformMessage.getModuleLayers().values(address))
@@ -985,7 +849,7 @@ bool Consumer::receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram)
             for (auto point : list)
             {
                 address_t address = address_t(point.System, point.Group, point.Point);
-                otpNetwork->addPoint(cid, address, priority_t());  //TODO Priority
+                otpNetwork->addPoint(cid, address);
                 otpNetwork->PointDetails(cid, address)->setName(point.PointName);
             }
         }

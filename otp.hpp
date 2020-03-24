@@ -132,6 +132,16 @@ namespace OTP
         signals:
             void newProducerPointName(name_t);
 
+        public:
+            priority_t getProducerPointPriority(address_t) const;
+            priority_t getProducerPointPriority(system_t system, group_t group, point_t point)
+                { return getProducerPointPriority(address_t(system, group, point)); }
+            void setProducerPointPriority(address_t, priority_t);
+            void setProducerPointPriority(system_t system, group_t group, point_t point, priority_t priority)
+                { setProducerPointPriority(address_t(system, group, point), priority); }
+        signals:
+            void newProducerPointPriority(priority_t);
+
         /* Producer Addresses */
         public:
             QList<address_t> getProducerAddresses();
@@ -461,12 +471,6 @@ namespace OTP
 
         /* Standard Modules */
         public:
-            enum multipleProducerResolution_e
-            {
-                Newest,
-                Largest,
-                Smallest
-            };
             QString getScaleString(MODULES::STANDARD::PositionModule_t::scale_t,  bool html = false) const;
             QString getUnitString(MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
             QString getUnitString(MODULES::STANDARD::PositionModule_t::scale_t, MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
@@ -479,9 +483,10 @@ namespace OTP
                 timestamp_t timestamp = 0;
                 MODULES::STANDARD::PositionModule_t::scale_t scale;
                 cid_t sourceCID;
+                priority_t priority;
             } PositionValue_t;
             PositionValue_t getPosition(cid_t, address_t, axis_t, bool respectRelative = true) const;
-            PositionValue_t getPosition(address_t, axis_t, multipleProducerResolution_e) const;
+            PositionValue_t getPosition(address_t, axis_t, bool respectRelative = true) const;
 
         signals:
             void updatedPosition(cid_t, address_t, axis_t);
@@ -494,9 +499,10 @@ namespace OTP
                 QString unit;
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } PositionVelocity_t;
             PositionVelocity_t getPositionVelocity(cid_t, address_t, axis_t, bool respectRelative = true) const;
-            PositionVelocity_t getPositionVelocity(address_t, axis_t, multipleProducerResolution_e) const;
+            PositionVelocity_t getPositionVelocity(address_t, axis_t, bool respectRelative = true) const;
 
             typedef struct PositionAcceleration_s
             {
@@ -504,9 +510,10 @@ namespace OTP
                 QString unit;
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } PositionAcceleration_t;
             PositionAcceleration_t getPositionAcceleration(cid_t, address_t, axis_t, bool respectRelative = true) const;
-            PositionAcceleration_t getPositionAcceleration(address_t, axis_t, multipleProducerResolution_e) const;
+            PositionAcceleration_t getPositionAcceleration(address_t, axis_t, bool respectRelative = true) const;
         signals:
             void updatedPositionVelocity(cid_t, address_t, axis_t);
             void updatedPositionAcceleration(cid_t, address_t, axis_t);
@@ -519,9 +526,10 @@ namespace OTP
                 QString unit;
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } RotationValue_t;
             RotationValue_t getRotation(cid_t, address_t, axis_t, bool respectRelative = true) const;
-            RotationValue_t getRotation(address_t, axis_t, multipleProducerResolution_e) const;
+            RotationValue_t getRotation(address_t, axis_t, bool respectRelative = true) const;
         signals:
             void updatedRotation(cid_t, address_t, axis_t);
 
@@ -533,9 +541,10 @@ namespace OTP
                 QString unit;
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } RotationVelocity_t;
             RotationVelocity_t getRotationVelocity(cid_t, address_t, axis_t, bool respectRelative = true) const;
-            RotationVelocity_t getRotationVelocity(address_t, axis_t, multipleProducerResolution_e) const;
+            RotationVelocity_t getRotationVelocity(address_t, axis_t, bool respectRelative = true) const;
 
             typedef struct RotationAcceleration_s
             {
@@ -543,9 +552,10 @@ namespace OTP
                 QString unit;
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } RotationAcceleration_t;
             RotationAcceleration_t getRotationAcceleration(cid_t, address_t, axis_t, bool respectRelative = true) const;
-            RotationAcceleration_t getRotationAcceleration(address_t, axis_t, multipleProducerResolution_e) const;
+            RotationAcceleration_t getRotationAcceleration(address_t, axis_t, bool respectRelative = true) const;
         signals:
             void updatedRotationVelocity(cid_t, address_t, axis_t);
             void updatedRotationAcceleration(cid_t, address_t, axis_t);
@@ -557,9 +567,10 @@ namespace OTP
                 MODULES::STANDARD::ScaleModule_t::scale_t value = 0;
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } Scale_t;
             Scale_t getScale(cid_t, address_t, axis_t) const;
-            Scale_t getScale(address_t, axis_t, multipleProducerResolution_e) const;
+            Scale_t getScale(address_t, axis_t) const;
         signals:
             void updatedScale(cid_t, address_t, axis_t);
 
@@ -571,9 +582,10 @@ namespace OTP
                 bool relative;
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
+                priority_t priority;
             } Parent_t;
             Parent_t getParent(cid_t, address_t) const;
-            Parent_t getParent(address_t, multipleProducerResolution_e) const;
+            Parent_t getParent(address_t) const;
         signals:
             void updatedParent(cid_t, address_t);
 

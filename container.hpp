@@ -49,6 +49,8 @@ namespace OTP
         QList<cid_t> getComponentList() const;
         component_t getComponent(cid_t cid) const;
 
+        cid_t getWinningComponent(address_t address) const;
+
         void clearSystems();
 
         void addSystem(cid_t cid, system_t system);
@@ -61,8 +63,8 @@ namespace OTP
         QList<group_t> getGroupList(system_t system) const;
         QList<group_t> getGroupList(cid_t cid, system_t system) const;
 
-        void addPoint(cid_t cid, address_t address, priority_t priority);
-        void addPoint(cid_t cid, system_t system, group_t group, point_t point, priority_t priority)
+        void addPoint(cid_t cid, address_t address, priority_t priority = priority_t());
+        void addPoint(cid_t cid, system_t system, group_t group, point_t point, priority_t priority = priority_t())
             { addPoint(cid, {system, group, point}, priority); }
         void removePoint(cid_t cid, address_t address);
         void removePoint(cid_t cid, system_t system, group_t group, point_t point)
