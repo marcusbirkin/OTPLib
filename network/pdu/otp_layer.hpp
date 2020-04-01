@@ -20,7 +20,7 @@
 #define OTP_LAYER_HPP
 
 #include <QObject>
-#include <QApplication>
+#include <QCoreApplication>
 #include "pdu_types.hpp"
 #include "pdu_const.hpp"
 
@@ -39,7 +39,7 @@ public:
             folio_t Folio = 0,
             page_t Page = 0,
             page_t LastPage = 0,
-            name_t ComponentName = QApplication::applicationName().toUtf8(),
+            name_t ComponentName = QCoreApplication::applicationName().toUtf8(),
             QObject *parent = nullptr);
     explicit Layer(
             PDUByteArray layer,

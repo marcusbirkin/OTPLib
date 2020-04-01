@@ -20,10 +20,10 @@
 #define OTP_HPP
 
 #include "bugs.hpp"
+#include <QCoreApplication>
 #include <QObject>
 #include <QNetworkInterface>
 #include <QAbstractSocket>
-#include <QMessageBox>
 #include <memory>
 #include "socket.hpp"
 #include "types.hpp"
@@ -55,7 +55,7 @@ namespace OTP
         explicit Producer(
                 QNetworkInterface iface,
                 QAbstractSocket::NetworkLayerProtocol transport,
-                name_t name = QApplication::applicationName(),
+                name_t name = QCoreApplication::applicationName(),
                 cid_t CID = cid_t::createUuid(),
                 QObject *parent = nullptr);
         ~Producer();
@@ -344,7 +344,7 @@ namespace OTP
                 QNetworkInterface iface,
                 QAbstractSocket::NetworkLayerProtocol transport,
                 QList<system_t> systems,
-                name_t name = QApplication::applicationName(),
+                name_t name = QCoreApplication::applicationName(),
                 cid_t CID = cid_t::createUuid(),
                 QObject *parent = nullptr);
         ~Consumer();

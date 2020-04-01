@@ -1,5 +1,7 @@
 include($$PWD/version.pri)
 
+INCLUDEPATH += $$PWD
+
 SOURCES += \
     $$PWD/otp.cpp \
     $$PWD/container.cpp \

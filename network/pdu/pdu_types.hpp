@@ -19,6 +19,7 @@
 #ifndef PDU_TYPES_HPP
 #define PDU_TYPES_HPP
 
+#include "bugs.hpp"
 #include <QByteArray>
 #include <QUuid>
 #include <QtEndian>
