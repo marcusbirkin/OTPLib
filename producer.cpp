@@ -32,6 +32,7 @@ Producer::Producer(
         QAbstractSocket::NetworkLayerProtocol transport,
         name_t name,
         cid_t CID,
+        std::chrono::milliseconds transformRate,
         QObject *parent) :
     QObject(parent),
     otpNetwork(new Container(this)),
@@ -39,6 +40,7 @@ Producer::Producer(
     transport(transport),
     CID(CID),
     name(name)
+
 {
     // Signals
     connect(otpNetwork.get(), &Container::newSystem,
@@ -92,7 +94,7 @@ Producer::Producer(
     setupListener();
     auto startSenderTimeout = new QTimer;
     startSenderTimeout->setSingleShot(true);
-    connect(startSenderTimeout, SIGNAL(timeout()), this, SLOT(setupSender()));
+    connect(startSenderTimeout, &QTimer::timeout, this, [this, transformRate]() {this->setupSender(transformRate); });
     connect(startSenderTimeout, SIGNAL(timeout()), startSenderTimeout, SLOT(deleteLater()));
     startSenderTimeout->start(OTP_ADVERTISEMENT_STARTUP_WAIT);
 }
@@ -575,15 +577,15 @@ void Producer::setupListener()
     }
 }
 
-void Producer::setupSender()
+void Producer::setupSender(std::chrono::milliseconds transformRate)
 {
     qDebug() << this << "- Starting OTP Transform Messages" << iface.name();
-    auto transformTimer = new QTimer(this);
-    connect(transformTimer, &QTimer::timeout, [this]() {
+    connect(&transformMsgTimer, &QTimer::timeout, [this]() {
         for (auto system : getProducerSystems())
             sendOTPTransformMessage(system);
     });
-    transformTimer->start(OTP_TRANSFORM_TIMING_MAX);
+    transformRate = std::clamp(transformRate, OTP_TRANSFORM_TIMING_MIN, OTP_TRANSFORM_TIMING_MAX);
+    transformMsgTimer.start(transformRate);
 }
 
 void Producer::newDatagram(QNetworkDatagram datagram)

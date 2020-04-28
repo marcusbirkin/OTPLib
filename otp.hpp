@@ -51,12 +51,14 @@ namespace OTP
          * iface - Network interface to utilise
          * name - Producer, human readable, name
          * CID - Component Identifier
+         * Transform messgage trasnmission rate, allowed ranges OTP_TRANSFORM_TIMING_MIN -> OTP_TRANSFORM_TIMING_MAX
         */
         explicit Producer(
                 QNetworkInterface iface,
                 QAbstractSocket::NetworkLayerProtocol transport,
                 name_t name = QCoreApplication::applicationName(),
                 cid_t CID = cid_t::createUuid(),
+                std::chrono::milliseconds transformRate = OTP_TRANSFORM_TIMING_MAX,
                 QObject *parent = nullptr);
         ~Producer();
 
@@ -64,6 +66,13 @@ namespace OTP
          * Clear local copy of network
          */
         void ClearOTPMap();
+
+        /* Producer Transmission Rates */
+        public:
+        std::chrono::milliseconds getProducerTransformMsgRate() const
+            { return std::chrono::milliseconds(transformMsgTimer.interval()); }
+        void setProducerTransformMsgRate(std::chrono::milliseconds value)
+            { transformMsgTimer.setInterval(std::clamp(value, OTP_TRANSFORM_TIMING_MIN, OTP_TRANSFORM_TIMING_MAX)); }
 
         /* Producer CID */
         public:
@@ -307,11 +316,12 @@ namespace OTP
         void newCID(cid_t);
 
     private slots:
-        void setupSender();
         void newDatagram(QNetworkDatagram datagram);
 
     private:
         void setupListener();
+        void setupSender(std::chrono::milliseconds transformRate);
+        QTimer transformMsgTimer;
 
         void sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio);
         void sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio);
