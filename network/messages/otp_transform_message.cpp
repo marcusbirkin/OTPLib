@@ -21,10 +21,10 @@
 using namespace OTP::PDU;
 using namespace OTP::MESSAGES::OTPTransformMessage;
 
-Message::Message(
-        OTP::cid_t CID,
+Message::Message(OTP::cid_t CID,
         OTP::name_t ComponentName,
         OTP::system_t System,
+        bool FullPointSet,
         QObject *parent) :
     QObject(parent),
     otpLayer(
@@ -32,7 +32,7 @@ Message::Message(
             VECTOR_OTP_TRANSFORM_MESSAGE, 0, CID, 0, 0, 0, 0, ComponentName, this)),
     transformLayer(
         new OTPTransformLayer::Layer(
-            0, System, static_cast<timestamp_t>(QDateTime::currentMSecsSinceEpoch() * 1000), OTPTransformLayer::options_t(), this))
+            0, System, static_cast<timestamp_t>(QDateTime::currentMSecsSinceEpoch() * 1000), OTPTransformLayer::options_t(FullPointSet), this))
 {
     updatePduLength();
 }

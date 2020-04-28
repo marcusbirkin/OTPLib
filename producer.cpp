@@ -846,7 +846,7 @@ void Producer::sendOTPTransformMessage(system_t system)
     // Generate messages
     QVector<std::shared_ptr<Message>> folioMessages;
     while (folioModuleData.count()) {
-        folioMessages.append(std::make_shared<Message>(getProducerCID(), name, system, this));
+        folioMessages.append(std::make_shared<Message>(getProducerCID(), name, system, true, this));
 
         Message::addModule_ret result;
         do {

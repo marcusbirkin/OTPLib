@@ -155,6 +155,9 @@ namespace OTP::PDU
         typedef struct options_s
         {
             options_s() : data(0) {}
+            options_s(bool FullPointSet) : data(0) {
+                setFullPointSet(FullPointSet);
+            }
             bool isFullPointSet() const { return data[FULL_POINT_SET_BIT]; }
             void setFullPointSet(bool value) { data[FULL_POINT_SET_BIT] = value; }
             friend PDUByteArray& operator<<(PDUByteArray &l, const options_s &r) {

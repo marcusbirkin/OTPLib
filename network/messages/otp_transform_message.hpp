@@ -36,6 +36,7 @@ public:
             cid_t CID,
             name_t ComponentName,
             system_t System,
+            bool FullPointSet,
             QObject *parent = nullptr);
     explicit Message(
             QNetworkDatagram message,
