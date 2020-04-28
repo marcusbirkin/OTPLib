@@ -323,6 +323,7 @@ namespace OTP
         void setupSender(std::chrono::milliseconds transformRate);
         QTimer transformMsgTimer;
 
+        QTimer* getBackoffTimer(std::chrono::milliseconds maximum);
         void sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio);
         void sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio);
         void sendOTPTransformMessage(system_t system);

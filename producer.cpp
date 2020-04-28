@@ -22,6 +22,7 @@
 #include "network/modules/modules.hpp"
 #include "network/messages/otp_transform_message.hpp"
 #include <QTimer>
+#include <random>
 
 #include <QDebug>
 
@@ -649,7 +650,15 @@ void Producer::newDatagram(QNetworkDatagram datagram)
                     type);
 
             if (type == component_t::type_t::consumer)
-                sendOTPNameAdvertisementMessage(datagram.senderAddress(), nameAdvert.getOTPLayer()->getFolio());
+            {
+                auto folio = nameAdvert.getOTPLayer()->getFolio();
+                auto destAddr = datagram.senderAddress();
+                auto timer = getBackoffTimer(OTP_NAME_ADVERTISEMENT_MAX_BACKOFF);
+                connect(timer, &QTimer::timeout, this, [this, destAddr, folio]() {
+                    sendOTPNameAdvertisementMessage(destAddr, folio);
+                });
+                timer->start();
+            }
             return;
         }
 
@@ -685,10 +694,31 @@ void Producer::newDatagram(QNetworkDatagram datagram)
             }
 
             if (type == component_t::type_t::consumer)
-                sendOTPSystemAdvertisementMessage(datagram.senderAddress(), systemAdvert.getOTPLayer()->getFolio());
+            {
+                auto folio = systemAdvert.getOTPLayer()->getFolio();
+                auto destAddr = datagram.senderAddress();
+                auto timer = getBackoffTimer(OTP_SYSTEM_ADVERTISEMENT_MAX_BACKOFF);
+                connect(timer, &QTimer::timeout, this, [this, destAddr, folio]() {
+                    sendOTPSystemAdvertisementMessage(destAddr, folio);
+                });
+                timer->start();
+            }
             return;
         }
     }
+}
+
+QTimer* Producer::getBackoffTimer(std::chrono::milliseconds maximum)
+{
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, maximum.count());
+
+    auto timer = new QTimer(this);
+    timer->setSingleShot(true);
+    timer->setInterval(std::chrono::milliseconds(dis(gen)));
+    connect(timer, SIGNAL(timeout()), timer, SLOT(deleteLater()));
+    return timer;
 }
 
 void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio)

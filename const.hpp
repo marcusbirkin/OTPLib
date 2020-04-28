@@ -77,9 +77,9 @@ namespace OTP {
     inline const std::chrono::milliseconds OTP_ADVERTISEMENT_STARTUP_WAIT = std::chrono::seconds(12);
     inline const std::chrono::milliseconds OTP_ADVERTISEMENT_TIMEOUT = std::chrono::seconds(30);
     // OTP Name Advertisement
-    inline const std::chrono::microseconds OTP_NAME_ADVERTISEMENT_MAX_BACKOFF = std::chrono::seconds(5);
+    inline const std::chrono::milliseconds OTP_NAME_ADVERTISEMENT_MAX_BACKOFF = std::chrono::seconds(5);
     // OTP System Advertisement
-    inline const std::chrono::microseconds OTP_SYSTEM_ADVERTISEMENT_MAX_BACKOFF = std::chrono::seconds(5);
+    inline const std::chrono::milliseconds OTP_SYSTEM_ADVERTISEMENT_MAX_BACKOFF = std::chrono::seconds(5);
 
     /* Table A-3: Additional Defines */
     inline const quint16 OTP_PORT = 5568;
