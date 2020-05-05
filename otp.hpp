@@ -329,7 +329,7 @@ namespace OTP
         void sendOTPTransformMessage(system_t system);
         PDU::OTPLayer::folio_t TransformMessage_Folio = 0;
 
-        QMap<cid_t, sequenceMap_t> sequenceMap;
+        folioMap_t folioMap;
 
         std::unique_ptr<Container> otpNetwork;
         QNetworkInterface iface;
@@ -617,7 +617,6 @@ namespace OTP
         void sendOTPSystemAdvertisementMessage();
         PDU::OTPLayer::folio_t SystemAdvertisementMessage_Folio = 0;
 
-        QMap<cid_t, sequenceMap_t> sequenceMap;
         folioMap_t folioMap;
 
         std::unique_ptr<Container> otpNetwork;

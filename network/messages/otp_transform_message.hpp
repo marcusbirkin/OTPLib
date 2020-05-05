@@ -44,13 +44,11 @@ public:
     bool isValid();
     QNetworkDatagram toQNetworkDatagram(
             QHostAddress destAddr,
-            sequence_t sequenceNumber,
             folio_t folio,
             page_t thisPage,
             page_t lastPage);
     QList<QNetworkDatagram> toQNetworkDatagrams(
             QAbstractSocket::NetworkLayerProtocol transport,
-            sequence_t sequenceNumber,
             folio_t folio,
             page_t thisPage,
             page_t lastPage)
@@ -60,7 +58,6 @@ public:
             ret.append(toQNetworkDatagram(
                             QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address()
                                          + transformLayer->getSystem()),
-                            sequenceNumber,
                             folio,
                             thisPage,
                             lastPage));
@@ -68,7 +65,6 @@ public:
             ret.append(toQNetworkDatagram(
                             QHostAddress(OTP_Transform_Message_IPv6.toIPv6Address()
                                         + transformLayer->getSystem()),
-                            sequenceNumber,
                             folio,
                             thisPage,
                             lastPage));

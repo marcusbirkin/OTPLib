@@ -29,7 +29,7 @@ Message::Message(OTP::mode_e mode,
     QObject(parent),
     otpLayer(
         new OTPLayer::Layer(
-            VECTOR_OTP_ADVERTISEMENT_MESSAGE, 0, CID, 0, 0, 0, 0, ComponentName, this)),
+            VECTOR_OTP_ADVERTISEMENT_MESSAGE, 0, CID, 0, 0, 0, ComponentName, this)),
     advertisementLayer(
         new OTP::PDU::OTPAdvertisementLayer::Layer(
             OTP::PDU::VECTOR_OTP_ADVERTISEMENT_NAME, 0, this)),
@@ -106,12 +106,10 @@ bool Message::isValid()
 
 QNetworkDatagram Message::toQNetworkDatagram(
         QHostAddress destAddr,
-        sequence_t sequenceNumber,
         folio_t folio,
         page_t thisPage,
         page_t lastPage)
 {
-    otpLayer->setSequence(sequenceNumber);
     otpLayer->setFolio(folio);
     otpLayer->setPage(thisPage);
     otpLayer->setLastPage(lastPage);

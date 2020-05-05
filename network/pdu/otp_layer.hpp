@@ -35,7 +35,6 @@ public:
             vector_t Vector = 0,
             pduLength_t PDULength = 0,
             cid_t CID = cid_t::createUuid(),
-            sequence_t Sequence = 0,
             folio_t Folio = 0,
             page_t Page = 0,
             page_t LastPage = 0,
@@ -56,8 +55,6 @@ public:
     const auto &getFooterOptions() { return Footer.Flags(); }
     cid_t getCID() const { return CID; }
     void setCID(cid_t value) { CID = value; }
-    const sequence_t &getSequence() { return Sequence; }
-    void setSequence(sequence_t value) { Sequence = value; }
     const folio_t &getFolio() { return Folio; }
     void setFolio(folio_t value) { Folio = value; }
     const page_t &getPage() { return Page; }
@@ -75,7 +72,6 @@ private:
     pduLength_t PDULength;
     footer_t Footer;
     cid_t CID;
-    sequence_t Sequence;
     folio_t Folio;
     page_t Page;
     page_t LastPage;

@@ -29,7 +29,7 @@ Message::Message(OTP::cid_t CID,
     QObject(parent),
     otpLayer(
         new OTPLayer::Layer(
-            VECTOR_OTP_TRANSFORM_MESSAGE, 0, CID, 0, 0, 0, 0, ComponentName, this)),
+            VECTOR_OTP_TRANSFORM_MESSAGE, 0, CID, 0, 0, 0, ComponentName, this)),
     transformLayer(
         new OTPTransformLayer::Layer(
             0, System, static_cast<timestamp_t>(QDateTime::currentMSecsSinceEpoch() * 1000), OTPTransformLayer::options_t(FullPointSet), this))
@@ -123,12 +123,10 @@ bool Message::isValid()
 
 QNetworkDatagram Message::toQNetworkDatagram(
         QHostAddress destAddr,
-        sequence_t sequenceNumber,
         folio_t folio,
         page_t thisPage,
         page_t lastPage)
 {
-    otpLayer->setSequence(sequenceNumber);
     otpLayer->setFolio(folio);
     otpLayer->setPage(thisPage);
     otpLayer->setLastPage(lastPage);

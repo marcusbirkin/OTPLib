@@ -606,9 +606,10 @@ void Producer::newDatagram(QNetworkDatagram datagram)
         if (moduleAdvert.isValid())
         {
             auto cid = moduleAdvert.getOTPLayer()->getCID();
-            if (!sequenceMap[cid].checkSequence(
+            if (!folioMap.checkSequence(
+                        cid,
                         PDU::VECTOR_OTP_ADVERTISEMENT_MODULE,
-                        moduleAdvert.getOTPLayer()->getSequence()))
+                        moduleAdvert.getOTPLayer()->getFolio()))
             {
                 qDebug() << this << "- Out of Sequence OTP Module Advertisement Message Request Received From" << datagram.senderAddress();
                 return;
@@ -629,9 +630,10 @@ void Producer::newDatagram(QNetworkDatagram datagram)
         if (nameAdvert.isValid())
         {
             auto cid = nameAdvert.getOTPLayer()->getCID();
-            if (!sequenceMap[cid].checkSequence(
+            if (!folioMap.checkSequence(
+                        cid,
                         PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
-                        nameAdvert.getOTPLayer()->getSequence()))
+                        nameAdvert.getOTPLayer()->getFolio()))
             {
                 qDebug() << this << "- Out of Sequence OTP Name Advertisement Message Request Received From" << datagram.senderAddress();
                 return;
@@ -666,9 +668,10 @@ void Producer::newDatagram(QNetworkDatagram datagram)
         if (systemAdvert.isValid() && systemAdvert.getSystemAdvertisementLayer()->getOptions().isRequest())
         {
             auto cid = systemAdvert.getOTPLayer()->getCID();
-            if (!sequenceMap[cid].checkSequence(
+            if (!folioMap.checkSequence(
+                        cid,
                         PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
-                        systemAdvert.getOTPLayer()->getSequence()))
+                        systemAdvert.getOTPLayer()->getFolio()))
             {
                 qDebug() << this << "- Out of Sequence OTP System Advertisement Message Request Received From" << datagram.senderAddress();
                 return;
@@ -765,7 +768,6 @@ void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MES
     {
         auto datagram = folioMessages[page]->toQNetworkDatagram(
                     destinationAddr,
-                    sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_NAME),
                     folio,
                     page,
                     lastPage);
@@ -814,7 +816,6 @@ void Producer::sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, M
     {
         auto datagram = folioMessages[page]->toQNetworkDatagram(
                     destinationAddr,
-                    sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM),
                     folio,
                     page,
                     lastPage);
@@ -898,7 +899,6 @@ void Producer::sendOTPTransformMessage(system_t system)
     {
         auto datagrams = folioMessages[page]->toQNetworkDatagrams(
                     transport,
-                    sequenceMap[getProducerCID()].getNextSequence(PDU::VECTOR_OTP_TRANSFORM_MESSAGE),
                     folio,
                     page,
                     lastPage);

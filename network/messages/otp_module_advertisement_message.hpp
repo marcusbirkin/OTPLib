@@ -44,13 +44,11 @@ public:
     bool isValid();
     QNetworkDatagram toQNetworkDatagram(
             QHostAddress destAddr,
-            sequence_t sequenceNumber,
             folio_t folio,
             page_t thisPage,
             page_t lastPage);
     QList<QNetworkDatagram> toQNetworkDatagrams(
             QAbstractSocket::NetworkLayerProtocol transport,
-            sequence_t sequenceNumber,
             folio_t folio,
             page_t thisPage,
             page_t lastPage)
@@ -59,14 +57,12 @@ public:
         if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
             ret.append(toQNetworkDatagram(
                             OTP_Advertisement_Message_IPv4,
-                            sequenceNumber,
                             folio,
                             thisPage,
                             lastPage));
         if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
             ret.append(toQNetworkDatagram(
                             OTP_Advertisement_Message_IPv6,
-                            sequenceNumber,
                             folio,
                             thisPage,
                             lastPage));
