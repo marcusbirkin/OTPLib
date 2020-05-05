@@ -111,6 +111,23 @@ namespace OTP::PDU
         private:
             type data;
         };
+
+        class footer_t {
+            typedef quint8 flags_t;
+            typedef quint8 length_t;
+            typedef QByteArray type;
+        public:
+            footer_t() : flags(0) {}
+            footer_t(flags_t flags, length_t length = 0) : flags(flags) { footer.resize(length); }
+            operator type() const { return footer; }
+
+            flags_t &Flags() { return flags; }
+            length_t getLength() { return footer.size(); }
+        private:
+            flags_t flags;
+            type footer;
+        };
+
         typedef quint16 folio_t;
         typedef quint16 page_t;
         typedef quint8 options_t;

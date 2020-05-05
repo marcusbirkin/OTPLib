@@ -53,6 +53,7 @@ public:
     void setVector(vector_t value) { Vector = value; }
     const pduLength_t &getPDULength() { return PDULength; }
     void setPDULength(pduLength_t value) { PDULength = value; }
+    const auto &getFooterOptions() { return Footer.Flags(); }
     cid_t getCID() const { return CID; }
     void setCID(cid_t value) { CID = value; }
     const sequence_t &getSequence() { return Sequence; }
@@ -72,6 +73,7 @@ private:
     otpIdent_t PacketIdent;
     vector_t Vector;
     pduLength_t PDULength;
+    footer_t Footer;
     cid_t CID;
     sequence_t Sequence;
     folio_t Folio;

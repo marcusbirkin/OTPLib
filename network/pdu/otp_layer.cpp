@@ -51,6 +51,7 @@ Layer::Layer(
     PacketIdent(QByteArray()),
     Vector(0),
     PDULength(0),
+    Footer(FOOTERFLAGS),
     CID(cid_t()),
     Sequence(0),
     Folio(0),
@@ -81,6 +82,8 @@ OTP::PDU::PDUByteArray Layer::toPDUByteArray()
         << PacketIdent
         << Vector
         << PDULength
+        << Footer.Flags()
+        << Footer.getLength()
         << CID
         << Sequence
         << Folio
@@ -91,12 +94,12 @@ OTP::PDU::PDUByteArray Layer::toPDUByteArray()
         << ComponentName;
 }
 
-
 void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
 {
     PacketIdent = QByteArray();
     Vector = 0;
     PDULength = 0;
+    Footer = footer_t();
     CID = cid_t();
     Sequence = 0;
     Folio = 0;
@@ -109,9 +112,12 @@ void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
     if (layer.size() != Layer().toPDUByteArray().size())
         return;
 
+    decltype (Footer.getLength()) FooterLength;
     layer >> PacketIdent
         >> Vector
         >> PDULength
+        >> Footer.Flags()
+        >> FooterLength // Currently Ignored
         >> CID
         >> Sequence
         >> Folio
