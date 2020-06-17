@@ -32,7 +32,7 @@ namespace OTP::MODULES {
             ROTATION = 0x0003,
             ROTATION_VELOCITY_ACCELERATION = 0x0004,
             SCALE = 0x0005,
-            PARENT = 0x0006
+            REFERENCE_FRAME = 0x0006
         };
 
         static QMap<moduleNumber_t, module_t> modules{
@@ -41,7 +41,7 @@ namespace OTP::MODULES {
             {ROTATION, {{QObject::tr("ESTA"), QObject::tr("Rotation")}, {ESTA_MANUFACTURER_ID, ROTATION}}},
             {ROTATION_VELOCITY_ACCELERATION, {{QObject::tr("ESTA"), QObject::tr("Rotation Velocity/Acceleration")}, {ESTA_MANUFACTURER_ID, ROTATION_VELOCITY_ACCELERATION}}},
             {SCALE, {{QObject::tr("ESTA"), QObject::tr("Scale")}, {ESTA_MANUFACTURER_ID, SCALE}}},
-            {PARENT, {{QObject::tr("ESTA"), QObject::tr("Parent")}, {ESTA_MANUFACTURER_ID, PARENT}}},
+            {REFERENCE_FRAME, {{QObject::tr("ESTA"), QObject::tr("Reference Frame")}, {ESTA_MANUFACTURER_ID, REFERENCE_FRAME}}},
         };
 
         namespace VALUES {
@@ -53,7 +53,7 @@ namespace OTP::MODULES {
                 ROTATION_VELOCITY,
                 ROTATION_ACCELERATION,
                 SCALE,
-                PARENT
+                REFERENCE_FRAME
             } moduleValue_t;
 
             namespace UNITS {

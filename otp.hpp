@@ -298,19 +298,18 @@ namespace OTP
         signals:
             void updatedScale(address_t, axis_t);
 
-        /* -Parent */
+        /* -Reference Frame */
         public:
-        typedef struct Parent_s
+        typedef struct
             {
                 address_t value;
-                bool relative;
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
-            } Parent_t;
-            Parent_t getProducerParent(address_t) const;
-            void setProducerParent(address_t, Parent_t);
+            } ReferenceFrame_t;
+            ReferenceFrame_t getProducerReferenceFrame(address_t) const;
+            void setProducerReferenceFrame(address_t, ReferenceFrame_t);
         signals:
-            void updatedParent(address_t);
+            void updatedReferenceFrame(address_t);
 
     signals:
         void newCID(cid_t);
@@ -585,20 +584,19 @@ namespace OTP
         signals:
             void updatedScale(cid_t, address_t, axis_t);
 
-        /* -Parent */
+        /* -Reference Frame */
         public:
-            typedef struct Parent_s
+            typedef struct
             {
                 address_t value;
-                bool relative;
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
                 priority_t priority;
-            } Parent_t;
-            Parent_t getParent(cid_t, address_t) const;
-            Parent_t getParent(address_t) const;
+            } ReferenceFrame_t;
+            ReferenceFrame_t getReferenceFrame(cid_t, address_t) const;
+            ReferenceFrame_t getReferenceFrame(address_t) const;
         signals:
-            void updatedParent(cid_t, address_t);
+            void updatedReferenceFrame(cid_t, address_t);
 
     private slots:
         void newDatagram(QNetworkDatagram datagram);

@@ -57,7 +57,6 @@ namespace OTP::MODULES {
         }
     }
 
-
     MESSAGES::OTPModuleAdvertisementMessage::list_t const getSupportedModules()
     {
         MESSAGES::OTPModuleAdvertisementMessage::list_t ret;
@@ -66,7 +65,7 @@ namespace OTP::MODULES {
         ret.append(STANDARD::modules.value(STANDARD::ROTATION).ident);
         ret.append(STANDARD::modules.value(STANDARD::ROTATION_VELOCITY_ACCELERATION).ident);
         ret.append(STANDARD::modules.value(STANDARD::SCALE).ident);
-        ret.append(STANDARD::modules.value(STANDARD::PARENT).ident);
+        ret.append(STANDARD::modules.value(STANDARD::REFERENCE_FRAME).ident);
         return ret;
     }
 

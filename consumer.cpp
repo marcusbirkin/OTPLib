@@ -384,14 +384,13 @@ Consumer::PositionValue_t Consumer::getPosition(cid_t cid, address_t address, ax
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.position;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.position;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.position;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getPosition(axis);
@@ -420,14 +419,13 @@ Consumer::PositionVelocity_t Consumer::getPositionVelocity(cid_t cid, address_t 
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.positionVelAcc;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.positionVelAcc;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getVelocity(axis);
@@ -454,14 +452,13 @@ Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(cid_t cid, ad
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.positionVelAcc;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.positionVelAcc;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getAcceleration(axis);
@@ -490,14 +487,13 @@ Consumer::RotationValue_t Consumer::getRotation(cid_t cid, address_t address, ax
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotation;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.rotation;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.rotation;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getRotation(axis);
@@ -526,14 +522,13 @@ Consumer::RotationVelocity_t Consumer::getRotationVelocity(cid_t cid, address_t 
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.rotationVelAcc;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.rotationVelAcc;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getVelocity(axis);
@@ -560,14 +555,13 @@ Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(cid_t cid, ad
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.rotationVelAcc;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.rotationVelAcc;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getAcceleration(axis);
@@ -604,26 +598,25 @@ Consumer::Scale_t Consumer::getScale(address_t address, axis_t axis) const
     return getScale(cid, address, axis);
 }
 
-Consumer::Parent_t Consumer::getParent(cid_t cid, address_t address) const
+Consumer::ReferenceFrame_t Consumer::getReferenceFrame(cid_t cid, address_t address) const
 {
     using namespace MODULES::STANDARD;
-    Consumer::Parent_t ret;
+    Consumer::ReferenceFrame_t ret;
     if (!isPointValid(cid, address))
         return ret;
 
-    auto module = otpNetwork->PointDetails(cid, address)->standardModules.parent;
+    auto module = otpNetwork->PointDetails(cid, address)->standardModules.referenceFrame;
     ret.value = {module.getSystem(), module.getGroup(), module.getPoint()};
-    ret.relative = module.isRelative();
     ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
     ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
-Consumer::Parent_t Consumer::getParent(address_t address) const
+Consumer::ReferenceFrame_t Consumer::getReferenceFrame(address_t address) const
 {
     auto cid = otpNetwork->getWinningComponent(address);
-    return getParent(cid, address);
+    return getReferenceFrame(cid, address);
 }
 
 void Consumer::setupListener()
@@ -760,8 +753,8 @@ bool Consumer::receiveOTPTransformMessage(QNetworkDatagram datagram)
                                             newStandardModules.scale = MODULES::STANDARD::ScaleModule_t(moduleLayer->getAdditional(), timestamp);
                                             break;
 
-                                        case MODULES::STANDARD::PARENT:
-                                            newStandardModules.parent = MODULES::STANDARD::ParentModule_t(moduleLayer->getAdditional(), timestamp);
+                                        case MODULES::STANDARD::REFERENCE_FRAME:
+                                            newStandardModules.referenceFrame = MODULES::STANDARD::ReferenceFrameModule_t(moduleLayer->getAdditional(), timestamp);
                                             break;
 
                                         default:
@@ -815,10 +808,10 @@ bool Consumer::receiveOTPTransformMessage(QNetworkDatagram datagram)
                             if (oldStandardModules.scale.getScale(axis) != newStandardModules.scale.getScale(axis))
                                 emit updatedScale(cid, address, axis);
 
-                            // - MODULES::STANDARD::PARENT
-                            otpNetwork->PointDetails(cid, address)->standardModules.parent = newStandardModules.parent;
-                            if (oldStandardModules.parent != newStandardModules.parent)
-                                    emit updatedParent(cid, address);
+                            // - MODULES::STANDARD::REFERENCE_FRAME
+                            otpNetwork->PointDetails(cid, address)->standardModules.referenceFrame = newStandardModules.referenceFrame;
+                            if (oldStandardModules.referenceFrame != newStandardModules.referenceFrame)
+                                    emit updatedReferenceFrame(cid, address);
                         }
                     }
                 }

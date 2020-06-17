@@ -196,7 +196,7 @@ namespace OTP
                 ret = std::max(ret, rotation.getTimestamp());
                 ret = std::max(ret, rotationVelAcc.getTimestamp());
                 ret = std::max(ret, scale.getTimestamp());
-                ret = std::max(ret, parent.getTimestamp());
+                ret = std::max(ret, referenceFrame.getTimestamp());
                 return ret;
             }
 
@@ -208,7 +208,7 @@ namespace OTP
                 ret = std::max(ret, rotation.getLastSeen());
                 ret = std::max(ret, rotationVelAcc.getLastSeen());
                 ret = std::max(ret, scale.getLastSeen());
-                ret = std::max(ret, parent.getLastSeen());
+                ret = std::max(ret, referenceFrame.getLastSeen());
                 return ret;
             }
 
@@ -217,7 +217,7 @@ namespace OTP
             MODULES::STANDARD::RotationModule_t rotation;
             MODULES::STANDARD::RotationVelAccModule_t rotationVelAcc;
             MODULES::STANDARD::ScaleModule_t scale;
-            MODULES::STANDARD::ParentModule_t parent;
+            MODULES::STANDARD::ReferenceFrameModule_t referenceFrame;
         } standardModules_t;
 
         standardModules_t standardModules;

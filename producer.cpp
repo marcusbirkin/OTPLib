@@ -184,9 +184,9 @@ QList<point_t> Producer::getProducerPoints(system_t system, group_t group) const
 void Producer::addProducerPoint(address_t address, priority_t priority)
 {
     otpNetwork->addPoint(getProducerCID(), address, priority);
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent.setSystem(address.system, 0);
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent.setGroup(address.group, 0);
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent.setPoint(address.point, 0);
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.referenceFrame.setSystem(address.system, 0);
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.referenceFrame.setGroup(address.group, 0);
+    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.referenceFrame.setPoint(address.point, 0);
 }
 
 void Producer::removeProducerPoint(address_t address)
@@ -527,31 +527,28 @@ void Producer::setProducerScale(address_t address, axis_t axis, Scale_t scale)
     emit updatedScale(address, axis);
 }
 
-Producer::Parent_t Producer::getProducerParent(address_t address) const
+Producer::ReferenceFrame_t Producer::getProducerReferenceFrame(address_t address) const
 {
     using namespace MODULES::STANDARD;
-    Producer::Parent_t ret;
+    Producer::ReferenceFrame_t ret;
     if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
         return ret;
 
-    auto module = &otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent;
+    auto module = &otpNetwork->PointDetails(getProducerCID(), address)->standardModules.referenceFrame;
     ret.value = {module->getSystem(), module->getGroup(), module->getPoint()};
-    ret.relative = module->isRelative();
     ret.timestamp = module->getTimestamp();
     return ret;
 }
 
-void Producer::setProducerParent(address_t address, Parent_t parent)
+void Producer::setProducerReferenceFrame(address_t address, ReferenceFrame_t referenceFrame)
 {
     if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
 
-    auto module = &otpNetwork->PointDetails(getProducerCID(), address)->standardModules.parent;
-    module->setSystem(parent.value.system, parent.timestamp);
-    module->setGroup(parent.value.group, parent.timestamp);
-    module->setPoint(parent.value.point, parent.timestamp);
-    module->setRelative(parent.relative, parent.timestamp);
-
-    emit updatedParent(address);
+    auto module = &otpNetwork->PointDetails(getProducerCID(), address)->standardModules.referenceFrame;
+    module->setSystem(referenceFrame.value.system, referenceFrame.timestamp);
+    module->setGroup(referenceFrame.value.group, referenceFrame.timestamp);
+    module->setPoint(referenceFrame.value.point, referenceFrame.timestamp);
+    emit updatedReferenceFrame(address);
 }
 
 void Producer::setupListener()
