@@ -255,7 +255,36 @@ namespace OTP::MODULES {
         // 16.3 Rotation Module
         class RotationModule_t {
         public:
-            typedef quint32 rotation_t;
+            class rotation_t {
+            private:
+                typedef quint32 type;
+
+            public:
+                rotation_t() : data(0) {}
+                rotation_t(type value) : data(value) {}
+
+                operator type() {
+                    return data;
+                }
+
+                friend additional_t& operator<<(additional_t &l, const rotation_t &r) {
+                    return l << r.data;
+                }
+                friend additional_t& operator>>(additional_t &l, rotation_t &r)
+                {
+                    l >> r.data;
+                    return l;
+                }
+                friend bool operator==(const rotation_t& l, const rotation_t& r)
+                {
+                    return l.data == r.data;
+                }
+                friend bool operator!=(const rotation_t& l, const rotation_t& r) { return !(l == r); }
+                friend rotation_t& operator+=(rotation_t& l, const rotation_t& r);
+
+            private:
+                type data;
+            };
 
             RotationModule_t() : timestamp(0), lastSeen(QDateTime())
             {
