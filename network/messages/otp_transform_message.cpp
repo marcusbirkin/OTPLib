@@ -100,7 +100,7 @@ Message::Message(
     }
 }
 
-bool Message::isValid()
+bool Message::isValid() const
 {
     auto lengthCheck = toByteArray().length();
     if (lengthCheck != otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET)
@@ -117,7 +117,8 @@ bool Message::isValid()
 
     for (auto moduleLayer : moduleLayers)
         if (!moduleLayer->isValid()) return false;
-    if (!RANGES::MESSAGE_SIZE.isValid(toByteArray().size())) return false;
+    if (!RANGES::MESSAGE_SIZE.isValid(toByteArray().size() - otpLayer->getFooter().getLength()))
+        return false;
     return true;
 }
 
@@ -165,7 +166,7 @@ Message::addModule_ret Message::addModule(addModule_t &moduleData)
     return OK;
 }
 
-QByteArray Message::toByteArray()
+QByteArray Message::toByteArray() const
 {
     QByteArray ba;
     ba.append(otpLayer->toPDUByteArray());

@@ -41,7 +41,7 @@ public:
     explicit Message(
             QNetworkDatagram message,
             QObject *parent = nullptr);
-    bool isValid();
+    bool isValid() const;
     QNetworkDatagram toQNetworkDatagram(
             QHostAddress destAddr,
             folio_t folio,
@@ -94,7 +94,7 @@ public:
 
 private:
     void updatePduLength();
-    QByteArray toByteArray();
+    QByteArray toByteArray() const;
 
     std::shared_ptr<OTP::PDU::OTPLayer::Layer> otpLayer;
     std::shared_ptr<OTP::PDU::OTPTransformLayer::Layer> transformLayer;

@@ -108,7 +108,7 @@ namespace OTP::PDU
             operator type() const { return footer; }
 
             flags_t &Flags() { return flags; }
-            length_t getLength() { return footer.size(); }
+            length_t getLength() const { return footer.size(); }
         private:
             flags_t flags;
             type footer;

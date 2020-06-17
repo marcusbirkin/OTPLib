@@ -32,7 +32,7 @@ namespace OTP::MESSAGES
 
     namespace OTPTransformMessage {
         namespace RANGES {
-            const range_t MESSAGE_SIZE = {135, 1472};
+            const range_t MESSAGE_SIZE = {134, 1472};
         }
     }
 
