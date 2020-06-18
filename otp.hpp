@@ -291,6 +291,9 @@ namespace OTP
         typedef struct Scale_s
             {
                 MODULES::STANDARD::ScaleModule_t::scale_t value = 0;
+                MODULES::STANDARD::ScaleModule_t::percent_t getPercent() { return MODULES::STANDARD::ScaleModule_t::toPercent(value); }
+                operator QString() { return MODULES::STANDARD::ScaleModule_t::toPercentString(value).append("%"); }
+                void setPercent(MODULES::STANDARD::ScaleModule_t::percent_t value) { value = MODULES::STANDARD::ScaleModule_t::fromPercent(value); }
                 timestamp_t timestamp = 0;
             } Scale_t;
             Scale_t getProducerScale(address_t, axis_t) const;
@@ -575,6 +578,9 @@ namespace OTP
             typedef struct Scale_s
             {
                 MODULES::STANDARD::ScaleModule_t::scale_t value = 0;
+                MODULES::STANDARD::ScaleModule_t::percent_t getPercent() { return MODULES::STANDARD::ScaleModule_t::toPercent(value); }
+                operator QString() { return MODULES::STANDARD::ScaleModule_t::toPercentString(value).append("%"); }
+                void setPercent(MODULES::STANDARD::ScaleModule_t::percent_t value) { value = MODULES::STANDARD::ScaleModule_t::fromPercent(value); }
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
                 priority_t priority;

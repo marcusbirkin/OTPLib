@@ -34,4 +34,19 @@ namespace OTP::MODULES::STANDARD {
         l.data = min + (l.data - min) % size;
         return l;
     }
+
+    ScaleModule_t::percent_t ScaleModule_t::toPercent(scale_t scale) {
+        scale = std::clamp(scale,
+                           static_cast<scale_t>(VALUES::RANGES::getRange(VALUES::SCALE).getMin()),
+                           static_cast<scale_t>(VALUES::RANGES::getRange(VALUES::SCALE).getMax()));
+        return (static_cast<percent_t>(scale) * 100) / 1000000;
+    }
+
+    ScaleModule_t::scale_t ScaleModule_t::fromPercent(ScaleModule_t::percent_t percent) {
+        ScaleModule_t::scale_t scale = (percent / 100) * 1000000;
+        scale = std::clamp(scale,
+                           static_cast<scale_t>(VALUES::RANGES::getRange(VALUES::SCALE).getMin()),
+                           static_cast<scale_t>(VALUES::RANGES::getRange(VALUES::SCALE).getMax()));
+        return scale;
+    }
 }

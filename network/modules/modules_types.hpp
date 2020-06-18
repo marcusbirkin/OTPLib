@@ -420,10 +420,11 @@ namespace OTP::MODULES {
         class ScaleModule_t {
         public:
             typedef qint32 scale_t;
+            typedef qreal percent_t;
 
             ScaleModule_t() : timestamp(0), lastSeen(QDateTime())
             {
-                std::fill(std::begin(scale), std::end(scale), 1);
+                std::fill(std::begin(scale), std::end(scale), fromPercent(100));
             }
 
             ScaleModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
@@ -444,6 +445,14 @@ namespace OTP::MODULES {
                 timestamp = time;
                 updateLastSeen();
             }
+
+            static percent_t toPercent(scale_t scale);
+            static QString toPercentString(scale_t scale) {
+                auto ret = QString::number(toPercent(scale), 'f', 4);
+                ret.remove( QRegExp("\\.?0+$") );
+                return ret;
+            }
+            static scale_t fromPercent(percent_t percent);
 
             friend additional_t& operator<<(additional_t &l, const ScaleModule_t &r)
             {
