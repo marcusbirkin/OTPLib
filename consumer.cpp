@@ -384,14 +384,13 @@ Consumer::PositionValue_t Consumer::getPosition(cid_t cid, address_t address, ax
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.position;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.position;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.position;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getPosition(axis);
@@ -420,14 +419,13 @@ Consumer::PositionVelocity_t Consumer::getPositionVelocity(cid_t cid, address_t 
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.positionVelAcc;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.positionVelAcc;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getVelocity(axis);
@@ -454,14 +452,13 @@ Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(cid_t cid, ad
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.positionVelAcc;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.positionVelAcc;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getAcceleration(axis);
@@ -490,14 +487,13 @@ Consumer::RotationValue_t Consumer::getRotation(cid_t cid, address_t address, ax
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotation;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.rotation;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.rotation;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getRotation(axis);
@@ -526,14 +522,13 @@ Consumer::RotationVelocity_t Consumer::getRotationVelocity(cid_t cid, address_t 
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.rotationVelAcc;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.rotationVelAcc;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getVelocity(axis);
@@ -560,14 +555,13 @@ Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(cid_t cid, ad
     auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc;
     if (respectRelative) {
         QList<address_t> previous({address});
-        auto parent = getParent(cid, address);
-        while (isPointValid(parent.value) &&
-               parent.relative &&
-               !previous.contains(parent.value))
+        auto referenceFrame = getReferenceFrame(cid, address);
+        while (isPointValid(referenceFrame.value) &&
+               !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(parent.value), parent.value)->standardModules.rotationVelAcc;
-            previous << parent.value;
-            parent = getParent(otpNetwork->getWinningComponent(parent.value), parent.value);
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.rotationVelAcc;
+            previous << referenceFrame.value;
+            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
     ret.value = module.getAcceleration(axis);
@@ -604,26 +598,25 @@ Consumer::Scale_t Consumer::getScale(address_t address, axis_t axis) const
     return getScale(cid, address, axis);
 }
 
-Consumer::Parent_t Consumer::getParent(cid_t cid, address_t address) const
+Consumer::ReferenceFrame_t Consumer::getReferenceFrame(cid_t cid, address_t address) const
 {
     using namespace MODULES::STANDARD;
-    Consumer::Parent_t ret;
+    Consumer::ReferenceFrame_t ret;
     if (!isPointValid(cid, address))
         return ret;
 
-    auto module = otpNetwork->PointDetails(cid, address)->standardModules.parent;
+    auto module = otpNetwork->PointDetails(cid, address)->standardModules.referenceFrame;
     ret.value = {module.getSystem(), module.getGroup(), module.getPoint()};
-    ret.relative = module.isRelative();
     ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
     ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
-Consumer::Parent_t Consumer::getParent(address_t address) const
+Consumer::ReferenceFrame_t Consumer::getReferenceFrame(address_t address) const
 {
     auto cid = otpNetwork->getWinningComponent(address);
-    return getParent(cid, address);
+    return getReferenceFrame(cid, address);
 }
 
 void Consumer::setupListener()
@@ -680,9 +673,13 @@ bool Consumer::receiveOTPTransformMessage(QNetworkDatagram datagram)
         if (transformMessage.isValid())
         {
             auto cid = transformMessage.getOTPLayer()->getCID();
-            if (!sequenceMap[cid].checkSequence(
-                        PDU::VECTOR_OTP_TRANSFORM_MESSAGE,
-                        transformMessage.getOTPLayer()->getSequence()))
+            auto folio = transformMessage.getOTPLayer()->getFolio();
+            auto system = transformMessage.getTransformLayer()->getSystem();
+            if (!folioMap.checkSequence(
+                    cid,
+                    system,
+                    PDU::VECTOR_OTP_TRANSFORM_MESSAGE,
+                    folio))
             {
                 qDebug() << this << "- Out of Sequence OTP Transform Message Request Received From" << datagram.senderAddress();
                 return true;
@@ -697,116 +694,125 @@ bool Consumer::receiveOTPTransformMessage(QNetworkDatagram datagram)
             // Add page to folio map
             folioMap.addPage(
                         cid,
+                        system,
                         PDU::VECTOR_OTP_TRANSFORM_MESSAGE,
-                        transformMessage.getOTPLayer()->getFolio(),
+                        folio,
                         transformMessage.getOTPLayer()->getPage(),
                         datagram);
 
             // Last page?
             if (folioMap.checkAllPages(
                         cid,
+                        system,
                         PDU::VECTOR_OTP_TRANSFORM_MESSAGE,
-                        transformMessage.getOTPLayer()->getFolio(),
+                        folio,
                         transformMessage.getOTPLayer()->getLastPage()))
             {
-                // Process each Point layer
-                for (auto pointLayer : transformMessage.getPointLayers())
+                // Process all pages
+                for (auto datagram : folioMap.getDatagrams(cid,
+                            system,
+                            PDU::VECTOR_OTP_TRANSFORM_MESSAGE,
+                            folio))
                 {
-                    auto address = address_t{
-                        transformMessage.getTransformLayer()->getSystem(),
-                        pointLayer->getGroup(),
-                        pointLayer->getPoint()};
-                    auto timestamp = pointLayer->getTimestamp();
-                    otpNetwork->addPoint(cid, address, pointLayer->getPriority());
-                    otpNetwork->PointDetails(cid, address)->setPriority(pointLayer->getPriority());
-
-                    pointDetails::standardModules_t newStandardModules;
-                    for (auto moduleLayer : transformMessage.getModuleLayers().values(address))
+                    // Process each Point layer
+                    for (auto pointLayer : transformMessage.getPointLayers())
                     {
-                        switch (moduleLayer->getManufacturerID())
+                        auto address = address_t{
+                            transformMessage.getTransformLayer()->getSystem(),
+                            pointLayer->getGroup(),
+                            pointLayer->getPoint()};
+                        auto timestamp = pointLayer->getTimestamp();
+                        otpNetwork->addPoint(cid, address, pointLayer->getPriority());
+                        otpNetwork->PointDetails(cid, address)->setPriority(pointLayer->getPriority());
+
+                        pointDetails::standardModules_t newStandardModules;
+                        for (auto moduleLayer : transformMessage.getModuleLayers().values(address))
                         {
-                            case ESTA_MANUFACTURER_ID:
+                            switch (moduleLayer->getManufacturerID())
                             {
-                                switch (moduleLayer->getModuleNumber()) {
-                                    case MODULES::STANDARD::POSITION:
-                                        newStandardModules.position = MODULES::STANDARD::PositionModule_t(moduleLayer->getAdditional(), timestamp);
-                                        break;
+                                case ESTA_MANUFACTURER_ID:
+                                {
+                                    switch (moduleLayer->getModuleNumber()) {
+                                        case MODULES::STANDARD::POSITION:
+                                            newStandardModules.position = MODULES::STANDARD::PositionModule_t(moduleLayer->getAdditional(), timestamp);
+                                            break;
 
-                                    case MODULES::STANDARD::POSITION_VELOCITY_ACCELERATION:
-                                        newStandardModules.positionVelAcc = MODULES::STANDARD::PositionVelAccModule_t(moduleLayer->getAdditional(), timestamp);
-                                        break;
+                                        case MODULES::STANDARD::POSITION_VELOCITY_ACCELERATION:
+                                            newStandardModules.positionVelAcc = MODULES::STANDARD::PositionVelAccModule_t(moduleLayer->getAdditional(), timestamp);
+                                            break;
 
-                                    case MODULES::STANDARD::ROTATION:
-                                        newStandardModules.rotation = MODULES::STANDARD::RotationModule_t(moduleLayer->getAdditional(), timestamp);
-                                        break;
+                                        case MODULES::STANDARD::ROTATION:
+                                            newStandardModules.rotation = MODULES::STANDARD::RotationModule_t(moduleLayer->getAdditional(), timestamp);
+                                            break;
 
-                                    case MODULES::STANDARD::ROTATION_VELOCITY_ACCELERATION:
-                                        newStandardModules.rotationVelAcc = MODULES::STANDARD::RotationVelAccModule_t(moduleLayer->getAdditional(), timestamp);
-                                        break;
+                                        case MODULES::STANDARD::ROTATION_VELOCITY_ACCELERATION:
+                                            newStandardModules.rotationVelAcc = MODULES::STANDARD::RotationVelAccModule_t(moduleLayer->getAdditional(), timestamp);
+                                            break;
 
-                                    case MODULES::STANDARD::SCALE:
-                                        newStandardModules.scale = MODULES::STANDARD::ScaleModule_t(moduleLayer->getAdditional(), timestamp);
-                                        break;
+                                        case MODULES::STANDARD::SCALE:
+                                            newStandardModules.scale = MODULES::STANDARD::ScaleModule_t(moduleLayer->getAdditional(), timestamp);
+                                            break;
 
-                                    case MODULES::STANDARD::PARENT:
-                                        newStandardModules.parent = MODULES::STANDARD::ParentModule_t(moduleLayer->getAdditional(), timestamp);
-                                        break;
+                                        case MODULES::STANDARD::REFERENCE_FRAME:
+                                            newStandardModules.referenceFrame = MODULES::STANDARD::ReferenceFrameModule_t(moduleLayer->getAdditional(), timestamp);
+                                            break;
 
-                                    default:
-                                    {
-                                    qDebug() << this << "Unknown module ID"
-                                             << moduleLayer->getManufacturerID() << moduleLayer->getModuleNumber()
+                                        default:
+                                        {
+                                        qDebug() << this << "Unknown module ID"
+                                                 << moduleLayer->getManufacturerID() << moduleLayer->getModuleNumber()
+                                                 << "From" << datagram.senderAddress();
+                                        } break;
+                                    }
+
+                                } break;
+                                default:
+                                {
+                                    qDebug() << this << "Unknown module Manufacturer ID"
+                                             << moduleLayer->getManufacturerID()
                                              << "From" << datagram.senderAddress();
-                                    } break;
-                                }
-
-                            } break;
-                            default:
-                            {
-                                qDebug() << this << "Unknown module Manufacturer ID"
-                                         << moduleLayer->getManufacturerID()
-                                         << "From" << datagram.senderAddress();
-                            } break;
+                                } break;
+                            }
                         }
-                    }
 
-                    // Update standard module details
-                    auto const oldStandardModules = otpNetwork->PointDetails(cid, address)->standardModules;
-                    for (auto axis = axis_t::first; axis < axis_t::count; axis++)
-                    {
-                        // - MODULES::STANDARD::POSITION
-                        otpNetwork->PointDetails(cid, address)->standardModules.position = newStandardModules.position;
-                        if (oldStandardModules.position.getPosition(axis) != newStandardModules.position.getPosition(axis))
-                            emit updatedPosition(cid, address, axis);
+                        // Update standard module details
+                        auto const oldStandardModules = otpNetwork->PointDetails(cid, address)->standardModules;
+                        for (auto axis = axis_t::first; axis < axis_t::count; axis++)
+                        {
+                            // - MODULES::STANDARD::POSITION
+                            otpNetwork->PointDetails(cid, address)->standardModules.position = newStandardModules.position;
+                            if (oldStandardModules.position.getPosition(axis) != newStandardModules.position.getPosition(axis))
+                                emit updatedPosition(cid, address, axis);
 
-                        // - MODULES::STANDARD::POSITION_VELOCITY_ACCELERATION
-                        otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc = newStandardModules.positionVelAcc;
-                        if (oldStandardModules.positionVelAcc.getVelocity(axis) != newStandardModules.positionVelAcc.getVelocity(axis))
-                            emit updatedPositionVelocity(cid, address, axis);
-                        if (oldStandardModules.positionVelAcc.getAcceleration(axis) != newStandardModules.positionVelAcc.getAcceleration(axis))
-                            emit updatedPositionAcceleration(cid, address, axis);
+                            // - MODULES::STANDARD::POSITION_VELOCITY_ACCELERATION
+                            otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc = newStandardModules.positionVelAcc;
+                            if (oldStandardModules.positionVelAcc.getVelocity(axis) != newStandardModules.positionVelAcc.getVelocity(axis))
+                                emit updatedPositionVelocity(cid, address, axis);
+                            if (oldStandardModules.positionVelAcc.getAcceleration(axis) != newStandardModules.positionVelAcc.getAcceleration(axis))
+                                emit updatedPositionAcceleration(cid, address, axis);
 
-                        // - MODULES::STANDARD::ROTATION
-                        otpNetwork->PointDetails(cid, address)->standardModules.rotation = newStandardModules.rotation;
-                        if (oldStandardModules.rotation.getRotation(axis) != newStandardModules.rotation.getRotation(axis))
-                            emit updatedRotation(cid, address, axis);
+                            // - MODULES::STANDARD::ROTATION
+                            otpNetwork->PointDetails(cid, address)->standardModules.rotation = newStandardModules.rotation;
+                            if (oldStandardModules.rotation.getRotation(axis) != newStandardModules.rotation.getRotation(axis))
+                                emit updatedRotation(cid, address, axis);
 
-                        // - MODULES::STANDARD::ROTATION_VELOCITY_ACCELERATION
-                        otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc = newStandardModules.rotationVelAcc;
-                        if (oldStandardModules.rotationVelAcc.getVelocity(axis) != newStandardModules.rotationVelAcc.getVelocity(axis))
-                            emit updatedRotationVelocity(cid, address, axis);
-                        if (oldStandardModules.rotationVelAcc.getAcceleration(axis) != newStandardModules.rotationVelAcc.getAcceleration(axis))
-                            emit updatedRotationAcceleration(cid, address, axis);
+                            // - MODULES::STANDARD::ROTATION_VELOCITY_ACCELERATION
+                            otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc = newStandardModules.rotationVelAcc;
+                            if (oldStandardModules.rotationVelAcc.getVelocity(axis) != newStandardModules.rotationVelAcc.getVelocity(axis))
+                                emit updatedRotationVelocity(cid, address, axis);
+                            if (oldStandardModules.rotationVelAcc.getAcceleration(axis) != newStandardModules.rotationVelAcc.getAcceleration(axis))
+                                emit updatedRotationAcceleration(cid, address, axis);
 
-                        // - MODULES::STANDARD::SCALE
-                        otpNetwork->PointDetails(cid, address)->standardModules.scale = newStandardModules.scale;
-                        if (oldStandardModules.scale.getScale(axis) != newStandardModules.scale.getScale(axis))
-                            emit updatedScale(cid, address, axis);
+                            // - MODULES::STANDARD::SCALE
+                            otpNetwork->PointDetails(cid, address)->standardModules.scale = newStandardModules.scale;
+                            if (oldStandardModules.scale.getScale(axis) != newStandardModules.scale.getScale(axis))
+                                emit updatedScale(cid, address, axis);
 
-                        // - MODULES::STANDARD::PARENT
-                        otpNetwork->PointDetails(cid, address)->standardModules.parent = newStandardModules.parent;
-                        if (oldStandardModules.parent != newStandardModules.parent)
-                                emit updatedParent(cid, address);
+                            // - MODULES::STANDARD::REFERENCE_FRAME
+                            otpNetwork->PointDetails(cid, address)->standardModules.referenceFrame = newStandardModules.referenceFrame;
+                            if (oldStandardModules.referenceFrame != newStandardModules.referenceFrame)
+                                    emit updatedReferenceFrame(cid, address);
+                        }
                     }
                 }
             }
@@ -824,9 +830,11 @@ bool Consumer::receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram)
     if (nameAdvert.isValid())
     {
         auto cid = nameAdvert.getOTPLayer()->getCID();
-        if (cid != getConsumerCID() && !sequenceMap[cid].checkSequence(
+        auto folio = nameAdvert.getOTPLayer()->getFolio();
+        if (cid != getConsumerCID() && !folioMap.checkSequence(
+                    cid,
                     PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
-                    nameAdvert.getOTPLayer()->getSequence()))
+                    folio))
         {
             qDebug() << this << "- Out of Sequence OTP Name Advertisement Message Request Received From" << datagram.senderAddress();
             return true;
@@ -848,7 +856,7 @@ bool Consumer::receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram)
         folioMap.addPage(
                     cid,
                     PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
-                    nameAdvert.getOTPLayer()->getFolio(),
+                    folio,
                     nameAdvert.getOTPLayer()->getPage(),
                     datagram);
 
@@ -856,14 +864,14 @@ bool Consumer::receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram)
         if (folioMap.checkAllPages(
                     cid,
                     PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
-                    nameAdvert.getOTPLayer()->getFolio(),
+                    folio,
                     nameAdvert.getOTPLayer()->getLastPage()))
         {
             // Process all pages
             MESSAGES::OTPNameAdvertisementMessage::list_t list;
             for (auto datagram : folioMap.getDatagrams(cid,
-                                                       PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
-                                                       nameAdvert.getOTPLayer()->getFolio()))
+                        PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
+                        folio))
             {
                 MESSAGES::OTPNameAdvertisementMessage::Message nameAdvert(datagram);
                 list.append(nameAdvert.getNameAdvertisementLayer()->getList());
@@ -890,9 +898,11 @@ bool Consumer::receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram)
     if (systemAdvert.isValid())
     {
         auto cid = systemAdvert.getOTPLayer()->getCID();
-        if (cid != getConsumerCID() && !sequenceMap[cid].checkSequence(
+        auto folio = systemAdvert.getOTPLayer()->getFolio();
+        if (cid != getConsumerCID() && !folioMap.checkSequence(
+                    cid,
                     PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
-                    systemAdvert.getOTPLayer()->getSequence()))
+                    folio))
         {
             qDebug() << this << "- Out of Sequence OTP Name Advertisement Message Request Received From" << datagram.senderAddress();
             return true;
@@ -914,7 +924,7 @@ bool Consumer::receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram)
         folioMap.addPage(
                     cid,
                     PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
-                    systemAdvert.getOTPLayer()->getFolio(),
+                    folio,
                     systemAdvert.getOTPLayer()->getPage(),
                     datagram);
 
@@ -922,14 +932,14 @@ bool Consumer::receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram)
         if (folioMap.checkAllPages(
                     cid,
                     PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
-                    systemAdvert.getOTPLayer()->getFolio(),
+                    folio,
                     systemAdvert.getOTPLayer()->getLastPage()))
         {
             // Process all pages
             MESSAGES::OTPSystemAdvertisementMessage::list_t list;
             for (auto datagram : folioMap.getDatagrams(cid,
-                                                       PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
-                                                       systemAdvert.getOTPLayer()->getFolio()))
+                        PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
+                        folio))
             {
                 MESSAGES::OTPSystemAdvertisementMessage::Message systemAdvert(datagram);
                 list.append(systemAdvert.getSystemAdvertisementLayer()->getList());
@@ -995,7 +1005,6 @@ void Consumer::sendOTPModuleAdvertisementMessage()
     {
         auto datagrams = folioMessages[page]->toQNetworkDatagrams(
                     transport,
-                    sequenceMap[getConsumerCID()].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_MODULE),
                     ModuleAdvertisementMessage_Folio++,
                     page,
                     lastPage);
@@ -1025,8 +1034,8 @@ void Consumer::sendOTPNameAdvertisementMessage()
 
     auto datagrams = nameAdvertisementMessage.toQNetworkDatagrams(
                 transport,
-                sequenceMap[CID].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_NAME),
-                NameAdvertisementMessage_Folio++,0,0);
+                NameAdvertisementMessage_Folio++,
+                0,0);
     if (SocketManager::writeDatagrams(iface, datagrams))
         qDebug() << this << "- OTP Name Advertisement Message Request Sent";
     else
@@ -1052,8 +1061,8 @@ void Consumer::sendOTPSystemAdvertisementMessage()
 
     auto datagrams = systemAdvertisementMessage.toQNetworkDatagrams(
                 transport,
-                sequenceMap[CID].getNextSequence(PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM),
-                SystemAdvertisementMessage_Folio++,0,0);
+                SystemAdvertisementMessage_Folio++,
+                0,0);
     if (SocketManager::writeDatagrams(iface, datagrams))
         qDebug() << this << "- OTP System Advertisement Message Request Sent";
     else

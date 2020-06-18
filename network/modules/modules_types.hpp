@@ -255,7 +255,36 @@ namespace OTP::MODULES {
         // 16.3 Rotation Module
         class RotationModule_t {
         public:
-            typedef quint32 rotation_t;
+            class rotation_t {
+            private:
+                typedef quint32 type;
+
+            public:
+                rotation_t() : data(0) {}
+                rotation_t(type value) : data(value) {}
+
+                operator type() {
+                    return data;
+                }
+
+                friend additional_t& operator<<(additional_t &l, const rotation_t &r) {
+                    return l << r.data;
+                }
+                friend additional_t& operator>>(additional_t &l, rotation_t &r)
+                {
+                    l >> r.data;
+                    return l;
+                }
+                friend bool operator==(const rotation_t& l, const rotation_t& r)
+                {
+                    return l.data == r.data;
+                }
+                friend bool operator!=(const rotation_t& l, const rotation_t& r) { return !(l == r); }
+                friend rotation_t& operator+=(rotation_t& l, const rotation_t& r);
+
+            private:
+                type data;
+            };
 
             RotationModule_t() : timestamp(0), lastSeen(QDateTime())
             {
@@ -391,10 +420,11 @@ namespace OTP::MODULES {
         class ScaleModule_t {
         public:
             typedef qint32 scale_t;
+            typedef qreal percent_t;
 
             ScaleModule_t() : timestamp(0), lastSeen(QDateTime())
             {
-                std::fill(std::begin(scale), std::end(scale), 1);
+                std::fill(std::begin(scale), std::end(scale), fromPercent(100));
             }
 
             ScaleModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
@@ -415,6 +445,14 @@ namespace OTP::MODULES {
                 timestamp = time;
                 updateLastSeen();
             }
+
+            static percent_t toPercent(scale_t scale);
+            static QString toPercentString(scale_t scale) {
+                auto ret = QString::number(toPercent(scale), 'f', 4);
+                ret.remove( QRegExp("\\.?0+$") );
+                return ret;
+            }
+            static scale_t fromPercent(percent_t percent);
 
             friend additional_t& operator<<(additional_t &l, const ScaleModule_t &r)
             {
@@ -442,46 +480,20 @@ namespace OTP::MODULES {
             QDateTime lastSeen;
         };
 
-        // 16.6 Parent Module
-        class ParentModule_t {
+        // 16.6 Reference Frame
+        class ReferenceFrameModule_t {
         public:
-            typedef struct options_s
-            {
-                options_s() : data(0) {}
-                bool isRelative() const { return data[RELATIVE_BIT]; }
-                void setRelative(bool value) { data[RELATIVE_BIT] = value; }
-                friend additional_t& operator<<(additional_t &l, const options_s &r) {
-                    l << type(r.data.to_ulong());
-                    return l;
-                }
-                friend additional_t& operator>>(additional_t &l, options_s &r) {
-                    type temp;
-                    l >> temp;
-                    r.data = std::bitset<bitWidth>(temp);
-                    return l;
-                }
-                options_s& operator=(const options_s& r) {this->data = r.data; return *this; }
-                options_s& operator=(const unsigned int& r) {this->data = static_cast<type>(r); return *this; }
-            private:
-                typedef quint8 type;
-                static const quint8 bitWidth = sizeof(type) * 8;
-                enum {
-                    RELATIVE_BIT = 7
-                };
-                std::bitset<bitWidth> data;
-            } options_t;
             typedef OTPTransformLayer::system_t system_t;
             typedef OTPPointLayer::point_t point_t;
             typedef OTPPointLayer::group_t group_t;
 
-            ParentModule_t() : timestamp(0), lastSeen(QDateTime()) { }
+            ReferenceFrameModule_t() : timestamp(0), lastSeen(QDateTime()) { }
 
-            ParentModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
+            ReferenceFrameModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
             {
                 updateLastSeen();
-                ParentModule_t temp;
+                ReferenceFrameModule_t temp;
                 additional >> temp;
-                options = temp.options;
                 system = temp.system;
                 group = temp.group;
                 point = temp.point;
@@ -489,13 +501,6 @@ namespace OTP::MODULES {
 
             timestamp_t getTimestamp() const { return timestamp; }
             QDateTime getLastSeen() const { return lastSeen; }
-
-            void setRelative(bool value, timestamp_t time) {
-                options.setRelative(value);
-                timestamp = time;
-                updateLastSeen();
-            }
-            bool isRelative() const { return options.isRelative(); }
 
             system_t getSystem() const { return system; }
             void setSystem(system_t value, timestamp_t time)
@@ -521,26 +526,25 @@ namespace OTP::MODULES {
                 updateLastSeen();
             }
 
-            friend additional_t& operator<<(additional_t &l, const ParentModule_t &r)
+            friend additional_t& operator<<(additional_t &l, const ReferenceFrameModule_t &r)
             {
-                return l << r.options << r.system << r.group << r.point;
+                return l << r.system << r.group << r.point;
             }
-            friend additional_t& operator>>(additional_t &l, ParentModule_t &r)
+            friend additional_t& operator>>(additional_t &l, ReferenceFrameModule_t &r)
             {
-                l >> r.options >> r.system >> r.group >> r.point;
+                l >> r.system >> r.group >> r.point;
                 return l;
             }
-            friend bool operator==(const ParentModule_t& l, const ParentModule_t& r)
+            friend bool operator==(const ReferenceFrameModule_t& l, const ReferenceFrameModule_t& r)
             {
                 additional_t la, ra;
                 la << l;
                 ra << r;
                 return (ra == la);
             }
-            friend bool operator!=(const ParentModule_t& l, const ParentModule_t& r) { return !(l == r); }
+            friend bool operator!=(const ReferenceFrameModule_t& l, const ReferenceFrameModule_t& r) { return !(l == r); }
 
         private:
-            options_t options;
             system_t system;
             group_t group;
             point_t point;

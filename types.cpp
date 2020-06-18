@@ -24,12 +24,13 @@ namespace OTP
 {
     void folioMap_s::addPage(
         cid_t cid,
+        system_t system,
         OTP::PDU::vector_t vector,
         OTP::PDU::OTPLayer::folio_t folio,
         OTP::PDU::OTPLayer::page_t page,
         QNetworkDatagram datagram)
     {
-        key_t key = {cid, vector};
+        key_t key = {cid, {system, vector}};
         if (folioMap[key].folio != folio)
         {
             folioMap[key].pages.clear();
@@ -42,11 +43,12 @@ namespace OTP
 
     bool folioMap_s::checkAllPages(
             cid_t cid,
+            system_t system,
             OTP::PDU::vector_t vector,
             OTP::PDU::OTPLayer::folio_t folio,
             OTP::PDU::OTPLayer::page_t lastPage)
     {
-        key_t key = {cid, vector};
+        key_t key = {cid, {system, vector}};
         if (folioMap[key].folio != folio) return false;
         if (folioMap[key].pages.count() != (lastPage + 1)) return false;
         for (int page = 0; page <= lastPage; page++)
@@ -58,10 +60,11 @@ namespace OTP
 
     QVector<QNetworkDatagram> folioMap_s::getDatagrams(
             cid_t cid,
+            system_t system,
             OTP::PDU::vector_t vector,
             OTP::PDU::OTPLayer::folio_t folio)
     {
-        key_t key = {cid, vector};
+        key_t key = {cid, {system, vector}};
         if (folioMap[key].folio != folio) return QVector<QNetworkDatagram>();
         return folioMap[key].datagrams;
     }

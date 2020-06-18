@@ -167,35 +167,26 @@ namespace OTP::PDU {
             return l;
         }
 
-        bool sequence_t::checkSequence(sequence_t value)
+        bool folio_t::checkSequence(folio_t value)
         {
-            /* 6.5 Sequence Number
-            Components shall process messages in the order that they are received,
-            using the following algorithm to determine whether an OTP message is part of the current communication:
-            Having first received a message of OTP type X with sequence number A,
-            a Component then receives another message of OTP type X with sequence number B.
-            If, using unsigned 32-bit binary arithmetic, (A - B) falls within the range [0 - 65535], inclusive,
-            then the message containing sequence number B shall be discarded. Otherwise,
-            the message containing sequence number B shall be processed.
-            */
-            sequence_t::type A = data;
-            sequence_t::type B = value;
+            folio_t::type A = data;
+            folio_t::type B = value;
             quint32 test = A-B;
 
             return !((test >= 0) && (test <= 63335));
         }
 
-        PDUByteArray& operator>>(PDUByteArray &l, sequence_t &r)
+        PDUByteArray& operator>>(PDUByteArray &l, folio_t &r)
         {
             l >> r.data;
             return l;
         }
-        sequence_t& sequence_t::operator++()
+        folio_t& folio_t::operator++()
         {
             data++;
             return *this;
         }
-        sequence_t sequence_t::operator++(int)
+        folio_t folio_t::operator++(int)
         {
             auto tmp(*this);
             operator++();

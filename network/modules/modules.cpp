@@ -50,8 +50,8 @@ STANDARD::additional_t STANDARD::getAdditional(
             additional << pointDetails->standardModules.scale;
             return additional;
 
-        case STANDARD::PARENT:
-            additional << pointDetails->standardModules.parent;
+        case STANDARD::REFERENCE_FRAME:
+            additional << pointDetails->standardModules.referenceFrame;
             return additional;
     }
     return additional;
@@ -68,7 +68,7 @@ timestamp_t STANDARD::getTimestamp(
         case STANDARD::ROTATION: return pointDetails->standardModules.rotation.getTimestamp();
         case STANDARD::ROTATION_VELOCITY_ACCELERATION: return pointDetails->standardModules.rotationVelAcc.getTimestamp();
         case STANDARD::SCALE: return pointDetails->standardModules.scale.getTimestamp();
-        case STANDARD::PARENT: return pointDetails->standardModules.parent.getTimestamp();
+        case STANDARD::REFERENCE_FRAME: return pointDetails->standardModules.referenceFrame.getTimestamp();
     }
     return 0;
 }

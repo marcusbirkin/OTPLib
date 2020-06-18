@@ -24,7 +24,6 @@ using namespace OTP::PDU::OTPLayer;
 Layer::Layer(vector_t Vector,
         pduLength_t PDULength,
         cid_t CID,
-        sequence_t Sequence,
         folio_t Folio,
         page_t Page,
         page_t LastPage,
@@ -35,7 +34,6 @@ Layer::Layer(vector_t Vector,
     Vector(Vector),
     PDULength(PDULength),
     CID(CID),
-    Sequence(Sequence),
     Folio(Folio),
     Page(Page),
     LastPage(LastPage),
@@ -52,7 +50,6 @@ Layer::Layer(
     Vector(0),
     PDULength(0),
     CID(cid_t()),
-    Sequence(0),
     Folio(0),
     Page(0),
     LastPage(0),
@@ -81,8 +78,9 @@ OTP::PDU::PDUByteArray Layer::toPDUByteArray()
         << PacketIdent
         << Vector
         << PDULength
+        << Footer.Flags()
+        << Footer.getLength()
         << CID
-        << Sequence
         << Folio
         << Page
         << LastPage
@@ -91,14 +89,13 @@ OTP::PDU::PDUByteArray Layer::toPDUByteArray()
         << ComponentName;
 }
 
-
 void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
 {
     PacketIdent = QByteArray();
     Vector = 0;
     PDULength = 0;
+    Footer = footer_t();
     CID = cid_t();
-    Sequence = 0;
     Folio = 0;
     Page = 0;
     LastPage = 0;
@@ -109,11 +106,13 @@ void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
     if (layer.size() != Layer().toPDUByteArray().size())
         return;
 
+    decltype (Footer.getLength()) FooterLength;
     layer >> PacketIdent
         >> Vector
         >> PDULength
+        >> Footer.Flags()
+        >> FooterLength // Currently Ignored
         >> CID
-        >> Sequence
         >> Folio
         >> Page
         >> LastPage

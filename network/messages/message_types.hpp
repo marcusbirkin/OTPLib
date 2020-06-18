@@ -24,7 +24,6 @@
 namespace OTP::MESSAGES
 {
     namespace  OTPTransformMessage {
-        typedef OTP::PDU::OTPLayer::sequence_t sequence_t;
         typedef OTP::PDU::OTPLayer::folio_t folio_t;
         typedef OTP::PDU::OTPLayer::page_t page_t;
     }
@@ -32,7 +31,6 @@ namespace OTP::MESSAGES
     namespace OTPModuleAdvertisementMessage {
         typedef OTP::PDU::OTPModuleAdvertisementLayer::item_t item_t;
         typedef OTP::PDU::OTPModuleAdvertisementLayer::list_t list_t;
-        typedef OTP::PDU::OTPLayer::sequence_t sequence_t;
         typedef OTP::PDU::OTPLayer::folio_t folio_t;
         typedef OTP::PDU::OTPLayer::page_t page_t;
     }
@@ -40,7 +38,6 @@ namespace OTP::MESSAGES
     namespace OTPNameAdvertisementMessage {
         typedef OTP::PDU::OTPNameAdvertisementLayer::item_t item_t;
         typedef OTP::PDU::OTPNameAdvertisementLayer::list_t list_t;
-        typedef OTP::PDU::OTPLayer::sequence_t sequence_t;
         typedef OTP::PDU::OTPLayer::folio_t folio_t;
         typedef OTP::PDU::OTPLayer::page_t page_t;
     }
@@ -48,9 +45,7 @@ namespace OTP::MESSAGES
     namespace OTPSystemAdvertisementMessage {
         typedef OTP::PDU::OTPSystemAdvertisementLayer::item_t item_t;
         typedef OTP::PDU::OTPSystemAdvertisementLayer::list_t list_t;
-        typedef OTP::PDU::OTPLayer::sequence_t sequence_t;
         typedef OTP::PDU::OTPLayer::folio_t folio_t;
-        typedef OTP::PDU::OTPLayer::page_t page_t;
         typedef OTP::PDU::OTPLayer::page_t page_t;
     }
 }

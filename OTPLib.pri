@@ -24,6 +24,7 @@ SOURCES += \
     $$PWD/network/messages/otp_system_advertisement_message.cpp \
     $$PWD/network/messages/otp_transform_message.cpp \
     $$PWD/network/modules/modules.cpp \
+    $$PWD/network/modules/modules_types.cpp \
     $$PWD/network/modules/modules_const.cpp
 
 HEADERS += \

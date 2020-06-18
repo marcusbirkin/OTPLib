@@ -35,7 +35,6 @@ public:
             vector_t Vector = 0,
             pduLength_t PDULength = 0,
             cid_t CID = cid_t::createUuid(),
-            sequence_t Sequence = 0,
             folio_t Folio = 0,
             page_t Page = 0,
             page_t LastPage = 0,
@@ -51,29 +50,28 @@ public:
     otpIdent_t getPacketIdent() const { return PacketIdent; }
     const vector_t &getVector() { return Vector; }
     void setVector(vector_t value) { Vector = value; }
-    const pduLength_t &getPDULength() { return PDULength; }
+    const pduLength_t &getPDULength() const { return PDULength; }
     void setPDULength(pduLength_t value) { PDULength = value; }
+    const auto &getFooter() const { return Footer; }
     cid_t getCID() const { return CID; }
     void setCID(cid_t value) { CID = value; }
-    const sequence_t &getSequence() { return Sequence; }
-    void setSequence(sequence_t value) { Sequence = value; }
-    const folio_t &getFolio() { return Folio; }
+    const folio_t &getFolio() const { return Folio; }
     void setFolio(folio_t value) { Folio = value; }
-    const page_t &getPage() { return Page; }
+    const page_t &getPage() const { return Page; }
     void setPage(page_t value) { Page = value; }
-    const page_t &getLastPage() { return LastPage; }
+    const page_t &getLastPage() const { return LastPage; }
     void setLastPage(page_t value) { LastPage = value; }
-    const options_t &getOptions() { return Options; }
-    const reserved_t &getReserved() { return Reserved; }
-    const name_t &getComponentName() { return ComponentName; }
+    const options_t &getOptions() const { return Options; }
+    const reserved_t &getReserved() const { return Reserved; }
+    const name_t &getComponentName() const { return ComponentName; }
     void setComponentName(name_t value) { ComponentName = value; }
 
 private:
     otpIdent_t PacketIdent;
     vector_t Vector;
     pduLength_t PDULength;
+    footer_t Footer;
     cid_t CID;
-    sequence_t Sequence;
     folio_t Folio;
     page_t Page;
     page_t LastPage;

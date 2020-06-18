@@ -98,20 +98,36 @@ namespace OTP::PDU
         PDUByteArray& operator<<(PDUByteArray &l, const cid_t &r);
         PDUByteArray& operator>>(PDUByteArray &l, cid_t &r);
 
-        class sequence_t {
+        class footer_t {
+            typedef quint8 flags_t;
+            typedef quint8 length_t;
+            typedef QByteArray type;
+        public:
+            footer_t() : flags(0) {}
+            footer_t(flags_t flags, length_t length = 0) : flags(flags) { footer.resize(length); }
+            operator type() const { return footer; }
+
+            flags_t &Flags() { return flags; }
+            length_t getLength() const { return footer.size(); }
+        private:
+            flags_t flags;
+            type footer;
+        };
+
+        class folio_t {
             typedef quint32 type;
         public:
-            sequence_t() : data(0) {}
-            sequence_t(type value) : data(value) {}
+            folio_t() : data(0) {}
+            folio_t(type value) : data(value) {}
             operator type() const { return data; }
-            bool checkSequence(sequence_t value);
-            friend PDUByteArray& operator>>(PDUByteArray &l, sequence_t &r);
-            sequence_t& operator++();
-            sequence_t operator++(int);
+            bool checkSequence(folio_t value);
+            friend PDUByteArray& operator>>(PDUByteArray &l, folio_t &r);
+            folio_t& operator++();
+            folio_t operator++(int);
         private:
             type data;
         };
-        typedef quint16 folio_t;
+
         typedef quint16 page_t;
         typedef quint8 options_t;
         typedef quint32 reserved_t;

@@ -29,7 +29,7 @@ Message::Message(OTP::cid_t CID,
     QObject(parent),
     otpLayer(
         new OTPLayer::Layer(
-            VECTOR_OTP_TRANSFORM_MESSAGE, 0, CID, 0, 0, 0, 0, ComponentName, this)),
+            VECTOR_OTP_TRANSFORM_MESSAGE, 0, CID, 0, 0, 0, ComponentName, this)),
     transformLayer(
         new OTPTransformLayer::Layer(
             0, System, static_cast<timestamp_t>(QDateTime::currentMSecsSinceEpoch() * 1000), OTPTransformLayer::options_t(FullPointSet), this))
@@ -100,7 +100,7 @@ Message::Message(
     }
 }
 
-bool Message::isValid()
+bool Message::isValid() const
 {
     auto lengthCheck = toByteArray().length();
     if (lengthCheck != otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET)
@@ -117,18 +117,17 @@ bool Message::isValid()
 
     for (auto moduleLayer : moduleLayers)
         if (!moduleLayer->isValid()) return false;
-    if (!RANGES::MESSAGE_SIZE.isValid(toByteArray().size())) return false;
+    if (!RANGES::MESSAGE_SIZE.isValid(toByteArray().size() - otpLayer->getFooter().getLength()))
+        return false;
     return true;
 }
 
 QNetworkDatagram Message::toQNetworkDatagram(
         QHostAddress destAddr,
-        sequence_t sequenceNumber,
         folio_t folio,
         page_t thisPage,
         page_t lastPage)
 {
-    otpLayer->setSequence(sequenceNumber);
     otpLayer->setFolio(folio);
     otpLayer->setPage(thisPage);
     otpLayer->setLastPage(lastPage);
@@ -167,7 +166,7 @@ Message::addModule_ret Message::addModule(addModule_t &moduleData)
     return OK;
 }
 
-QByteArray Message::toByteArray()
+QByteArray Message::toByteArray() const
 {
     QByteArray ba;
     ba.append(otpLayer->toPDUByteArray());

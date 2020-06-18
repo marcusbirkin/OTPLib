@@ -291,6 +291,9 @@ namespace OTP
         typedef struct Scale_s
             {
                 MODULES::STANDARD::ScaleModule_t::scale_t value = 0;
+                MODULES::STANDARD::ScaleModule_t::percent_t getPercent() { return MODULES::STANDARD::ScaleModule_t::toPercent(value); }
+                operator QString() { return MODULES::STANDARD::ScaleModule_t::toPercentString(value).append("%"); }
+                void setPercent(MODULES::STANDARD::ScaleModule_t::percent_t value) { value = MODULES::STANDARD::ScaleModule_t::fromPercent(value); }
                 timestamp_t timestamp = 0;
             } Scale_t;
             Scale_t getProducerScale(address_t, axis_t) const;
@@ -298,19 +301,18 @@ namespace OTP
         signals:
             void updatedScale(address_t, axis_t);
 
-        /* -Parent */
+        /* -Reference Frame */
         public:
-        typedef struct Parent_s
+        typedef struct
             {
                 address_t value;
-                bool relative;
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
-            } Parent_t;
-            Parent_t getProducerParent(address_t) const;
-            void setProducerParent(address_t, Parent_t);
+            } ReferenceFrame_t;
+            ReferenceFrame_t getProducerReferenceFrame(address_t) const;
+            void setProducerReferenceFrame(address_t, ReferenceFrame_t);
         signals:
-            void updatedParent(address_t);
+            void updatedReferenceFrame(address_t);
 
     signals:
         void newCID(cid_t);
@@ -329,7 +331,7 @@ namespace OTP
         void sendOTPTransformMessage(system_t system);
         PDU::OTPLayer::folio_t TransformMessage_Folio = 0;
 
-        QMap<cid_t, sequenceMap_t> sequenceMap;
+        folioMap_t folioMap;
 
         std::unique_ptr<Container> otpNetwork;
         QNetworkInterface iface;
@@ -576,6 +578,9 @@ namespace OTP
             typedef struct Scale_s
             {
                 MODULES::STANDARD::ScaleModule_t::scale_t value = 0;
+                MODULES::STANDARD::ScaleModule_t::percent_t getPercent() { return MODULES::STANDARD::ScaleModule_t::toPercent(value); }
+                operator QString() { return MODULES::STANDARD::ScaleModule_t::toPercentString(value).append("%"); }
+                void setPercent(MODULES::STANDARD::ScaleModule_t::percent_t value) { value = MODULES::STANDARD::ScaleModule_t::fromPercent(value); }
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
                 priority_t priority;
@@ -585,20 +590,19 @@ namespace OTP
         signals:
             void updatedScale(cid_t, address_t, axis_t);
 
-        /* -Parent */
+        /* -Reference Frame */
         public:
-            typedef struct Parent_s
+            typedef struct
             {
                 address_t value;
-                bool relative;
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
                 priority_t priority;
-            } Parent_t;
-            Parent_t getParent(cid_t, address_t) const;
-            Parent_t getParent(address_t) const;
+            } ReferenceFrame_t;
+            ReferenceFrame_t getReferenceFrame(cid_t, address_t) const;
+            ReferenceFrame_t getReferenceFrame(address_t) const;
         signals:
-            void updatedParent(cid_t, address_t);
+            void updatedReferenceFrame(cid_t, address_t);
 
     private slots:
         void newDatagram(QNetworkDatagram datagram);
@@ -617,7 +621,6 @@ namespace OTP
         void sendOTPSystemAdvertisementMessage();
         PDU::OTPLayer::folio_t SystemAdvertisementMessage_Folio = 0;
 
-        QMap<cid_t, sequenceMap_t> sequenceMap;
         folioMap_t folioMap;
 
         std::unique_ptr<Container> otpNetwork;
