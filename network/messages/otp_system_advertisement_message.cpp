@@ -87,7 +87,7 @@ Message::Message(
 
 bool Message::isValid()
 {
-    auto lengthCheck = toByteArray().length();
+    size_t lengthCheck = toByteArray().length();
     if (lengthCheck != otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET)
         return false;
     if (!otpLayer->isValid()) return false;

@@ -173,7 +173,10 @@ namespace OTP::PDU {
             folio_t::type B = value;
             quint32 test = A-B;
 
-            return !((test >= 0) && (test <= 63335));
+            return test != std::clamp(
+                        test,
+                        static_cast<decltype(test)>(0),
+                        static_cast<decltype(test)>(63335));;
         }
 
         PDUByteArray& operator>>(PDUByteArray &l, folio_t &r)
