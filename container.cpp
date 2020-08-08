@@ -163,7 +163,8 @@ QList<system_t> Container::getSystemList() const
     }
 
     std::sort(ret.begin(),ret.end());
-    return ret.toSet().toList();
+    ret.erase(std::unique(ret.begin(), ret.end()), ret.end());
+    return ret;
 }
 
 QList<system_t> Container::getSystemList(cid_t cid) const
@@ -218,7 +219,8 @@ QList<group_t> Container::getGroupList(system_t system) const
     }
 
     std::sort(ret.begin(),ret.end());
-    return ret.toSet().toList();
+    ret.erase(std::unique(ret.begin(), ret.end()), ret.end());
+    return ret;
 }
 
 QList<group_t> Container::getGroupList(cid_t cid, system_t system) const
@@ -286,7 +288,8 @@ QList<point_t> Container::getPointList(system_t system, group_t group) const
     }
 
     std::sort(ret.begin(),ret.end());
-    return ret.toSet().toList();
+    ret.erase(std::unique(ret.begin(), ret.end()), ret.end());
+    return ret;
 }
 
 QList<point_t> Container::getPointList(cid_t cid, system_t system, group_t group) const
