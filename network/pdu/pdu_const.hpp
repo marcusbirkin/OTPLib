@@ -28,9 +28,9 @@ namespace OTP::PDU {
 
     /* Section 6 OTP Layer */
     namespace OTPLayer {
-        constexpr size_t LENGTHOFFSET = sizeof(otpIdent_t) + sizeof(vector_t) + sizeof(pduLength_t);
-
         const otpIdent_t OTP_PACKET_IDENT = QByteArrayLiteral("\x4f\x54\x50\x2d\x45\x31\x2e\x35\x39\x00\x00\x00");
+        const size_t LENGTHOFFSET = OTP_PACKET_IDENT.size() + sizeof(vector_t) + sizeof(pduLength_t);
+
         const QList<vector_t> VECTOR = {
             VECTOR_OTP_TRANSFORM_MESSAGE,
             VECTOR_OTP_ADVERTISEMENT_MESSAGE};
