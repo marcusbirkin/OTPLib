@@ -1050,7 +1050,7 @@ void Consumer::sendOTPSystemAdvertisementMessage()
                 mode_e::Consumer,
                 getConsumerCID(),
                 name,
-                otpNetwork->getSystemList(getConsumerCID()),
+                list_t(),
                 this);
 
     if (!systemAdvertisementMessage.isValid())
