@@ -833,15 +833,15 @@ void Producer::sendOTPTransformMessage(system_t system)
     QVector<PDU::OTPModuleLayer::ident_t> requestedModules;
     for (auto cid : otpNetwork->getComponentList())
     {
-        if (otpNetwork->getSystemList(cid).contains(system))
-        {
+//        if (otpNetwork->getSystemList(cid).contains(system))
+//        {
             auto component = otpNetwork->getComponent(cid);
             for (auto module : component.getModuleList())
             {
                 if (!requestedModules.contains(module))
                     requestedModules.append(module);
             }
-        }
+//        }
     }
     if (requestedModules.isEmpty()) return;
 
