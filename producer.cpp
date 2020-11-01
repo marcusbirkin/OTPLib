@@ -204,7 +204,7 @@ void Producer::setProducerPointName(address_t address, QString name)
 {
     if (!getProducerPoints(address.system, address.group).contains(address.point)) return;
     otpNetwork->PointDetails(getProducerCID(), address)->setName(name);
-    emit newProducerPointName(name);
+    emit updatedProducerPointName(address);
 }
 
 priority_t Producer::getProducerPointPriority(address_t address) const
@@ -217,7 +217,7 @@ void Producer::setProducerPointPriority(address_t address, priority_t priority)
 {
     if (!getProducerPoints(address.system, address.group).contains(address.point)) return;
     otpNetwork->PointDetails(getProducerCID(), address)->setPriority(priority);
-    emit newProducerPointPriority(priority);
+    emit updatedProducerPointPriority(address);
 }
 
 /* Producer Addesses */

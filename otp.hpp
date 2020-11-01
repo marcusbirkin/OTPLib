@@ -139,7 +139,7 @@ namespace OTP
             void setProducerPointName(system_t system, group_t group, point_t point, QString name)
                 { setProducerPointName(address_t(system, group, point), name); }
         signals:
-            void newProducerPointName(name_t);
+            void updatedProducerPointName(address_t);
 
         public:
             priority_t getProducerPointPriority(address_t) const;
@@ -149,7 +149,7 @@ namespace OTP
             void setProducerPointPriority(system_t system, group_t group, point_t point, priority_t priority)
                 { setProducerPointPriority(address_t(system, group, point), priority); }
         signals:
-            void newProducerPointPriority(priority_t);
+            void updatedProducerPointPriority(address_t);
 
         /* Producer Addresses */
         public:
