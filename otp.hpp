@@ -95,7 +95,10 @@ namespace OTP
             QAbstractSocket::NetworkLayerProtocol getProducerNetworkTransport() const { return transport; }
             void setProducerNetworkTransport(QAbstractSocket::NetworkLayerProtocol transport);
             QAbstractSocket::SocketState getProducerNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const
-                { return SocketManager::getInstance(getProducerNetworkInterface(), transport)->state(); }
+                {
+                    if (!sockets.contains(transport)) return QAbstractSocket::UnconnectedState;
+                    return sockets.value(transport)->state();
+                }
         signals:
             void newProducerNetworkInterface(QNetworkInterface);
             void newProducerNetworkTransport(QAbstractSocket::NetworkLayerProtocol);
@@ -337,6 +340,7 @@ namespace OTP
         QNetworkInterface iface;
         QAbstractSocket::NetworkLayerProtocol transport;
         QList<QMetaObject::Connection> listenerConnections;
+        QMap<QAbstractSocket::NetworkLayerProtocol, QSharedPointer<SocketManager>> sockets;
 
         cid_t CID;
         name_t name;
@@ -394,10 +398,14 @@ namespace OTP
             QAbstractSocket::NetworkLayerProtocol getConsumerNetworkTransport() const { return transport; }
             void setConsumerNetworkTransport(QAbstractSocket::NetworkLayerProtocol value);
             QAbstractSocket::SocketState getConsumerNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const
-                { return SocketManager::getInstance(getConsumerNetworkInterface(), transport)->state(); }
+                {
+                    if (!sockets.contains(transport)) return QAbstractSocket::UnconnectedState;
+                    return sockets.value(transport)->state();
+                }
         signals:
             void newConsumerNetworkInterface(QNetworkInterface);
             void newConsumerNetworkTransport(QAbstractSocket::NetworkLayerProtocol);
+            void stateChangedConsumerNetworkInterface(QAbstractSocket::SocketState);
 
         /* Consumer Systems */
         public:
@@ -627,6 +635,7 @@ namespace OTP
         QNetworkInterface iface;
         QAbstractSocket::NetworkLayerProtocol transport;
         QList<QMetaObject::Connection> listenerConnections;
+        QMap<QAbstractSocket::NetworkLayerProtocol, QSharedPointer<SocketManager>> sockets;
 
         cid_t CID;
         name_t name;

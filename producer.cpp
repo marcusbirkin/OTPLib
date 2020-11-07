@@ -555,23 +555,30 @@ void Producer::setupListener()
 {
     qDebug() << this << "- Starting on interface" << iface.humanReadableName() << iface.hardwareAddress();
 
+    sockets.clear();
+
     for (auto connection : listenerConnections)
         disconnect(connection);
 
     if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
     {
-        listenerConnections.append(connect(SocketManager::getInstance(iface, QAbstractSocket::IPv4Protocol).get(), &SocketManager::newDatagram,
-                this, &Producer::newDatagram));
-        SocketManager::getInstance(iface, QAbstractSocket::IPv4Protocol)->joinMulticastGroup(OTP_Advertisement_Message_IPv4);
+        sockets.insert(QAbstractSocket::IPv4Protocol, SocketManager::getSocket(iface, QAbstractSocket::IPv4Protocol));
+        sockets.value(QAbstractSocket::IPv4Protocol).get()->joinMulticastGroup(OTP_Advertisement_Message_IPv4);
         qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv4;
     }
 
     if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
     {
-        listenerConnections.append(connect(SocketManager::getInstance(iface, QAbstractSocket::IPv6Protocol).get(), &SocketManager::newDatagram,
-                this, &Producer::newDatagram));
-        SocketManager::getInstance(iface, QAbstractSocket::IPv6Protocol)->joinMulticastGroup(OTP_Advertisement_Message_IPv6);
+        sockets.insert(QAbstractSocket::IPv6Protocol, SocketManager::getSocket(iface, QAbstractSocket::IPv6Protocol));
+        sockets.value(QAbstractSocket::IPv6Protocol).get()->joinMulticastGroup(OTP_Advertisement_Message_IPv6);
         qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv6;
+    }
+
+    for (auto socket : sockets) {
+        listenerConnections.append(
+                    connect(
+                        socket.get(), &SocketManager::newDatagram,
+                        this, &Producer::newDatagram));
     }
 }
 
@@ -768,7 +775,7 @@ void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MES
                     folio,
                     page,
                     lastPage);
-        if (SocketManager::getInstance(iface, destinationAddr.protocol())->writeDatagram(datagram))
+        if (sockets.value(destinationAddr.protocol())->writeDatagram(datagram))
             qDebug() << this << "- OTP Name Advertisement Message Response Sent to" << destinationAddr;
         else
             qDebug() << this << "- OTP Name Advertisement Message Response Failed";
@@ -817,7 +824,7 @@ void Producer::sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, M
                     page,
                     lastPage);
 
-        if (SocketManager::getInstance(iface, destinationAddr.protocol())->writeDatagram(datagram))
+        if (sockets.value(destinationAddr.protocol())->writeDatagram(datagram))
             qDebug() << this << "- OTP System Advertisement Message Response Sent To" << datagram.destinationAddress();
         else
             qDebug() << this << "- OTP System Advertisement Message Response Failed";

@@ -44,13 +44,15 @@ namespace OTP
         Q_OBJECT
     public:
         SocketManager(QNetworkInterface interface, QAbstractSocket::NetworkLayerProtocol transport);
-        ~SocketManager() = default;
-        static std::shared_ptr<SocketManager> getInstance(QNetworkInterface interface, QAbstractSocket::NetworkLayerProtocol transport);
+        ~SocketManager();
+        static QSharedPointer<SocketManager> getSocket(QNetworkInterface interface, QAbstractSocket::NetworkLayerProtocol transport);
+
+        static bool isValid(QNetworkInterface interface);
 
         static bool writeDatagrams(QNetworkInterface interface, const QList<QNetworkDatagram> &datagrams)
         {
             for (auto datagram : datagrams)
-                if (!getInstance(interface, datagram.destinationAddress().protocol())->writeDatagram(datagram))
+                if (!getSocket(interface, datagram.destinationAddress().protocol())->writeDatagram(datagram))
                 {
                     qDebug() << "writeDatagram() failed to" << datagram.destinationAddress();
                     return false;
@@ -80,6 +82,7 @@ namespace OTP
 
     signals:
         void newDatagram(QNetworkDatagram datagram);
+        void stateChanged(QAbstractSocket::SocketState state);
 
     private:
         SocketManager(const SocketManager&) = delete;

@@ -142,7 +142,7 @@ void Consumer::addConsumerSystem(system_t system)
         if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
         {
             auto groupAddr = QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address() + system);
-            if (SocketManager::getInstance(iface, QAbstractSocket::IPv4Protocol)->joinMulticastGroup(groupAddr))
+            if (sockets.value(QAbstractSocket::IPv4Protocol)->joinMulticastGroup(groupAddr))
             {
                 emit newConsumerSystem(system);
                 qDebug() << this << "- Listening to Transform Messages for System" << system << groupAddr;
@@ -152,7 +152,7 @@ void Consumer::addConsumerSystem(system_t system)
         if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
         {
             auto groupAddr = QHostAddress(OTP_Transform_Message_IPv6.toIPv6Address() + system);
-            if (SocketManager::getInstance(iface, QAbstractSocket::IPv6Protocol)->joinMulticastGroup(groupAddr))
+            if (sockets.value(QAbstractSocket::IPv6Protocol)->joinMulticastGroup(groupAddr))
             {
                 emit newConsumerSystem(system);
                 qDebug() << this << "- Listening to Transform Messages for System" << system << groupAddr;
@@ -169,14 +169,14 @@ void Consumer::removeConsumerSystem(system_t system)
         if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
         {
             auto groupAddr = QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address() + system);
-            if (SocketManager::getInstance(iface, QAbstractSocket::IPv4Protocol)->leaveMulticastGroup(groupAddr))
+            if (sockets.value(QAbstractSocket::IPv4Protocol)->leaveMulticastGroup(groupAddr))
                 qDebug() << this << "- Stopping listening to Transform Messages for System" << system << groupAddr;
         }
 
         if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
         {
             auto groupAddr = QHostAddress(OTP_Transform_Message_IPv6.toIPv6Address() + system);
-            if (SocketManager::getInstance(iface, QAbstractSocket::IPv6Protocol)->leaveMulticastGroup(groupAddr))
+            if (sockets.value(QAbstractSocket::IPv6Protocol)->leaveMulticastGroup(groupAddr))
                 qDebug() << this << "- Stopping listening to Transform Messages for System" << system << groupAddr;
         }
 
@@ -623,23 +623,34 @@ void Consumer::setupListener()
 {
     qDebug() << this << "- Starting on interface" << iface.humanReadableName() << iface.hardwareAddress();
 
+    sockets.clear();
+
     for (auto connection : listenerConnections)
         disconnect(connection);
 
     if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
     {
-        listenerConnections.append(connect(SocketManager::getInstance(iface, QAbstractSocket::IPv4Protocol).get(), &SocketManager::newDatagram,
-                this, &Consumer::newDatagram));
-        SocketManager::getInstance(iface, QAbstractSocket::IPv4Protocol)->joinMulticastGroup(OTP_Advertisement_Message_IPv4);
+        sockets.insert(QAbstractSocket::IPv4Protocol, SocketManager::getSocket(iface, QAbstractSocket::IPv4Protocol));
+        sockets.value(QAbstractSocket::IPv4Protocol).get()->joinMulticastGroup(OTP_Advertisement_Message_IPv4);
         qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv4;
     }
 
     if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
     {
-        listenerConnections.append(connect(SocketManager::getInstance(iface, QAbstractSocket::IPv6Protocol).get(), &SocketManager::newDatagram,
-                this, &Consumer::newDatagram));
-        SocketManager::getInstance(iface, QAbstractSocket::IPv6Protocol)->joinMulticastGroup(OTP_Advertisement_Message_IPv6);
+        sockets.insert(QAbstractSocket::IPv6Protocol, SocketManager::getSocket(iface, QAbstractSocket::IPv6Protocol));
+        sockets.value(QAbstractSocket::IPv6Protocol).get()->joinMulticastGroup(OTP_Advertisement_Message_IPv6);
         qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv6;
+    }
+
+    for (auto socket : sockets) {
+        listenerConnections.append(
+                    connect(
+                        socket.get(), &SocketManager::newDatagram,
+                        this, &Consumer::newDatagram));
+        listenerConnections.append(
+                    connect(
+                        socket.get(), &SocketManager::stateChanged,
+                        this, &Consumer::stateChangedConsumerNetworkInterface));
     }
 
     for (auto system : getConsumerSystems())

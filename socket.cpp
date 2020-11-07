@@ -22,6 +22,9 @@
 
 using namespace OTP;
 
+typedef std::pair<QString, QAbstractSocket::NetworkLayerProtocol> instanceKey_t;
+static QMap<instanceKey_t, QWeakPointer<SocketManager>> instances;
+
 SocketManager::SocketManager(QNetworkInterface interface, QAbstractSocket::NetworkLayerProtocol transport) : QObject(),
     interface(interface), transport(transport)
 {
@@ -49,16 +52,42 @@ SocketManager::SocketManager(QNetworkInterface interface, QAbstractSocket::Netwo
             while (RXSocket->hasPendingDatagrams())
                 emit this->newDatagram(RXSocket->receiveDatagram());
         });
+
+    connect(RXSocket.get(), &QUdpSocket::stateChanged,
+        [this](QAbstractSocket::SocketState state) {
+            if (!RXSocket || !RXSocket->isValid()) return;
+            emit this->stateChanged(state);
+        });
 };
 
-std::shared_ptr<SocketManager> SocketManager::getInstance(QNetworkInterface interface, QAbstractSocket::NetworkLayerProtocol transport)
+SocketManager::~SocketManager()
 {
-    typedef std::pair<QString, QAbstractSocket::NetworkLayerProtocol> key_t;
-    key_t key = {interface.name(), transport};
-    static QMap<key_t, std::shared_ptr<SocketManager>> instances;
-    if (!instances.contains(key))
-        instances.insert(key, std::make_shared<SocketManager>(interface, transport));
-    return instances.value(key);
+    instanceKey_t key = {interface.name(), transport};
+    instances.remove(key);
+    RXSocket->close();
+    RXSocket.release();
+}
+
+QSharedPointer<SocketManager> SocketManager::getSocket(QNetworkInterface interface, QAbstractSocket::NetworkLayerProtocol transport)
+{
+    instanceKey_t key = {interface.name(), transport};
+    QSharedPointer<SocketManager> sp;
+    if (!instances.contains(key)) {
+        sp = QSharedPointer<SocketManager>(new SocketManager(interface, transport));
+        instances.insert(key, sp);
+    } else {
+        sp = instances.value(key).lock();
+    }
+    return sp;
+}
+
+bool SocketManager::isValid(QNetworkInterface interface)
+{
+    return (
+        interface.flags().testFlag(QNetworkInterface::IsUp) &&
+        interface.flags().testFlag(QNetworkInterface::IsRunning) &&
+        interface.flags().testFlag(QNetworkInterface::CanMulticast)
+    );
 }
 
 bool SocketManager::writeDatagram(const QNetworkDatagram &datagram)
