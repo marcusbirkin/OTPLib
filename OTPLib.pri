@@ -5,6 +5,7 @@ INCLUDEPATH += $$PWD
 SOURCES += \
     $$PWD/otp.cpp \
     $$PWD/container.cpp \
+    $$PWD/component.cpp \
     $$PWD/producer.cpp \
     $$PWD/consumer.cpp \
     $$PWD/types.cpp \
@@ -29,6 +30,7 @@ SOURCES += \
 
 HEADERS += \
     $$PWD/bugs.hpp \
+    $$PWD/component.hpp \
     $$PWD/otp.hpp \
     $$PWD/container.hpp \
     $$PWD/const.hpp \

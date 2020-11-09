@@ -31,66 +31,36 @@ using namespace OTP;
 Producer::Producer(
         QNetworkInterface iface,
         QAbstractSocket::NetworkLayerProtocol transport,
-        name_t name,
         cid_t CID,
+        name_t name,
         std::chrono::milliseconds transformRate,
         QObject *parent) :
-    QObject(parent),
-    otpNetwork(new Container(this)),
-    iface(iface),
-    transport(transport),
-    CID(CID),
-    name(name)
-
-{
-    // Signals
-    connect(otpNetwork.get(), &Container::newSystem,
-        [this](cid_t cid, system_t system) {
-            if (cid == getProducerCID()) emit newProducerSystem(system);
-        });
-    connect(otpNetwork.get(), &Container::removedSystem,
-        [this](cid_t cid, system_t system) {
-            if (cid == getProducerCID()) emit removedProducerSystem(system);
-        });
-
+    Component(
+        iface,
+        transport,
+        CID,
+        name,
+        parent)
+{    
+    // Group Signals
     connect(otpNetwork.get(), &Container::newGroup,
         [this](cid_t cid, system_t system, group_t group) {
-            if (cid == getProducerCID()) emit newProducerGroup(system, group);
+            if (cid == getLocalCID()) emit newLocalGroup(system, group);
         });
     connect(otpNetwork.get(), &Container::removedGroup,
         [this](cid_t cid, system_t system, group_t group) {
-            if (cid == getProducerCID()) emit removedProducerGroup(system, group);
+            if (cid == getLocalCID()) emit removedLocalGroup(system, group);
         });
 
+    // Point Signals
     connect(otpNetwork.get(), &Container::newPoint,
         [this](cid_t cid, system_t system, group_t group, point_t point) {
-            if (cid == getProducerCID()) emit newProducerPoint(system, group, point);
+            if (cid == getLocalCID()) emit newLocalPoint(system, group, point);
         });
     connect(otpNetwork.get(), &Container::removedPoint,
         [this](cid_t cid, system_t system, group_t group, point_t point) {
-            if (cid == getProducerCID()) emit removedProducerPoint(system, group, point);
+            if (cid == getLocalCID()) emit removedLocalPoint(system, group, point);
         });
-
-    connect(otpNetwork.get(), &Container::newComponent, this, &Producer::newComponent);
-    connect(otpNetwork.get(), &Container::removedComponent, this, &Producer::removedComponent);
-
-    connect(otpNetwork.get(), qOverload<const cid_t&, const name_t&>(&Container::updatedComponent),
-            this, qOverload<const cid_t&, const name_t&>(&Producer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, const QHostAddress&>(&Container::updatedComponent),
-            this, qOverload<const OTP::cid_t&, const QHostAddress&>(&Producer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, const moduleList_t &>(&Container::updatedComponent),
-            this, qOverload<const OTP::cid_t&, const moduleList_t &>(&Producer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, OTP::component_t::type_t>(&Container::updatedComponent),
-            this, qOverload<const OTP::cid_t&, OTP::component_t::type_t>(&Producer::updatedComponent));
-
-    connect(otpNetwork.get(), &Container::newSystem, this, &Producer::newSystem);
-    connect(otpNetwork.get(), &Container::removedSystem, this, &Producer::removedSystem);
-
-    connect(otpNetwork.get(), &Container::newGroup, this, &Producer::newGroup);
-    connect(otpNetwork.get(), &Container::removedGroup, this, &Producer::removedGroup);
-
-    connect(otpNetwork.get(), &Container::newPoint, this, &Producer::newPoint);
-    connect(otpNetwork.get(), &Container::removedPoint, this, &Producer::removedPoint);
 
     setupListener();
     auto startSenderTimeout = new QTimer;
@@ -100,493 +70,280 @@ Producer::Producer(
     startSenderTimeout->start(OTP_ADVERTISEMENT_STARTUP_WAIT);
 }
 
-Producer::~Producer()
-{}
-
-void Producer::ClearOTPMap()
+/* Local Groups */
+QList<group_t> Producer::getLocalGroups(system_t system) const
 {
-    otpNetwork->clearSystems();
-    otpNetwork->clearComponents();
+    return otpNetwork->getGroupList(getLocalCID(), system);
+}
+void Producer::addLocalGroup(system_t system, group_t group)
+{
+    otpNetwork->addGroup(getLocalCID(), system, group);
+}
+void Producer::removeLocalGroup(system_t system, group_t group)
+{
+    otpNetwork->removeGroup(getLocalCID(), system, group);
 }
 
-/* Producer CID */
-void Producer::setProducerCID(cid_t value)
+/* Local Points */
+QList<point_t> Producer::getLocalPoints(system_t system, group_t group) const
 {
-    if (CID == value) return;
-    CID = value;
-    emit newProducerCID(CID);
+    return otpNetwork->getPointList(getLocalCID(), system, group);
+}
+void Producer::addLocalPoint(address_t address, priority_t priority)
+{
+    otpNetwork->addPoint(getLocalCID(), address, priority);
+    otpNetwork->PointDetails(getLocalCID(), address)->standardModules.referenceFrame.setSystem(address.system, 0);
+    otpNetwork->PointDetails(getLocalCID(), address)->standardModules.referenceFrame.setGroup(address.group, 0);
+    otpNetwork->PointDetails(getLocalCID(), address)->standardModules.referenceFrame.setPoint(address.point, 0);
+}
+void Producer::removeLocalPoint(address_t address)
+{
+    otpNetwork->removePoint(getLocalCID(), address);
+}
+QString Producer::getLocalPointName(address_t address) const
+{
+    if (!getLocalPoints(address.system, address.group).contains(address.point)) return QString();
+    return otpNetwork->PointDetails(getLocalCID(), address)->getName();
+}
+void Producer::setLocalPointName(address_t address, QString name)
+{
+    if (!getLocalPoints(address.system, address.group).contains(address.point)) return;
+    otpNetwork->PointDetails(getLocalCID(), address)->setName(name);
+    emit updatedLocalPointName(address);
+}
+priority_t Producer::getLocalPointPriority(address_t address) const
+{
+    if (!getLocalPoints(address.system, address.group).contains(address.point)) return priority_t();
+    return otpNetwork->PointDetails(getLocalCID(), address)->getPriority();
+}
+void Producer::setLocalPointPriority(address_t address, priority_t priority)
+{
+    if (!getLocalPoints(address.system, address.group).contains(address.point)) return;
+    otpNetwork->PointDetails(getLocalCID(), address)->setPriority(priority);
+    emit updatedLocalPointPriority(address);
 }
 
-/* Producer Name */
-void Producer::setProducerName(name_t value)
-{
-    if (name == value) return;
-    name = value;
-    emit newProducerName(name);
-}
-
-/* Producer Network Interface */
-void Producer::setProducerNetworkInterface(QNetworkInterface value)
-{
-    if (iface.name() == value.name()) return;
-    iface = value;
-    setupListener();
-    emit newProducerNetworkInterface(iface);
-}
-
-/* Producer Network Transport */
-void Producer::setProducerNetworkTransport(QAbstractSocket::NetworkLayerProtocol value)
-{
-    if (transport == value) return;
-    transport = value;
-    setupListener();
-    emit newProducerNetworkTransport(transport);
-}
-
-/* Producer Systems */
-QList<system_t> Producer::getProducerSystems() const
-{
-    return otpNetwork->getSystemList(getProducerCID());
-}
-
-void Producer::addProducerSystem(system_t system)
-{
-    otpNetwork->addSystem(getProducerCID(), system);
-}
-
-void Producer::removeProducerSystem(system_t system)
-{
-    otpNetwork->removeSystem(getProducerCID(), system);
-}
-
-/* Producer Groups */
-QList<group_t> Producer::getProducerGroups(system_t system) const
-{
-    return otpNetwork->getGroupList(getProducerCID(), system);
-}
-
-void Producer::addProducerGroup(system_t system, group_t group)
-{
-    otpNetwork->addGroup(getProducerCID(), system, group);
-}
-
-void Producer::removeProducerGroup(system_t system, group_t group)
-{
-    otpNetwork->removeGroup(getProducerCID(), system, group);
-}
-
-/* Producer Points */
-QList<point_t> Producer::getProducerPoints(system_t system, group_t group) const
-{
-    return otpNetwork->getPointList(CID, system, group);
-}
-
-void Producer::addProducerPoint(address_t address, priority_t priority)
-{
-    otpNetwork->addPoint(getProducerCID(), address, priority);
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.referenceFrame.setSystem(address.system, 0);
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.referenceFrame.setGroup(address.group, 0);
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.referenceFrame.setPoint(address.point, 0);
-}
-
-void Producer::removeProducerPoint(address_t address)
-{
-    otpNetwork->removePoint(getProducerCID(), address);
-}
-
-QString Producer::getProducerPointName(address_t address) const
-{
-    if (!getProducerPoints(address.system, address.group).contains(address.point)) return QString();
-    return otpNetwork->PointDetails(getProducerCID(), address)->getName();
-}
-
-void Producer::setProducerPointName(address_t address, QString name)
-{
-    if (!getProducerPoints(address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(getProducerCID(), address)->setName(name);
-    emit updatedProducerPointName(address);
-}
-
-priority_t Producer::getProducerPointPriority(address_t address) const
-{
-    if (!getProducerPoints(address.system, address.group).contains(address.point)) return priority_t();
-    return otpNetwork->PointDetails(getProducerCID(), address)->getPriority();
-}
-
-void Producer::setProducerPointPriority(address_t address, priority_t priority)
-{
-    if (!getProducerPoints(address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(getProducerCID(), address)->setPriority(priority);
-    emit updatedProducerPointPriority(address);
-}
-
-/* Producer Addesses */
-QList<address_t> Producer::getProducerAddresses()
+/* Local Addesses */
+QList<address_t> Producer::getLocalAddresses()
 {
     QList<address_t> ret;
-    for (auto system : getProducerSystems())
+    for (auto system : getLocalSystems())
         ret.append(getAddresses(system));
 
     return ret;
 }
-QList<address_t> Producer::getProducerAddresses(system_t system)
+QList<address_t> Producer::getLocalAddresses(system_t system)
 {
     QList<address_t> ret;
-    for (auto group : getProducerGroups(system))
+    for (auto group : getLocalGroups(system))
         ret.append(getAddresses(system, group));
 
     return ret;
 }
-QList<address_t> Producer::getProducerAddresses(system_t system, group_t group)
+QList<address_t> Producer::getLocalAddresses(system_t system, group_t group)
 {
     QList<address_t> ret;
-    for (auto point : getProducerPoints(system, group))
+    for (auto point : getLocalPoints(system, group))
         ret.append(address_t(system, group, point));
 
     return ret;
-}
-
-/* Components */
-QList<cid_t> Producer::getComponents() const
-{
-    return otpNetwork->getComponentList();
-}
-
-component_t Producer::getComponent(cid_t cid) const
-{
-    return otpNetwork->getComponent(cid);
-}
-
-/* Systems */
-QList<system_t> Producer::getSystems() const
-{
-    return otpNetwork->getSystemList();
-}
-
-void Producer::addSystem(cid_t cid, system_t system)
-{
-    otpNetwork->addSystem(cid, system);
-}
-
-/* Groups */
-QList<group_t> Producer::getGroups(system_t system) const
-{
-    return otpNetwork->getGroupList(system);
-}
-
-void Producer::addGroup(cid_t cid, system_t system, group_t group)
-{
-    otpNetwork->addGroup(cid, system, group);
-}
-
-/* Points */
-QList<point_t> Producer::getPoints(system_t system, group_t group) const
-{
-    return otpNetwork->getPointList(system, group);
-}
-QList<point_t> Producer::getPoints(cid_t cid, system_t system, group_t group) const
-{
-    return otpNetwork->getPointList(cid, system, group);
-}
-
-QString Producer::getPointName(cid_t cid, address_t address) const
-{
-    if (!getPoints(cid, address.system, address.group).contains(address.point)) return QString();
-    if (cid.isNull())
-    {
-        cid_t newestCid;
-        QDateTime lastSeen;
-        for (auto cid : getComponents())
-        {
-            auto tempSeen = otpNetwork->PointDetails(cid, address)->getLastSeen();
-            if (tempSeen > lastSeen)
-            {
-                lastSeen = tempSeen;
-                newestCid = cid;
-            }
-        }
-        return otpNetwork->PointDetails(newestCid, address)->getName();
-    }
-    return otpNetwork->PointDetails(cid, address)->getName();
-}
-
-/* Addresses */
-QList<address_t> Producer::getAddresses()
-{
-    QList<address_t> ret;
-    for (auto system : getSystems())
-        ret.append(getAddresses(system));
-
-    return ret;
-}
-QList<address_t> Producer::getAddresses(system_t system)
-{
-    QList<address_t> ret;
-    for (auto group : getGroups(system))
-        ret.append(getAddresses(system, group));
-
-    return ret;
-}
-
-QList<address_t> Producer::getAddresses(system_t system, group_t group)
-{
-    QList<address_t> ret;
-    for (auto point : getPoints(system, group))
-        ret.append(address_t(system, group, point));
-
-    return ret;
-}
-
-/* Standard Modules */
-QString Producer::getScaleString(MODULES::STANDARD::PositionModule_t::scale_t scale, bool html) const
-{
-    return MODULES::STANDARD::VALUES::UNITS::getScaleString(scale, html);
-}
-
-QString Producer::getUnitString(MODULES::STANDARD::VALUES::moduleValue_t moduleValue, bool html) const
-{
-    using namespace MODULES::STANDARD::VALUES;
-    return QString ("%2")
-            .arg(UNITS::getUnitString(moduleValue, html));
-}
-
-QString Producer::getUnitString(
-        MODULES::STANDARD::PositionModule_t::scale_t scale,
-        MODULES::STANDARD::VALUES::moduleValue_t moduleValue,
-        bool html) const
-{
-    using namespace MODULES::STANDARD::VALUES;
-    return QString ("%1%2")
-            .arg(getScaleString(scale, html))
-            .arg(UNITS::getUnitString(moduleValue, html));
 }
 
 /* Standard Modules - Position */
-Producer::PositionValue_t Producer::getProducerPosition(address_t address, axis_t axis) const
+Producer::PositionValue_t Producer::getLocalPosition(address_t address, axis_t axis) const
 {
     using namespace MODULES::STANDARD;
     Producer::PositionValue_t ret;
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getPosition(axis);
-    ret.scale = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getScaling();
+    ret.value = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.position.getPosition(axis);
+    ret.scale = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.position.getScaling();
     ret.unit = getUnitString(ret.scale, VALUES::POSITION);
-    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.getTimestamp();
+    ret.timestamp = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.position.getTimestamp();
     return ret;
 }
 
-void Producer::setProducerPosition(address_t address, axis_t axis, PositionValue_t position)
+void Producer::setLocalPosition(address_t address, axis_t axis, PositionValue_t position)
 {
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.setPosition(
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point)) return;
+    otpNetwork->PointDetails(getLocalCID(), address)->standardModules.position.setPosition(
                 axis, position.value, position.timestamp);
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.position.setScaling(
+    otpNetwork->PointDetails(getLocalCID(), address)->standardModules.position.setScaling(
                 position.scale);
 
     emit updatedPosition(address, axis);
 }
 
 /* Standard Modules - Position Velocity/Acceleration */
-Producer::PositionVelocity_t Producer::getProducerPositionVelocity(address_t address, axis_t axis) const
+Producer::PositionVelocity_t Producer::getLocalPositionVelocity(address_t address, axis_t axis) const
 {
     using namespace MODULES::STANDARD;
     Producer::PositionVelocity_t ret;
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.getVelocity(axis);
+    ret.value = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.positionVelAcc.getVelocity(axis);
     ret.unit = getUnitString(VALUES::POSITION_VELOCITY);
-    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.getTimestamp();
+    ret.timestamp = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.positionVelAcc.getTimestamp();
     return ret;
 }
 
-void Producer::setProducerPositionVelocity(address_t address, axis_t axis, PositionVelocity_t positionVel)
+void Producer::setLocalPositionVelocity(address_t address, axis_t axis, PositionVelocity_t positionVel)
 {
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point)) return;
 
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.setVelocity(
+    otpNetwork->PointDetails(getLocalCID(), address)->standardModules.positionVelAcc.setVelocity(
                 axis, positionVel.value, positionVel.timestamp);
 
     emit updatedPositionVelocity(address, axis);
 }
 
-Producer::PositionAcceleration_t Producer::getProducerPositionAcceleration(address_t address, axis_t axis) const
+Producer::PositionAcceleration_t Producer::getLocalPositionAcceleration(address_t address, axis_t axis) const
 {
     using namespace MODULES::STANDARD;
     Producer::PositionAcceleration_t ret;
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.getAcceleration(axis);
+    ret.value = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.positionVelAcc.getAcceleration(axis);
     ret.unit = getUnitString(VALUES::POSITION_ACCELERATION);
-    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.getTimestamp();
+    ret.timestamp = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.positionVelAcc.getTimestamp();
     return ret;
 }
 
-void Producer::setProducerPositionAcceleration(address_t address, axis_t axis, PositionAcceleration_t positionAccel)
+void Producer::setLocalPositionAcceleration(address_t address, axis_t axis, PositionAcceleration_t positionAccel)
 {
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point)) return;
 
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.positionVelAcc.setAcceleration(
+    otpNetwork->PointDetails(getLocalCID(), address)->standardModules.positionVelAcc.setAcceleration(
                 axis, positionAccel.value, positionAccel.timestamp);
 
     emit updatedPositionAcceleration(address, axis);
 }
 
 /* Standard Modules - Rotation */
-Producer::RotationValue_t Producer::getProducerRotation(address_t address, axis_t axis) const
+Producer::RotationValue_t Producer::getLocalRotation(address_t address, axis_t axis) const
 {
     using namespace MODULES::STANDARD;
     Producer::RotationValue_t ret;
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotation.getRotation(axis);
+    ret.value = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.rotation.getRotation(axis);
     ret.unit = getUnitString(VALUES::ROTATION);
-    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotation.getTimestamp();
+    ret.timestamp = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.rotation.getTimestamp();
     return ret;
 }
 
-void Producer::setProducerRotation(address_t address, axis_t axis, RotationValue_t rotation)
+void Producer::setLocalRotation(address_t address, axis_t axis, RotationValue_t rotation)
 {
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point)) return;
 
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotation.setRotation(
+    otpNetwork->PointDetails(getLocalCID(), address)->standardModules.rotation.setRotation(
                 axis, rotation.value, rotation.timestamp);
 
     emit updatedRotation(address, axis);
 }
 
 /* Standard Modules - Position Velocity/Acceleration */
-Producer::RotationVelocity_t Producer::getProducerRotationVelocity( address_t address, axis_t axis) const
+Producer::RotationVelocity_t Producer::getLocalRotationVelocity( address_t address, axis_t axis) const
 {
     using namespace MODULES::STANDARD;
     Producer::RotationVelocity_t ret;
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.getVelocity(axis);
+    ret.value = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.rotationVelAcc.getVelocity(axis);
     ret.unit = getUnitString(VALUES::ROTATION_VELOCITY);
-    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.getTimestamp();
+    ret.timestamp = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.rotationVelAcc.getTimestamp();
     return ret;
 }
 
-void Producer::setProducerRotationVelocity(address_t address, axis_t axis, RotationVelocity_t rotationVel)
+void Producer::setLocalRotationVelocity(address_t address, axis_t axis, RotationVelocity_t rotationVel)
 {
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point)) return;
 
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.setVelocity(
+    otpNetwork->PointDetails(getLocalCID(), address)->standardModules.rotationVelAcc.setVelocity(
                 axis, rotationVel.value, rotationVel.timestamp);
 
     emit updatedRotationVelocity(address, axis);
 }
 
-Producer::RotationAcceleration_t Producer::getProducerRotationAcceleration(address_t address, axis_t axis) const
+Producer::RotationAcceleration_t Producer::getLocalRotationAcceleration(address_t address, axis_t axis) const
 {
     using namespace MODULES::STANDARD;
     Producer::RotationAcceleration_t ret;
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.getAcceleration(axis);
+    ret.value = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.rotationVelAcc.getAcceleration(axis);
     ret.unit = getUnitString(VALUES::ROTATION_VELOCITY);
-    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.getTimestamp();
+    ret.timestamp = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.rotationVelAcc.getTimestamp();
     return ret;
 }
 
-void Producer::setProducerRotationAcceleration(address_t address, axis_t axis, RotationAcceleration_t rotationAccel)
+void Producer::setLocalRotationAcceleration(address_t address, axis_t axis, RotationAcceleration_t rotationAccel)
 {
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point)) return;
 
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.rotationVelAcc.setAcceleration(
+    otpNetwork->PointDetails(getLocalCID(), address)->standardModules.rotationVelAcc.setAcceleration(
                 axis, rotationAccel.value, rotationAccel.timestamp);
 
     emit updatedRotationAcceleration(address, axis);
 }
 
-Producer::Scale_t Producer::getProducerScale(address_t address, axis_t axis) const
+Producer::Scale_t Producer::getLocalScale(address_t address, axis_t axis) const
 {
     using namespace MODULES::STANDARD;
     Producer::Scale_t ret;
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point))
         return ret;
 
-    ret.value = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.scale.getScale(axis);
-    ret.timestamp = otpNetwork->PointDetails(getProducerCID(), address)->standardModules.scale.getTimestamp();
+    ret.value = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.scale.getScale(axis);
+    ret.timestamp = otpNetwork->PointDetails(getLocalCID(), address)->standardModules.scale.getTimestamp();
     return ret;
 }
 
-void Producer::setProducerScale(address_t address, axis_t axis, Scale_t scale)
+void Producer::setLocalScale(address_t address, axis_t axis, Scale_t scale)
 {
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point)) return;
 
-    otpNetwork->PointDetails(getProducerCID(), address)->standardModules.scale.setScale(
+    otpNetwork->PointDetails(getLocalCID(), address)->standardModules.scale.setScale(
                 axis, scale.value, scale.timestamp);
 
     emit updatedScale(address, axis);
 }
 
-Producer::ReferenceFrame_t Producer::getProducerReferenceFrame(address_t address) const
+Producer::ReferenceFrame_t Producer::getLocalReferenceFrame(address_t address) const
 {
     using namespace MODULES::STANDARD;
     Producer::ReferenceFrame_t ret;
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point))
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point))
         return ret;
 
-    auto module = &otpNetwork->PointDetails(getProducerCID(), address)->standardModules.referenceFrame;
+    auto module = &otpNetwork->PointDetails(getLocalCID(), address)->standardModules.referenceFrame;
     ret.value = {module->getSystem(), module->getGroup(), module->getPoint()};
     ret.timestamp = module->getTimestamp();
     return ret;
 }
 
-void Producer::setProducerReferenceFrame(address_t address, ReferenceFrame_t referenceFrame)
+void Producer::setLocalReferenceFrame(address_t address, ReferenceFrame_t referenceFrame)
 {
-    if (!getPoints(getProducerCID(), address.system, address.group).contains(address.point)) return;
+    if (!getPoints(getLocalCID(), address.system, address.group).contains(address.point)) return;
 
-    auto module = &otpNetwork->PointDetails(getProducerCID(), address)->standardModules.referenceFrame;
+    auto module = &otpNetwork->PointDetails(getLocalCID(), address)->standardModules.referenceFrame;
     module->setSystem(referenceFrame.value.system, referenceFrame.timestamp);
     module->setGroup(referenceFrame.value.group, referenceFrame.timestamp);
     module->setPoint(referenceFrame.value.point, referenceFrame.timestamp);
     emit updatedReferenceFrame(address);
 }
 
-void Producer::setupListener()
-{
-    qDebug() << this << "- Starting on interface" << iface.humanReadableName() << iface.hardwareAddress();
-
-    sockets.clear();
-
-    for (auto connection : listenerConnections)
-        disconnect(connection);
-
-    if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
-    {
-        sockets.insert(QAbstractSocket::IPv4Protocol, SocketManager::getSocket(iface, QAbstractSocket::IPv4Protocol));
-        sockets.value(QAbstractSocket::IPv4Protocol).get()->joinMulticastGroup(OTP_Advertisement_Message_IPv4);
-        qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv4;
-    }
-
-    if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
-    {
-        sockets.insert(QAbstractSocket::IPv6Protocol, SocketManager::getSocket(iface, QAbstractSocket::IPv6Protocol));
-        sockets.value(QAbstractSocket::IPv6Protocol).get()->joinMulticastGroup(OTP_Advertisement_Message_IPv6);
-        qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv6;
-    }
-
-    for (auto socket : sockets) {
-        listenerConnections.append(
-                    connect(
-                        socket.get(), &SocketManager::newDatagram,
-                        this, &Producer::newDatagram));
-    }
-}
-
 void Producer::setupSender(std::chrono::milliseconds transformRate)
 {
     qDebug() << this << "- Starting OTP Transform Messages" << iface.name();
     connect(&transformMsgTimer, &QTimer::timeout, [this]() {
-        for (auto system : getProducerSystems())
+        for (auto system : getLocalSystems())
             sendOTPTransformMessage(system);
     });
     transformRate = std::clamp(transformRate, OTP_TRANSFORM_TIMING_MIN, OTP_TRANSFORM_TIMING_MAX);
@@ -734,10 +491,10 @@ void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MES
 
     // Create a List of Address Point Descriptions
     list_t list;
-    for (auto address : getProducerAddresses())
+    for (auto address : getLocalAddresses())
     {
         item_t item(address.system, address.group, address.point,
-                    getProducerPointName(address));
+                    getLocalPointName(address));
         list.append(item);
     }
 
@@ -747,8 +504,8 @@ void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MES
         folioMessages.append(
                     std::make_shared<Message>(
                         mode_e::Producer,
-                        getProducerCID(),
-                        name,
+                        getLocalCID(),
+                        getLocalName(),
                         list_t(),
                         this));
 
@@ -787,7 +544,7 @@ void Producer::sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, M
     using namespace OTP::MESSAGES::OTPSystemAdvertisementMessage;
 
     // Get list of systems
-    list_t list = otpNetwork->getSystemList(getProducerCID());
+    list_t list = otpNetwork->getSystemList(getLocalCID());
 
     // Generate messages
     QVector<std::shared_ptr<Message>> folioMessages;
@@ -795,8 +552,8 @@ void Producer::sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, M
         folioMessages.append(
                     std::make_shared<Message>(
                         mode_e::Producer,
-                        getProducerCID(),
-                        name,
+                        getLocalCID(),
+                        getLocalName(),
                         list_t(),
                         this));
 
@@ -854,9 +611,9 @@ void Producer::sendOTPTransformMessage(system_t system)
 
     // Get each requested module
     QVector<Message::addModule_t> folioModuleData;
-    for (auto address: getProducerAddresses(system))
+    for (auto address: getLocalAddresses(system))
     {
-        auto pointDetails = otpNetwork->PointDetails(getProducerCID(), address);
+        auto pointDetails = otpNetwork->PointDetails(getLocalCID(), address);
         for (auto module : requestedModules)
         {
             switch (module.ManufacturerID)
@@ -881,7 +638,7 @@ void Producer::sendOTPTransformMessage(system_t system)
     // Generate messages
     QVector<std::shared_ptr<Message>> folioMessages;
     while (folioModuleData.count()) {
-        folioMessages.append(std::make_shared<Message>(getProducerCID(), name, system, true, this));
+        folioMessages.append(std::make_shared<Message>(getLocalCID(), getLocalName(), system, true, this));
 
         Message::addModule_ret result;
         do {

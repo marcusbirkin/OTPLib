@@ -30,43 +30,19 @@ Consumer::Consumer(
         QNetworkInterface iface,
         QAbstractSocket::NetworkLayerProtocol transport,
         QList<system_t> systems,
-        name_t name,
         cid_t CID,
+        name_t name,
         QObject *parent) :
-    QObject(parent),
-    otpNetwork(new Container(this)),
-    iface(iface),
-    transport(transport),
-    CID(CID),
-    name(name)
+    Component(
+        iface,
+        transport,
+        CID,
+        name,
+        parent)
 {
-    // Signals
-    connect(otpNetwork.get(), &Container::newComponent, this, &Consumer::newComponent);
-    connect(otpNetwork.get(), &Container::removedComponent, this, &Consumer::removedComponent);
-
-    connect(otpNetwork.get(), qOverload<const cid_t&, const name_t&>(&Container::updatedComponent),
-            this, qOverload<const cid_t&, const name_t&>(&Consumer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, const QHostAddress&>(&Container::updatedComponent),
-            this, qOverload<const OTP::cid_t&, const QHostAddress&>(&Consumer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, const moduleList_t &>(&Container::updatedComponent),
-            this, qOverload<const OTP::cid_t&, const moduleList_t &>(&Consumer::updatedComponent));
-    connect(otpNetwork.get(), qOverload<const OTP::cid_t&, OTP::component_t::type_t>(&Container::updatedComponent),
-            this, qOverload<const OTP::cid_t&, OTP::component_t::type_t>(&Consumer::updatedComponent));
-
-    connect(otpNetwork.get(), &Container::newSystem, this, &Consumer::newSystem);
-    connect(otpNetwork.get(), &Container::removedSystem, this, &Consumer::removedSystem);
-
-    connect(otpNetwork.get(), &Container::newGroup, this, &Consumer::newGroup);
-    connect(otpNetwork.get(), &Container::removedGroup, this, &Consumer::removedGroup);
-
-    connect(otpNetwork.get(), &Container::newPoint, this, &Consumer::newPoint);
-    connect(otpNetwork.get(), &Container::updatedPoint, this, &Consumer::updatedPoint);
-    connect(otpNetwork.get(), &Container::expiredPoint, this, &Consumer::expiredPoint);
-    connect(otpNetwork.get(), &Container::removedPoint, this, &Consumer::removedPoint);
-
     // Setup Systems
     for (auto system : systems)
-        addConsumerSystem(system);
+        addLocalSystem(system);
     setupListener();
 
     // Module Advertisement Message Timer
@@ -78,299 +54,52 @@ Consumer::Consumer(
     sendOTPModuleAdvertisementMessage();
 };
 
-Consumer::~Consumer()
-{}
-
-void Consumer::ClearOTPMap()
-{
-    otpNetwork->clearSystems();
-    otpNetwork->clearComponents();
-}
-
 void Consumer::UpdateOTPMap()
 {
     sendOTPSystemAdvertisementMessage();
     sendOTPNameAdvertisementMessage();
 }
 
-/* Consumer CID */
-void Consumer::setConsumerCID(cid_t value)
+/* Local Systems */
+void Consumer::addLocalSystem(system_t system)
 {
-    if (CID == value) return;
-    CID = value;
-    emit newConsumerCID(getConsumerCID());
-}
+    if (!system.isValid()) return;
 
-/* Consumer Name */
-void Consumer::setConsumerName(name_t value)
-{
-    if (name == value) return;
-    name = value;
-    emit newConsumerName(name);
-}
+    Component::addLocalSystem(system);
 
-/* Consumer Network Interface */
-void Consumer::setConsumerNetworkInterface(QNetworkInterface value)
-{
-    if (iface.name() == value.name()) return;
-    iface = value;
-    setupListener();
-    emit newConsumerNetworkInterface(iface);
-}
-
-/* Consumer Network Transport */
-void Consumer::setConsumerNetworkTransport(QAbstractSocket::NetworkLayerProtocol value)
-{
-    if (transport == value) return;
-    transport = value;
-    setupListener();
-    emit newConsumerNetworkTransport(transport);
-}
-
-/* Consumer Systems */
-QList<system_t> Consumer::getConsumerSystems() const
-{
-    return otpNetwork->getSystemList(getConsumerCID());
-}
-
-void Consumer::addConsumerSystem(system_t system)
-{
-    if (system.isValid())
+    if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
     {
-        if (!getConsumerSystems().contains(system)) otpNetwork->addSystem(getConsumerCID(), system);
-
-        if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
-        {
-            auto groupAddr = QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address() + system);
-            if (sockets.value(QAbstractSocket::IPv4Protocol)->joinMulticastGroup(groupAddr))
-            {
-                emit newConsumerSystem(system);
-                qDebug() << this << "- Listening to Transform Messages for System" << system << groupAddr;
-            }
-        }
-
-        if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
-        {
-            auto groupAddr = QHostAddress(OTP_Transform_Message_IPv6.toIPv6Address() + system);
-            if (sockets.value(QAbstractSocket::IPv6Protocol)->joinMulticastGroup(groupAddr))
-            {
-                emit newConsumerSystem(system);
-                qDebug() << this << "- Listening to Transform Messages for System" << system << groupAddr;
-            }
-        }
-    }
-}
-
-void Consumer::removeConsumerSystem(system_t system)
-{
-    if (system.isValid())
-    {
-        otpNetwork->removeSystem(getConsumerCID(), system);
-        if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
-        {
-            auto groupAddr = QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address() + system);
-            if (sockets.value(QAbstractSocket::IPv4Protocol)->leaveMulticastGroup(groupAddr))
-                qDebug() << this << "- Stopping listening to Transform Messages for System" << system << groupAddr;
-        }
-
-        if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
-        {
-            auto groupAddr = QHostAddress(OTP_Transform_Message_IPv6.toIPv6Address() + system);
-            if (sockets.value(QAbstractSocket::IPv6Protocol)->leaveMulticastGroup(groupAddr))
-                qDebug() << this << "- Stopping listening to Transform Messages for System" << system << groupAddr;
-        }
-
-        removedConsumerSystem(system);
-    }
-}
-
-/* Components */
-QList<cid_t> Consumer::getComponents() const
-{
-    return otpNetwork->getComponentList();
-}
-
-component_t Consumer::getComponent(cid_t cid) const
-{
-    return otpNetwork->getComponent(cid);
-}
-
-
-/* Systems */
-QList<system_t> Consumer::getSystems() const
-{
-    return otpNetwork->getSystemList();
-}
-QList<system_t> Consumer::getSystems(cid_t cid) const
-{
-    return otpNetwork->getSystemList(cid);
-}
-
-/* Groups */
-QList<group_t> Consumer::getGroups(system_t system) const
-{
-    return otpNetwork->getGroupList(system);
-}
-QList<group_t> Consumer::getGroups(cid_t cid, system_t system) const
-{
-    return otpNetwork->getGroupList(cid, system);
-}
-
-bool Consumer::isGroupExpired(cid_t cid, system_t system, group_t group) const
-{
-    QList<point_t> pointList;
-    if (cid.isNull())
-        pointList = getPoints(system, group);
-    else
-        pointList = getPoints(cid, system, group);
-
-    for (auto point : pointList)
-    {
-        auto address = address_t{system, group, point};
-        if (!isPointExpired(cid, address)) return false;
-    }
-    return true;
-}
-
-/* Points */
-bool Consumer::isPointValid(address_t address) const
-{
-    if (!address.isValid())
-        return false;
-    if (!getPoints(address.system, address.group).contains(address.point))
-        return false;
-
-    return true;
-}
-
-bool Consumer::isPointValid(cid_t cid, address_t address) const
-{
-    if (!address.isValid())
-        return false;
-    if (!getPoints(cid, address.system, address.group).contains(address.point))
-        return false;
-
-    return true;
-}
-
-QList<point_t> Consumer::getPoints(system_t system, group_t group) const
-{
-    return otpNetwork->getPointList(system, group);
-}
-
-QList<point_t> Consumer::getPoints(cid_t cid, system_t system, group_t group) const
-{
-    return otpNetwork->getPointList(cid, system, group);
-}
-
-QString Consumer::getPointName(cid_t cid, address_t address) const
-{
-    if (cid.isNull())
-    {
-        cid_t newestCid;
-        QDateTime lastSeen;
-        for (auto cid : getComponents())
-        {
-            if (isPointValid(cid, address))
-            {
-                auto tempSeen = otpNetwork->PointDetails(cid, address)->getLastSeen();
-                if (tempSeen > lastSeen)
-                {
-                    lastSeen = tempSeen;
-                    newestCid = cid;
-                }
-            }
-        }
-        return otpNetwork->PointDetails(newestCid, address)->getName();
+        auto groupAddr = QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address() + system);
+        if (sockets.value(QAbstractSocket::IPv4Protocol)->joinMulticastGroup(groupAddr))
+            qDebug() << this << "- Listening to Transform Messages for System" << system << groupAddr;
     }
 
-    if (!isPointValid(cid, address)) return QString();
-    return otpNetwork->PointDetails(cid, address)->getName();
-}
-
-QDateTime Consumer::getPointLastSeen(cid_t cid, address_t address) const
-{
-    if (cid.isNull())
+    if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
     {
-        QDateTime ret;
-        for (auto cid : getComponents())
-        {
-            if (isPointValid(cid, address))
-            {
-                auto temp = otpNetwork->PointDetails(cid, address)->getLastSeen();
-                if (temp > ret) ret = temp;
-            }
-        }
-        return ret;
+        auto groupAddr = QHostAddress(OTP_Transform_Message_IPv6.toIPv6Address() + system);
+        if (sockets.value(QAbstractSocket::IPv6Protocol)->joinMulticastGroup(groupAddr))
+            qDebug() << this << "- Listening to Transform Messages for System" << system << groupAddr;
+    }
+}
+void Consumer::removeLocalSystem(system_t system)
+{
+    if (!system.isValid()) return;
+
+    Component::removeLocalSystem(system);
+
+    if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
+    {
+        auto groupAddr = QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address() + system);
+        if (sockets.value(QAbstractSocket::IPv4Protocol)->leaveMulticastGroup(groupAddr))
+            qDebug() << this << "- Stopping listening to Transform Messages for System" << system << groupAddr;
     }
 
-    if (!isPointValid(cid, address)) return QDateTime();
-    return otpNetwork->PointDetails(cid, address)->getLastSeen();
-}
-
-bool Consumer::isPointExpired(cid_t cid, address_t address) const
-{
-    if (cid.isNull())
+    if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
     {
-        for (auto cid : getComponents())
-            if (isPointValid(cid, address))
-                if (!otpNetwork->PointDetails(cid, address)->isExpired()) return false;
-        return true;
+        auto groupAddr = QHostAddress(OTP_Transform_Message_IPv6.toIPv6Address() + system);
+        if (sockets.value(QAbstractSocket::IPv6Protocol)->leaveMulticastGroup(groupAddr))
+            qDebug() << this << "- Stopping listening to Transform Messages for System" << system << groupAddr;
     }
-
-    if (!isPointValid(cid, address)) return true;
-    return otpNetwork->PointDetails(cid, address)->isExpired();
-}
-
-/* Addresses */
-QList<address_t> Consumer::getAddresses()
-{
-    QList<address_t> ret;
-    for (auto system : getSystems())
-        ret.append(getAddresses(system));
-
-    return ret;
-}
-QList<address_t> Consumer::getAddresses(system_t system)
-{
-    QList<address_t> ret;
-    for (auto group : getGroups(system))
-        ret.append(getAddresses(system, group));
-
-    return ret;
-}
-
-QList<address_t> Consumer::getAddresses(system_t system, group_t group)
-{
-    QList<address_t> ret;
-    for (auto point : getPoints(system, group))
-        ret.append(address_t(system, group, point));
-
-    return ret;
-}
-
-/* Standard Modules */
-QString Consumer::getScaleString(MODULES::STANDARD::PositionModule_t::scale_t scale, bool html) const
-{
-    return MODULES::STANDARD::VALUES::UNITS::getScaleString(scale, html);
-}
-
-QString Consumer::getUnitString(MODULES::STANDARD::VALUES::moduleValue_t moduleValue, bool html) const
-{
-    using namespace MODULES::STANDARD::VALUES;
-    return QString ("%2")
-            .arg(UNITS::getUnitString(moduleValue, html));
-}
-
-QString Consumer::getUnitString(
-        MODULES::STANDARD::PositionModule_t::scale_t scale,
-        MODULES::STANDARD::VALUES::moduleValue_t moduleValue,
-        bool html) const
-{
-    using namespace MODULES::STANDARD::VALUES;
-    return QString ("%1%2")
-            .arg(getScaleString(scale, html))
-            .arg(UNITS::getUnitString(moduleValue, html));
 }
 
 /* Standard Modules - Position */
@@ -621,40 +350,10 @@ Consumer::ReferenceFrame_t Consumer::getReferenceFrame(address_t address) const
 
 void Consumer::setupListener()
 {
-    qDebug() << this << "- Starting on interface" << iface.humanReadableName() << iface.hardwareAddress();
+    Component::setupListener();
 
-    sockets.clear();
-
-    for (auto connection : listenerConnections)
-        disconnect(connection);
-
-    if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
-    {
-        sockets.insert(QAbstractSocket::IPv4Protocol, SocketManager::getSocket(iface, QAbstractSocket::IPv4Protocol));
-        sockets.value(QAbstractSocket::IPv4Protocol).get()->joinMulticastGroup(OTP_Advertisement_Message_IPv4);
-        qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv4;
-    }
-
-    if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
-    {
-        sockets.insert(QAbstractSocket::IPv6Protocol, SocketManager::getSocket(iface, QAbstractSocket::IPv6Protocol));
-        sockets.value(QAbstractSocket::IPv6Protocol).get()->joinMulticastGroup(OTP_Advertisement_Message_IPv6);
-        qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv6;
-    }
-
-    for (auto socket : sockets) {
-        listenerConnections.append(
-                    connect(
-                        socket.get(), &SocketManager::newDatagram,
-                        this, &Consumer::newDatagram));
-        listenerConnections.append(
-                    connect(
-                        socket.get(), &SocketManager::stateChanged,
-                        this, &Consumer::stateChangedConsumerNetworkInterface));
-    }
-
-    for (auto system : getConsumerSystems())
-        addConsumerSystem(system);
+    for (auto system : getLocalSystems())
+        addLocalSystem(system);
 }
 
 void Consumer::newDatagram(QNetworkDatagram datagram)
@@ -842,7 +541,7 @@ bool Consumer::receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram)
     {
         auto cid = nameAdvert.getOTPLayer()->getCID();
         auto folio = nameAdvert.getOTPLayer()->getFolio();
-        if (cid != getConsumerCID() && !folioMap.checkSequence(
+        if (cid != getLocalCID() && !folioMap.checkSequence(
                     cid,
                     PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
                     folio))
@@ -910,7 +609,7 @@ bool Consumer::receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram)
     {
         auto cid = systemAdvert.getOTPLayer()->getCID();
         auto folio = systemAdvert.getOTPLayer()->getFolio();
-        if (cid != getConsumerCID() && !folioMap.checkSequence(
+        if (cid != getLocalCID() && !folioMap.checkSequence(
                     cid,
                     PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
                     folio))
@@ -991,8 +690,8 @@ void Consumer::sendOTPModuleAdvertisementMessage()
         folioMessages.append(
                     std::make_shared<Message>(
                         mode_e::Consumer,
-                        getConsumerCID(),
-                        name,
+                        getLocalCID(),
+                        getLocalName(),
                         list_t(),
                         this));
 
@@ -1032,8 +731,8 @@ void Consumer::sendOTPNameAdvertisementMessage()
     using namespace OTP::MESSAGES::OTPNameAdvertisementMessage;
     Message nameAdvertisementMessage(
                 mode_e::Consumer,
-                getConsumerCID(),
-                name,
+                getLocalCID(),
+                getLocalName(),
                 list_t(),
                 this);
 
@@ -1059,8 +758,8 @@ void Consumer::sendOTPSystemAdvertisementMessage()
     using namespace OTP::MESSAGES::OTPSystemAdvertisementMessage;
     Message systemAdvertisementMessage(
                 mode_e::Consumer,
-                getConsumerCID(),
-                name,
+                getLocalCID(),
+                getLocalName(),
                 list_t(),
                 this);
 

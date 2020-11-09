@@ -19,15 +19,12 @@
 #ifndef OTP_HPP
 #define OTP_HPP
 
+#include "component.hpp"
 #include "bugs.hpp"
 #include <QCoreApplication>
 #include <QObject>
-#include <QNetworkInterface>
-#include <QAbstractSocket>
 #include <memory>
-#include "socket.hpp"
 #include "types.hpp"
-#include "network/pdu/pdu_types.hpp"
 #include "network/messages/messages.hpp"
 #include "network/modules/modules.hpp"
 
@@ -39,9 +36,7 @@ namespace OTPLib {
 
 namespace OTP
 {
-    class Container;
-
-    class Producer : public QObject
+    class Producer : public Component
     {
         Q_OBJECT
     public:
@@ -56,166 +51,68 @@ namespace OTP
         explicit Producer(
                 QNetworkInterface iface,
                 QAbstractSocket::NetworkLayerProtocol transport,
-                name_t name = QCoreApplication::applicationName(),
                 cid_t CID = cid_t::createUuid(),
+                name_t name = QCoreApplication::applicationName(),
                 std::chrono::milliseconds transformRate = OTP_TRANSFORM_TIMING_MAX,
                 QObject *parent = nullptr);
-        ~Producer();
+        ~Producer() {};
 
-        /*
-         * Clear local copy of network
-         */
-        void ClearOTPMap();
-
-        /* Producer Transmission Rates */
+        /* Transmission Rates */
         public:
-        std::chrono::milliseconds getProducerTransformMsgRate() const
+        std::chrono::milliseconds getTransformMsgRate() const
             { return std::chrono::milliseconds(transformMsgTimer.interval()); }
-        void setProducerTransformMsgRate(std::chrono::milliseconds value)
+        void setTransformMsgRate(std::chrono::milliseconds value)
             { transformMsgTimer.setInterval(std::clamp(value, OTP_TRANSFORM_TIMING_MIN, OTP_TRANSFORM_TIMING_MAX)); }
 
-        /* Producer CID */
+        /* Local Groups */
         public:
-            cid_t getProducerCID() const { return CID; }
-            void setProducerCID(cid_t);
+            QList<group_t> getLocalGroups(system_t) const;
+            void addLocalGroup(system_t, group_t);
+            void removeLocalGroup(system_t, group_t);
         signals:
-            void newProducerCID(cid_t);
+            void newLocalGroup(system_t, group_t);
+            void removedLocalGroup(system_t, group_t);
 
-        /* Producer Name */
+        /* Local Points */
         public:
-            name_t getProducerName() const { return name; }
-            void setProducerName(name_t);
+            QList<point_t> getLocalPoints(system_t, group_t) const;
+            void addLocalPoint(address_t, priority_t);
+            void addLocalPoint(system_t system, group_t group, point_t point, priority_t priority)
+                { addLocalPoint(address_t(system, group, point), priority); }
+            void removeLocalPoint(address_t);
+            void removeLocalPoint(system_t system, group_t group, point_t point)
+                { removeLocalPoint(address_t(system, group, point)); }
         signals:
-            void newProducerName(name_t);
+            void newLocalPoint(system_t, group_t, point_t);
+            void removedLocalPoint(system_t, group_t, point_t);
 
-        /* Producer Network Interface */
         public:
-            QNetworkInterface getProducerNetworkInterface() const { return iface; }
-            void setProducerNetworkInterface(QNetworkInterface value);
-            QAbstractSocket::NetworkLayerProtocol getProducerNetworkTransport() const { return transport; }
-            void setProducerNetworkTransport(QAbstractSocket::NetworkLayerProtocol transport);
-            QAbstractSocket::SocketState getProducerNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const
-                {
-                    if (!sockets.contains(transport)) return QAbstractSocket::UnconnectedState;
-                    return sockets.value(transport)->state();
-                }
+            QString getLocalPointName(address_t) const;
+            QString getLocalPointName(system_t system, group_t group, point_t point)
+                { return getLocalPointName(address_t(system, group, point)); }
+            void setLocalPointName(address_t, QString);
+            void setLocalPointName(system_t system, group_t group, point_t point, QString name)
+                { setLocalPointName(address_t(system, group, point), name); }
         signals:
-            void newProducerNetworkInterface(QNetworkInterface);
-            void newProducerNetworkTransport(QAbstractSocket::NetworkLayerProtocol);
+            void updatedLocalPointName(address_t);
 
-        /* Producer Systems */
         public:
-            QList<system_t> getProducerSystems() const;
-            void addProducerSystem(system_t);
-            void removeProducerSystem(system_t);
+            priority_t getLocalPointPriority(address_t) const;
+            priority_t getLocalPointPriority(system_t system, group_t group, point_t point)
+                { return getLocalPointPriority(address_t(system, group, point)); }
+            void setLocalPointPriority(address_t, priority_t);
+            void setLocalPointPriority(system_t system, group_t group, point_t point, priority_t priority)
+                { setLocalPointPriority(address_t(system, group, point), priority); }
         signals:
-            void newProducerSystem(system_t);
-            void removedProducerSystem(system_t);
+            void updatedLocalPointPriority(address_t);
 
-        /* Producer Groups */
+        /* Local Addresses */
         public:
-            QList<group_t> getProducerGroups(system_t) const;
-            void addProducerGroup(system_t, group_t);
-            void removeProducerGroup(system_t, group_t);
-        signals:
-            void newProducerGroup(system_t, group_t);
-            void removedProducerGroup(system_t, group_t);
-
-        /* Producer Points */
-        public:
-            QList<point_t> getProducerPoints(system_t, group_t) const;
-            void addProducerPoint(address_t, priority_t);
-            void addProducerPoint(system_t system, group_t group, point_t point, priority_t priority)
-                { addProducerPoint(address_t(system, group, point), priority); }
-            void removeProducerPoint(address_t);
-            void removeProducerPoint(system_t system, group_t group, point_t point)
-                { removeProducerPoint(address_t(system, group, point)); }
-        signals:
-            void newProducerPoint(system_t, group_t, point_t);
-            void removedProducerPoint(system_t, group_t, point_t);
-
-        public:
-            QString getProducerPointName(address_t) const;
-            QString getProducerPointName(system_t system, group_t group, point_t point)
-                { return getProducerPointName(address_t(system, group, point)); }
-            void setProducerPointName(address_t, QString);
-            void setProducerPointName(system_t system, group_t group, point_t point, QString name)
-                { setProducerPointName(address_t(system, group, point), name); }
-        signals:
-            void updatedProducerPointName(address_t);
-
-        public:
-            priority_t getProducerPointPriority(address_t) const;
-            priority_t getProducerPointPriority(system_t system, group_t group, point_t point)
-                { return getProducerPointPriority(address_t(system, group, point)); }
-            void setProducerPointPriority(address_t, priority_t);
-            void setProducerPointPriority(system_t system, group_t group, point_t point, priority_t priority)
-                { setProducerPointPriority(address_t(system, group, point), priority); }
-        signals:
-            void updatedProducerPointPriority(address_t);
-
-        /* Producer Addresses */
-        public:
-            QList<address_t> getProducerAddresses();
-            QList<address_t> getProducerAddresses(system_t);
-            QList<address_t> getProducerAddresses(system_t, group_t);
-
-        /* Components */
-        public:
-            QList<cid_t> getComponents() const;
-            component_t getComponent(cid_t) const;
-        signals:
-            void newComponent(cid_t);
-            void removedComponent(cid_t);
-            void updatedComponent(const OTP::cid_t&, const OTP::name_t&);
-            void updatedComponent(const OTP::cid_t&, const QHostAddress&);
-            void updatedComponent(const OTP::cid_t&, const OTP::moduleList_t &);
-            void updatedComponent(const OTP::cid_t&, OTP::component_t::type_t);
-
-        /* Systems */
-        public:
-            QList<system_t> getSystems() const;
-            void addSystem(cid_t, system_t);
-        signals:
-            void newSystem(cid_t, system_t);
-            void removedSystem(cid_t, system_t);
-
-        /* Groups */
-        public:
-            QList<group_t> getGroups(system_t) const;
-            void addGroup(cid_t, system_t, group_t);
-        signals:
-            void newGroup(cid_t, system_t, group_t);
-            void removedGroup(cid_t, system_t, group_t);
-
-        /* Points */
-        public:
-            QList<point_t> getPoints(system_t, group_t) const;
-            QList<point_t> getPoints(cid_t, system_t, group_t) const;
-
-            QString getPointName(cid_t, address_t) const;
-            QString getPointName(cid_t cid, system_t system, group_t group, point_t point) const
-                { return getPointName(cid, address_t(system, group, point)); }
-            QString getPointName(address_t address) const
-                { return getPointName(cid_t(), address); }
-            QString getPointName(system_t system, group_t group, point_t point) const
-                { return getPointName(address_t(system, group, point)); }
-        signals:
-            void newPoint(cid_t, system_t, group_t, point_t);
-            void removedPoint(cid_t, system_t, group_t, point_t);
-
-        /* Addresses */
-        public:
-            QList<address_t> getAddresses();
-            QList<address_t> getAddresses(system_t);
-            QList<address_t> getAddresses(system_t, group_t);
+            QList<address_t> getLocalAddresses();
+            QList<address_t> getLocalAddresses(system_t);
+            QList<address_t> getLocalAddresses(system_t, group_t);
 
         /* Standard Modules */
-        public:
-            QString getScaleString(MODULES::STANDARD::PositionModule_t::scale_t, bool html = false) const;
-            QString getUnitString(MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
-            QString getUnitString(MODULES::STANDARD::PositionModule_t::scale_t, MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
-
         /* -Position */
         public:
             typedef struct PositionValue_s
@@ -225,8 +122,8 @@ namespace OTP
                 timestamp_t timestamp = static_cast<timestamp_t>(QDateTime::currentDateTime().toMSecsSinceEpoch());
                 MODULES::STANDARD::PositionModule_t::scale_t scale;
             } PositionValue_t;
-            PositionValue_t getProducerPosition(address_t, axis_t) const;
-            void setProducerPosition(address_t, axis_t, PositionValue_t);
+            PositionValue_t getLocalPosition(address_t, axis_t) const;
+            void setLocalPosition(address_t, axis_t, PositionValue_t);
         signals:
             void updatedPosition(address_t, axis_t);
 
@@ -238,8 +135,8 @@ namespace OTP
                 QString unit;
                 timestamp_t timestamp = 0;
             } PositionVelocity_t;
-            PositionVelocity_t getProducerPositionVelocity(address_t, axis_t) const;
-            void setProducerPositionVelocity(address_t, axis_t, PositionVelocity_t);
+            PositionVelocity_t getLocalPositionVelocity(address_t, axis_t) const;
+            void setLocalPositionVelocity(address_t, axis_t, PositionVelocity_t);
 
             typedef struct PositionAcceleration_s
             {
@@ -247,8 +144,8 @@ namespace OTP
                 QString unit;
                 timestamp_t timestamp = 0;
             } PositionAcceleration_t;
-            PositionAcceleration_t getProducerPositionAcceleration( address_t, axis_t) const;
-            void setProducerPositionAcceleration(address_t, axis_t, PositionAcceleration_t);
+            PositionAcceleration_t getLocalPositionAcceleration( address_t, axis_t) const;
+            void setLocalPositionAcceleration(address_t, axis_t, PositionAcceleration_t);
         signals:
             void updatedPositionVelocity(address_t, axis_t);
             void updatedPositionAcceleration(address_t, axis_t);
@@ -261,8 +158,8 @@ namespace OTP
                 QString unit;
                 timestamp_t timestamp = 0;
             } RotationValue_t;
-            RotationValue_t getProducerRotation(address_t, axis_t) const;
-            void setProducerRotation(address_t, axis_t, RotationValue_t);
+            RotationValue_t getLocalRotation(address_t, axis_t) const;
+            void setLocalRotation(address_t, axis_t, RotationValue_t);
         signals:
             void updatedRotation(address_t, axis_t);
 
@@ -274,8 +171,8 @@ namespace OTP
                 QString unit;
                 timestamp_t timestamp = 0;
             } RotationVelocity_t;
-            RotationVelocity_t getProducerRotationVelocity(address_t, axis_t) const;
-            void setProducerRotationVelocity(address_t, axis_t, RotationVelocity_t);
+            RotationVelocity_t getLocalRotationVelocity(address_t, axis_t) const;
+            void setLocalRotationVelocity(address_t, axis_t, RotationVelocity_t);
 
             typedef struct RotationAcceleration_s
             {
@@ -283,8 +180,8 @@ namespace OTP
                 QString unit;
                 timestamp_t timestamp = 0;
             } RotationAcceleration_t;
-            RotationAcceleration_t getProducerRotationAcceleration(address_t, axis_t) const;
-            void setProducerRotationAcceleration(address_t, axis_t, RotationAcceleration_t);
+            RotationAcceleration_t getLocalRotationAcceleration(address_t, axis_t) const;
+            void setLocalRotationAcceleration(address_t, axis_t, RotationAcceleration_t);
         signals:
             void updatedRotationVelocity(address_t, axis_t);
             void updatedRotationAcceleration(address_t, axis_t);
@@ -299,8 +196,8 @@ namespace OTP
                 void setPercent(MODULES::STANDARD::ScaleModule_t::percent_t value) { value = MODULES::STANDARD::ScaleModule_t::fromPercent(value); }
                 timestamp_t timestamp = 0;
             } Scale_t;
-            Scale_t getProducerScale(address_t, axis_t) const;
-            void setProducerScale(address_t, axis_t, Scale_t);
+            Scale_t getLocalScale(address_t, axis_t) const;
+            void setLocalScale(address_t, axis_t, Scale_t);
         signals:
             void updatedScale(address_t, axis_t);
 
@@ -312,19 +209,15 @@ namespace OTP
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
             } ReferenceFrame_t;
-            ReferenceFrame_t getProducerReferenceFrame(address_t) const;
-            void setProducerReferenceFrame(address_t, ReferenceFrame_t);
+            ReferenceFrame_t getLocalReferenceFrame(address_t) const;
+            void setLocalReferenceFrame(address_t, ReferenceFrame_t);
         signals:
             void updatedReferenceFrame(address_t);
 
-    signals:
-        void newCID(cid_t);
-
     private slots:
-        void newDatagram(QNetworkDatagram datagram);
+        void newDatagram(QNetworkDatagram datagram) override;
 
     private:
-        void setupListener();
         void setupSender(std::chrono::milliseconds transformRate);
         QTimer transformMsgTimer;
 
@@ -333,20 +226,9 @@ namespace OTP
         void sendOTPSystemAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio);
         void sendOTPTransformMessage(system_t system);
         PDU::OTPLayer::folio_t TransformMessage_Folio = 0;
-
-        folioMap_t folioMap;
-
-        std::unique_ptr<Container> otpNetwork;
-        QNetworkInterface iface;
-        QAbstractSocket::NetworkLayerProtocol transport;
-        QList<QMetaObject::Connection> listenerConnections;
-        QMap<QAbstractSocket::NetworkLayerProtocol, QSharedPointer<SocketManager>> sockets;
-
-        cid_t CID;
-        name_t name;
     };
 
-    class Consumer : public QObject
+    class Consumer : public Component
     {
         Q_OBJECT
     public:
@@ -361,15 +243,10 @@ namespace OTP
                 QNetworkInterface iface,
                 QAbstractSocket::NetworkLayerProtocol transport,
                 QList<system_t> systems,
-                name_t name = QCoreApplication::applicationName(),
                 cid_t CID = cid_t::createUuid(),
+                name_t name = QCoreApplication::applicationName(),
                 QObject *parent = nullptr);
-        ~Consumer();
-
-        /*
-         * Clear local copy of network
-         */
-        void ClearOTPMap();
+        ~Consumer() {};
 
         /*
          * Send a network request for systems and point descriptions
@@ -377,124 +254,12 @@ namespace OTP
          */
         void UpdateOTPMap();
 
-        /* Consumer CID */
+        /* Local Systems */
         public:
-            cid_t getConsumerCID() const { return CID; }
-            void setConsumerCID(cid_t);
-        signals:
-            void newConsumerCID(cid_t);
-
-        /* Consumer Name */
-        public:
-            name_t getConsumerName() const { return name; }
-            void setConsumerName(name_t);
-        signals:
-            void newConsumerName(name_t);
-
-        /* Consumer Network Interface */
-        public:
-            QNetworkInterface getConsumerNetworkInterface() const { return iface; }
-            void setConsumerNetworkInterface(QNetworkInterface value);
-            QAbstractSocket::NetworkLayerProtocol getConsumerNetworkTransport() const { return transport; }
-            void setConsumerNetworkTransport(QAbstractSocket::NetworkLayerProtocol value);
-            QAbstractSocket::SocketState getConsumerNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const
-                {
-                    if (!sockets.contains(transport)) return QAbstractSocket::UnconnectedState;
-                    return sockets.value(transport)->state();
-                }
-        signals:
-            void newConsumerNetworkInterface(QNetworkInterface);
-            void newConsumerNetworkTransport(QAbstractSocket::NetworkLayerProtocol);
-            void stateChangedConsumerNetworkInterface(QAbstractSocket::SocketState);
-
-        /* Consumer Systems */
-        public:
-            QList<system_t> getConsumerSystems() const;
-            void addConsumerSystem(system_t);
-            void removeConsumerSystem(system_t);
-        signals:
-            void newConsumerSystem(system_t);
-            void removedConsumerSystem(system_t);
-
-        /* Components */
-        public:
-            QList<cid_t> getComponents() const;
-            component_t getComponent(cid_t) const;
-        signals:
-            void newComponent(cid_t);
-            void removedComponent(cid_t);
-            void updatedComponent(const OTP::cid_t&, const OTP::name_t&);
-            void updatedComponent(const OTP::cid_t&, const QHostAddress&);
-            void updatedComponent(const OTP::cid_t&, const OTP::moduleList_t &);
-            void updatedComponent(const OTP::cid_t&, OTP::component_t::type_t);
-
-        /* Systems */
-        public:
-            QList<system_t> getSystems() const;
-            QList<system_t> getSystems(cid_t) const;
-        signals:
-            void newSystem(cid_t, system_t);
-            void removedSystem(cid_t, system_t);
-
-        /* Groups */
-        public:
-            QList<group_t> getGroups(system_t) const;
-            QList<group_t> getGroups(cid_t, system_t) const;
-
-            bool isGroupExpired(cid_t cid, system_t system, group_t group) const;
-            bool isGroupExpired(system_t system, group_t group) const
-                { return isGroupExpired(cid_t(), system, group); }
-        signals:
-            void newGroup(cid_t, system_t, group_t);
-            void removedGroup(cid_t, system_t, group_t);
-
-        /* Points */
-        public:
-            bool isPointValid(address_t) const;
-            bool isPointValid(cid_t, address_t) const;
-            QList<point_t> getPoints(system_t, group_t) const;
-            QList<point_t> getPoints(cid_t, system_t, group_t) const;
-
-            QString getPointName(cid_t, address_t) const;
-            QString getPointName(cid_t cid, system_t system, group_t group, point_t point) const
-                { return getPointName(cid, address_t(system, group, point)); }
-            QString getPointName(address_t address) const
-                { return getPointName(cid_t(), address); }
-            QString getPointName(system_t system, group_t group, point_t point) const
-                { return getPointName(address_t(system, group, point)); }
-
-            QDateTime getPointLastSeen(cid_t, address_t) const;
-            QDateTime getPointLastSeen(cid_t cid, system_t system, group_t group, point_t point) const
-                { return getPointLastSeen(cid, address_t(system, group, point)); }
-            QDateTime getPointLastSeen(address_t address) const
-                { return getPointLastSeen(cid_t(), address); }
-            QDateTime getPointLastSeen(system_t system, group_t group, point_t point) const
-                { return getPointLastSeen(address_t(system, group, point)); }
-
-            bool isPointExpired(cid_t, address_t) const;
-            bool isPointExpired(cid_t cid, system_t system, group_t group, point_t point) const
-                { return isPointExpired(cid, address_t(system, group, point)); }
-            bool isPointExpired(address_t address) const
-                { return isPointExpired(cid_t(), address); }
-            bool isPointExpired(system_t system, group_t group, point_t point) const
-                { return isPointExpired(address_t(system, group, point)); }
-
-        /* Addresses */
-        public:
-            QList<address_t> getAddresses();
-            QList<address_t> getAddresses(system_t);
-            QList<address_t> getAddresses(system_t, group_t);
-        signals:
-            void newPoint(cid_t, system_t, group_t, point_t);
-            void updatedPoint(cid_t, system_t, group_t, point_t);
-            void expiredPoint(cid_t, system_t, group_t, point_t);
-            void removedPoint(cid_t, system_t, group_t, point_t);
+            void addLocalSystem(system_t) override;
+            void removeLocalSystem(system_t) override;
 
         /* Standard Modules */
-        public:
-            QString getScaleString(MODULES::STANDARD::PositionModule_t::scale_t,  bool html = false) const;
-            QString getUnitString(MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
-            QString getUnitString(MODULES::STANDARD::PositionModule_t::scale_t, MODULES::STANDARD::VALUES::moduleValue_t, bool html = false) const;
         /* -Position */
         public:
             typedef struct PositionValue_s
@@ -613,10 +378,10 @@ namespace OTP
             void updatedReferenceFrame(cid_t, address_t);
 
     private slots:
-        void newDatagram(QNetworkDatagram datagram);
+        void newDatagram(QNetworkDatagram datagram) override;
 
     private:
-        void setupListener();
+        void setupListener() override;
 
         bool receiveOTPTransformMessage(QNetworkDatagram datagram);
         bool receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram);
@@ -628,17 +393,6 @@ namespace OTP
         PDU::OTPLayer::folio_t NameAdvertisementMessage_Folio = 0;
         void sendOTPSystemAdvertisementMessage();
         PDU::OTPLayer::folio_t SystemAdvertisementMessage_Folio = 0;
-
-        folioMap_t folioMap;
-
-        std::unique_ptr<Container> otpNetwork;
-        QNetworkInterface iface;
-        QAbstractSocket::NetworkLayerProtocol transport;
-        QList<QMetaObject::Connection> listenerConnections;
-        QMap<QAbstractSocket::NetworkLayerProtocol, QSharedPointer<SocketManager>> sockets;
-
-        cid_t CID;
-        name_t name;
     };
 };
 
