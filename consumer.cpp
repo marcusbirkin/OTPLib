@@ -664,12 +664,15 @@ bool Consumer::receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram)
             }
 
             // Prune old
-            for (auto system : otpNetwork->getSystemList(cid))
+            if (cid != getLocalCID())
             {
-                if (!list.contains(system))
-                    otpNetwork->removeSystem(
-                            cid,
-                            system);
+                for (auto system : otpNetwork->getSystemList(cid))
+                {
+                    if (!list.contains(system))
+                        otpNetwork->removeSystem(
+                                cid,
+                                system);
+                }
             }
         }
         return true;
