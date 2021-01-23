@@ -480,7 +480,7 @@ namespace OTP::PDU {
     namespace OTPModuleAdvertisementLayer {
         PDUByteArray& operator<<(PDUByteArray &l, const list_t &r)
         {
-            for (auto v : r)
+            for (const auto &v : r)
             {
                 l << v;
             }
@@ -518,7 +518,7 @@ namespace OTP::PDU {
 
         PDUByteArray& operator<<(PDUByteArray &l, const list_t &r)
         {
-            for (auto item : r)
+            for (const auto &item : r)
             {
                 l << item;
             }
@@ -539,7 +539,7 @@ namespace OTP::PDU {
     namespace OTPSystemAdvertisementLayer {
         PDUByteArray& operator<<(PDUByteArray &l, const list_t &r)
         {
-            for (auto item : r)
+            for (const auto &item : r)
             {
                 l << item;
             }

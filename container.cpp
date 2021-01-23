@@ -28,7 +28,7 @@ Container::Container(QObject *parent) :
 
 void Container::clearComponents()
 {
-    for (auto cid : getComponentList())
+    for (const auto &cid : getComponentList())
         removedComponent(cid);
 }
 
@@ -113,7 +113,7 @@ cid_t Container::getWinningComponent(address_t address) const
 {
     cid_t ret;
     pointDetails_t pdA;
-    for (auto cid : getComponentList())
+    for (const auto &cid : getComponentList())
     {
         pointDetails_t pdB = PointDetails(cid, address);
         if (!pdB || pdB->isExpired()) continue;
@@ -311,7 +311,7 @@ bool Container::isValid(const address_t address) const
 void Container::pruneModuleList(cid_t cid)
 {
     bool itemsRemoved = false;
-    for (auto item : componentMap.value(cid).getModuleList())
+    for (const auto &item : componentMap.value(cid).getModuleList())
     {
         if (componentMap.value(cid).isExpired(item))
         {

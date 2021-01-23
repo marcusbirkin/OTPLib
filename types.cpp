@@ -88,7 +88,7 @@ namespace OTP
     }
 
     QString component_s::getModuleString(ModuleItem_t item, bool includeManf) {
-        for (auto module : OTP::MODULES::getSupportedModules())
+        for (const auto &module : OTP::MODULES::getSupportedModules())
         {
             QString ret;
             if (module == item)

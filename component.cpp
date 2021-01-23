@@ -100,7 +100,7 @@ void Component::setupListener()
 
     sockets.clear();
 
-    for (auto connection : listenerConnections)
+    for (const auto &connection : listenerConnections)
         disconnect(connection);
 
     if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
@@ -117,7 +117,7 @@ void Component::setupListener()
         qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv6;
     }
 
-    for (auto socket : sockets) {
+    for (const auto &socket : sockets) {
         listenerConnections.append(
                     connect(
                         socket.get(), &SocketManager::newDatagram,
@@ -176,7 +176,7 @@ bool Component::isGroupExpired(cid_t cid, system_t system, group_t group) const
     else
         pointList = getPoints(cid, system, group);
 
-    for (auto point : pointList)
+    for (const auto &point : pointList)
     {
         auto address = address_t{system, group, point};
         if (!isPointExpired(cid, address)) return false;
@@ -193,7 +193,7 @@ QString Component::getPointName(cid_t cid, address_t address) const
     {
         cid_t newestCid;
         QDateTime lastSeen;
-        for (auto cid : getComponents())
+        for (const auto &cid : getComponents())
         {
             auto tempSeen = otpNetwork->PointDetails(cid, address)->getLastSeen();
             if (tempSeen > lastSeen)
@@ -229,7 +229,7 @@ QDateTime Component::getPointLastSeen(cid_t cid, address_t address) const
     if (cid.isNull())
     {
         QDateTime ret;
-        for (auto cid : getComponents())
+        for (const auto &cid : getComponents())
         {
             if (isPointValid(cid, address))
             {
@@ -247,7 +247,7 @@ bool Component::isPointExpired(cid_t cid, address_t address) const
 {
     if (cid.isNull())
     {
-        for (auto cid : getComponents())
+        for (const auto &cid : getComponents())
             if (isPointValid(cid, address))
                 if (!otpNetwork->PointDetails(cid, address)->isExpired()) return false;
         return true;
@@ -261,7 +261,7 @@ bool Component::isPointExpired(cid_t cid, address_t address) const
 QList<address_t> Component::getAddresses()
 {
     QList<address_t> ret;
-    for (auto system : getSystems())
+    for (const auto &system : getSystems())
         ret.append(getAddresses(system));
 
     return ret;
@@ -269,7 +269,7 @@ QList<address_t> Component::getAddresses()
 QList<address_t> Component::getAddresses(system_t system)
 {
     QList<address_t> ret;
-    for (auto group : getGroups(system))
+    for (const auto &group : getGroups(system))
         ret.append(getAddresses(system, group));
 
     return ret;
@@ -277,7 +277,7 @@ QList<address_t> Component::getAddresses(system_t system)
 QList<address_t> Component::getAddresses(system_t system, group_t group)
 {
     QList<address_t> ret;
-    for (auto point : getPoints(system, group))
+    for (const auto &point : getPoints(system, group))
         ret.append(address_t(system, group, point));
 
     return ret;

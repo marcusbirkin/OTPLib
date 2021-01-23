@@ -51,7 +51,7 @@ namespace OTP
 
         static bool writeDatagrams(QNetworkInterface interface, const QList<QNetworkDatagram> &datagrams)
         {
-            for (auto datagram : datagrams)
+            for (const auto &datagram : datagrams)
                 if (!getSocket(interface, datagram.destinationAddress().protocol())->writeDatagram(datagram))
                 {
                     qDebug() << "writeDatagram() failed to" << datagram.destinationAddress();
@@ -65,7 +65,7 @@ namespace OTP
         bool joinMulticastGroup(const QList<QHostAddress> &groupAddress)
         {
             bool ret = true;
-            for (auto address : groupAddress)
+            for (const auto &address : groupAddress)
                 if (!joinMulticastGroup(address)) ret = false;
             return ret;
         }
@@ -73,7 +73,7 @@ namespace OTP
         bool leaveMulticastGroup(const QList<QHostAddress> &groupAddress)
         {
             bool ret = true;
-            for (auto address : groupAddress)
+            for (const auto &address : groupAddress)
                 if (!leaveMulticastGroup(address)) ret = false;
             return ret;
         }

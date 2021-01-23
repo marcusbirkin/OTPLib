@@ -94,16 +94,19 @@ bool SocketManager::writeDatagram(const QNetworkDatagram &datagram)
 {
     // Sending unicast to self?
     if (!datagram.destinationAddress().isMulticast() &&
-            !datagram.destinationAddress().isBroadcast())
-        for (auto ifaceAddr : interface.addressEntries())
+            !datagram.destinationAddress().isBroadcast()) {
+        const auto addressEntries = interface.addressEntries();
+        for (const auto &ifaceAddr : addressEntries)
             if (ifaceAddr.ip() == datagram.destinationAddress())
             {
                 emit this->newDatagram(datagram);
                 return true;
             }
+    }
 
     auto socket = QUdpSocket();
-    for (auto ifaceAddr : interface.addressEntries())
+    const auto addressEntries = interface.addressEntries();
+    for (const auto &ifaceAddr : addressEntries)
         if (ifaceAddr.ip().protocol() == transport)
             socket.bind(ifaceAddr.ip());
 

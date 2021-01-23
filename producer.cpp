@@ -127,7 +127,7 @@ void Producer::setLocalPointPriority(address_t address, priority_t priority)
 QList<address_t> Producer::getLocalAddresses()
 {
     QList<address_t> ret;
-    for (auto system : getLocalSystems())
+    for (const auto &system : getLocalSystems())
         ret.append(getAddresses(system));
 
     return ret;
@@ -135,7 +135,7 @@ QList<address_t> Producer::getLocalAddresses()
 QList<address_t> Producer::getLocalAddresses(system_t system)
 {
     QList<address_t> ret;
-    for (auto group : getLocalGroups(system))
+    for (const auto &group : getLocalGroups(system))
         ret.append(getAddresses(system, group));
 
     return ret;
@@ -143,7 +143,7 @@ QList<address_t> Producer::getLocalAddresses(system_t system)
 QList<address_t> Producer::getLocalAddresses(system_t system, group_t group)
 {
     QList<address_t> ret;
-    for (auto point : getLocalPoints(system, group))
+    for (const auto &point : getLocalPoints(system, group))
         ret.append(address_t(system, group, point));
 
     return ret;
@@ -343,7 +343,7 @@ void Producer::setupSender(std::chrono::milliseconds transformRate)
 {
     qDebug() << this << "- Starting OTP Transform Messages" << iface.name();
     connect(&transformMsgTimer, &QTimer::timeout, [this]() {
-        for (auto system : getLocalSystems())
+        for (const auto &system : getLocalSystems())
             sendOTPTransformMessage(system);
     });
     transformRate = std::clamp(transformRate, OTP_TRANSFORM_TIMING_MIN, OTP_TRANSFORM_TIMING_MAX);
@@ -444,7 +444,7 @@ void Producer::newDatagram(QNetworkDatagram datagram)
             else if (type == component_t::type_t::consumer)
                 qDebug() << this << "- OTP System Advertisement Message Request Received From" << datagram.senderAddress();
 
-            for (auto system : systemAdvert.getSystemAdvertisementLayer()->getList())
+            for (const auto &system : systemAdvert.getSystemAdvertisementLayer()->getList())
             {
                 otpNetwork->addComponent(
                         cid,
@@ -491,7 +491,7 @@ void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MES
 
     // Create a List of Address Point Descriptions
     list_t list;
-    for (auto address : getLocalAddresses())
+    for (const auto &address : getLocalAddresses())
     {
         item_t item(address.system, address.group, address.point,
                     getLocalPointName(address));
@@ -595,12 +595,12 @@ void Producer::sendOTPTransformMessage(system_t system)
 
     // Establish requested modules for system
     QVector<PDU::OTPModuleLayer::ident_t> requestedModules;
-    for (auto cid : otpNetwork->getComponentList())
+    for (const auto &cid : otpNetwork->getComponentList())
     {
 //        if (otpNetwork->getSystemList(cid).contains(system))
 //        {
             auto component = otpNetwork->getComponent(cid);
-            for (auto module : component.getModuleList())
+            for (const auto &module : component.getModuleList())
             {
                 if (!requestedModules.contains(module))
                     requestedModules.append(module);
@@ -611,10 +611,10 @@ void Producer::sendOTPTransformMessage(system_t system)
 
     // Get each requested module
     QVector<Message::addModule_t> folioModuleData;
-    for (auto address: getLocalAddresses(system))
+    for (const auto &address: getLocalAddresses(system))
     {
         auto pointDetails = otpNetwork->PointDetails(getLocalCID(), address);
-        for (auto module : requestedModules)
+        for (const auto &module : requestedModules)
         {
             switch (module.ManufacturerID)
             {

@@ -41,7 +41,7 @@ Consumer::Consumer(
         parent)
 {
     // Setup Systems
-    for (auto system : systems)
+    for (const auto &system : systems)
         addLocalSystem(system);
     setupListener();
 
@@ -352,7 +352,7 @@ void Consumer::setupListener()
 {
     Component::setupListener();
 
-    for (auto system : getLocalSystems())
+    for (const auto &system : getLocalSystems())
         addLocalSystem(system);
 }
 
@@ -419,13 +419,13 @@ bool Consumer::receiveOTPTransformMessage(QNetworkDatagram datagram)
                         transformMessage.getOTPLayer()->getLastPage()))
             {
                 // Process all pages
-                for (auto datagram : folioMap.getDatagrams(cid,
+                for (const auto &datagram : folioMap.getDatagrams(cid,
                             system,
                             PDU::VECTOR_OTP_TRANSFORM_MESSAGE,
                             folio))
                 {
                     // Process each Point layer
-                    for (auto pointLayer : transformMessage.getPointLayers())
+                    for (const auto &pointLayer : transformMessage.getPointLayers())
                     {
                         auto address = address_t{
                             transformMessage.getTransformLayer()->getSystem(),
@@ -436,7 +436,7 @@ bool Consumer::receiveOTPTransformMessage(QNetworkDatagram datagram)
                         otpNetwork->PointDetails(cid, address)->setPriority(pointLayer->getPriority());
 
                         pointDetails::standardModules_t newStandardModules;
-                        for (auto moduleLayer : transformMessage.getModuleLayers().values(address))
+                        for (const auto &moduleLayer : transformMessage.getModuleLayers().values(address))
                         {
                             switch (moduleLayer->getManufacturerID())
                             {
@@ -579,7 +579,7 @@ bool Consumer::receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram)
         {
             // Process all pages
             MESSAGES::OTPNameAdvertisementMessage::list_t list;
-            for (auto datagram : folioMap.getDatagrams(cid,
+            for (const auto &datagram : folioMap.getDatagrams(cid,
                         PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
                         folio))
             {
@@ -588,7 +588,7 @@ bool Consumer::receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram)
             }
 
             // Add names
-            for (auto point : list)
+            for (const auto &point : list)
             {
                 address_t address = address_t(point.System, point.Group, point.Point);
                 otpNetwork->addPoint(cid, address);
@@ -647,7 +647,7 @@ bool Consumer::receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram)
         {
             // Process all pages
             MESSAGES::OTPSystemAdvertisementMessage::list_t list;
-            for (auto datagram : folioMap.getDatagrams(cid,
+            for (const auto &datagram : folioMap.getDatagrams(cid,
                         PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
                         folio))
             {
@@ -656,7 +656,7 @@ bool Consumer::receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram)
             }
 
             // Add new systems
-            for (auto system : list)
+            for (const auto &system : list)
             {
                 otpNetwork->addSystem(
                         cid,
@@ -666,7 +666,7 @@ bool Consumer::receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram)
             // Prune old
             if (cid != getLocalCID())
             {
-                for (auto system : otpNetwork->getSystemList(cid))
+                for (const auto &system : otpNetwork->getSystemList(cid))
                 {
                     if (!list.contains(system))
                         otpNetwork->removeSystem(

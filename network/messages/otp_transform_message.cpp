@@ -112,10 +112,10 @@ bool Message::isValid() const
         return false;
     if (!transformLayer->isValid()) return false;
 
-    for (auto pointLayer : pointLayers)
+    for (const auto &pointLayer : pointLayers)
         if (!pointLayer->isValid()) return false;
 
-    for (auto moduleLayer : moduleLayers)
+    for (const auto &moduleLayer : moduleLayers)
         if (!moduleLayer->isValid()) return false;
     if (!RANGES::MESSAGE_SIZE.isValid(toByteArray().size() - otpLayer->getFooter().getLength()))
         return false;
@@ -171,7 +171,7 @@ QByteArray Message::toByteArray() const
     QByteArray ba;
     ba.append(otpLayer->toPDUByteArray());
     ba.append(transformLayer->toPDUByteArray());
-    for (auto pointLayer : pointLayers)
+    for (const auto &pointLayer : pointLayers)
     {
         ba.append(pointLayer->toPDUByteArray());
         address_t address = {transformLayer->getSystem(), pointLayer->getGroup(), pointLayer->getPoint()};
@@ -190,7 +190,7 @@ void Message::updatePduLength()
 {
     pduLength_t length = 0;
 
-    for (auto pointLayer : pointLayers)
+    for (const auto &pointLayer : pointLayers)
     {
         pduLength_t modulesLength = 0;
         address_t address = {transformLayer->getSystem(), pointLayer->getGroup(), pointLayer->getPoint()};

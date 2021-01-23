@@ -65,7 +65,7 @@ namespace OTP
             return moduleList.keys();
         }
         void addModuleList(ModuleList_t list) {
-            for (auto item : list)
+            for (const auto &item : list)
                 moduleList[item] = QDateTime::currentDateTime();
             updateLastSeen();
         }
