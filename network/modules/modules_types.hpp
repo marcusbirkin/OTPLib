@@ -29,7 +29,7 @@ using namespace OTP::PDU;
 namespace OTP::MODULES {
     typedef OTP::PDU::OTPTransformLayer::timestamp_t timestamp_t;
 
-    typedef struct
+    typedef struct module_t
     {
         typedef struct
         {
@@ -81,8 +81,6 @@ namespace OTP::MODULES {
                     r.data = std::bitset<bitWidth>(temp);
                     return l;
                 }
-                options_s& operator=(const options_s& r) {this->data = r.data; return *this; }
-                options_s& operator=(const unsigned int& r) {this->data = static_cast<type>(r); return *this; }
             private:
                 typedef quint8 type;
                 static const quint8 bitWidth = sizeof(type) * 8;

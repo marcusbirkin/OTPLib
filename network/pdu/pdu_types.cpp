@@ -112,12 +112,6 @@ namespace OTP::PDU {
 
     int name_t::maxSize() { return NAME_LENGTH; }
 
-    name_t& name_t::operator=(const name_t& r)
-    {
-        this->clear();
-        this->append(r);
-        return *this;
-    }
     QString name_t::toString() const
     {
         return QString::fromUtf8(this->data());

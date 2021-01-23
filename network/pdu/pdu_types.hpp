@@ -43,7 +43,6 @@ namespace OTP::PDU
         name_t(const QByteArray &ba) : QByteArray(ba) {}
         name_t(const QString &s) : QByteArray() { fromString(s); }
         static int maxSize();
-        name_t& operator=(const name_t& r);
         QString toString() const;
         void fromString(const QString &s);
     };
@@ -186,8 +185,6 @@ namespace OTP::PDU
                 r.data = std::bitset<bitWidth>(temp);
                 return l;
             }
-            options_s& operator=(const options_s& r) {this->data = r.data; return *this; }
-            options_s& operator=(const unsigned int& r) {this->data = static_cast<type>(r); return *this; }
         private:
             typedef quint8 type;
             static const quint8 bitWidth = sizeof(type) * 8;
@@ -372,8 +369,6 @@ namespace OTP::PDU
                 r.data = std::bitset<bitWidth>(temp);
                 return l;
             }
-            options_s& operator=(const options_s& r) {this->data = r.data; return *this; }
-            options_s& operator=(const unsigned int& r) {this->data = static_cast<type>(r); return *this; }
         private:
             typedef quint8 type;
             static const quint8 bitWidth = sizeof(type) * 8;
