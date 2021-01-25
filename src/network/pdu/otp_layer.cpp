@@ -60,7 +60,7 @@ Layer::Layer(
     fromPDUByteArray(layer);
 }
 
-bool Layer::isValid()
+bool Layer::isValid() const
 {
     if (PacketIdent != OTP_PACKET_IDENT) return false;
     if (!VECTOR.contains(Vector)) return false;
@@ -71,14 +71,14 @@ bool Layer::isValid()
     return true;
 }
 
-OTP::PDU::PDUByteArray Layer::toPDUByteArray()
+OTP::PDU::PDUByteArray Layer::toPDUByteArray() const
 {
     PDUByteArray ret;
     return ret
         << PacketIdent
         << Vector
         << PDULength
-        << Footer.Flags()
+        << Footer.constFlags()
         << Footer.getLength()
         << CID
         << Folio
@@ -106,12 +106,12 @@ void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
     if (layer.size() != Layer().toPDUByteArray().size())
         return;
 
-    decltype (Footer.getLength()) FooterLength;
+    decltype (Footer.getLength()) footerLength;
     layer >> PacketIdent
         >> Vector
         >> PDULength
         >> Footer.Flags()
-        >> FooterLength // Currently Ignored
+        >> footerLength
         >> CID
         >> Folio
         >> Page
@@ -119,4 +119,5 @@ void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
         >> Options
         >> Reserved
         >> ComponentName;
+    Footer.setLength(footerLength);
 }
