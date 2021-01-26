@@ -651,7 +651,7 @@ void TEST_OTP::PDU::OTPLayer::componentName()
         {
             Layer layer(vector_t(), pduLength_t(), cid_t(), folio_t(), page_t(), page_t(), value);
             QVERIFY(static_cast<size_t>(layer.getComponentName().size()) <= fieldSize);
-            QCOMPARE(layer.getComponentName(), QString(value.mid(0, fieldSize)));
+            QCOMPARE(layer.getComponentName().toString(), QString(value.mid(0, fieldSize)));
             value += char('A') + n;
         }
     }
@@ -666,7 +666,7 @@ void TEST_OTP::PDU::OTPLayer::componentName()
             pdu.replace(octlet, fieldSize, ba);
             Layer layer(pdu);
             QVERIFY(static_cast<size_t>(layer.getComponentName().size()) <= fieldSize);
-            QCOMPARE(layer.getComponentName(), QString(value.mid(0, fieldSize)));
+            QCOMPARE(layer.getComponentName().toString(), QString(value.mid(0, fieldSize)));
             value += char('A') + n;
         }
     }
@@ -679,7 +679,7 @@ void TEST_OTP::PDU::OTPLayer::componentName()
         {
             layer.setComponentName(value);
             QVERIFY(static_cast<size_t>(layer.getComponentName().size()) <= fieldSize);
-            QCOMPARE(layer.getComponentName(), QString(value.mid(0, fieldSize)));
+            QCOMPARE(layer.getComponentName().toString(), QString(value.mid(0, fieldSize)));
             value += char('A') + n;
         }
     }
@@ -703,6 +703,6 @@ void TEST_OTP::PDU::OTPLayer::componentName()
         PDUByteArray pdu;
         pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
         Layer layer(pdu);
-        QCOMPARE(layer.getComponentName(), example.second.OTPLayer.componentName);
+        QCOMPARE(layer.getComponentName().toString(), example.second.OTPLayer.componentName);
     }
 }

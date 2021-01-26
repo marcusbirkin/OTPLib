@@ -16,9 +16,10 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#ifndef OTP_HPP
-#define OTP_HPP
+#ifndef OTP_H
+#define OTP_H
 
+#include "otp.hpp"
 #include "component.hpp"
 #include "bugs.hpp"
 #include <QCoreApplication>
@@ -28,15 +29,21 @@
 #include "network/messages/messages.hpp"
 #include "network/modules/modules.hpp"
 
+#if defined MAKE_OTP_LIB
+    #define OTP_LIB_EXPORT Q_DECL_EXPORT
+#else
+    #define OTP_LIB_EXPORT Q_DECL_IMPORT
+#endif
+
 namespace OTPLib {
-    QString getVersion();
-    QString getAbout();
-    void displayAbout(QWidget *parent);
+    OTP_LIB_EXPORT QString getVersion();
+    OTP_LIB_EXPORT QString getAbout();
+    OTP_LIB_EXPORT void displayAbout(QWidget *parent);
 }
 
 namespace OTP
 {
-    class Producer : public Component
+    class OTP_LIB_EXPORT Producer : public Component
     {
         Q_OBJECT
     public:
@@ -203,7 +210,7 @@ namespace OTP
 
         /* -Reference Frame */
         public:
-        typedef struct
+        typedef struct ReferenceFrame_t
             {
                 address_t value;
                 timestamp_t timestamp = 0;
@@ -228,7 +235,7 @@ namespace OTP
         PDU::OTPLayer::folio_t TransformMessage_Folio = 0;
     };
 
-    class Consumer : public Component
+    class OTP_LIB_EXPORT Consumer : public Component
     {
         Q_OBJECT
     public:
@@ -365,7 +372,7 @@ namespace OTP
 
         /* -Reference Frame */
         public:
-            typedef struct
+            typedef struct ReferenceFrame_t
             {
                 address_t value;
                 timestamp_t timestamp = 0;
@@ -396,4 +403,4 @@ namespace OTP
     };
 };
 
-#endif // OTP_HPP
+#endif // OTP_H

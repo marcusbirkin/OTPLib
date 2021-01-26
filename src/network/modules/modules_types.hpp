@@ -19,7 +19,7 @@
 #ifndef MODULES_TYPES_HPP
 #define MODULES_TYPES_HPP
 
-#include "bugs.hpp"
+#include "../../bugs.hpp"
 #include <QDateTime>
 #include <bitset>
 #include "../messages/message_types.hpp"

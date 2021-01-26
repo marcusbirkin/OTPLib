@@ -1,14 +1,16 @@
-QT *= network
-CONFIG *= c++17
+TEMPLATE = lib
+DEFINES += MAKE_OTP_LIB
+QT += network
+CONFIG += c++17
 
 include($$PWD/version.pri)
 
-INCLUDEPATH += $$PWD/src
+INCLUDEPATH += $$PWD/src/
 
 SOURCES += \
-    $$PWD/src/otp.cpp \
     $$PWD/src/container.cpp \
     $$PWD/src/component.cpp \
+    $$PWD/src/otp.cpp \
     $$PWD/src/producer.cpp \
     $$PWD/src/consumer.cpp \
     $$PWD/src/types.cpp \

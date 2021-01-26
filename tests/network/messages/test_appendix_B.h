@@ -4,7 +4,7 @@
 #include <QtGlobal>
 #include <QString>
 #include <QSet>
-#include "pdu_const.hpp"
+#include "network/pdu/pdu_const.hpp"
 
 namespace TEST_OTP::MESSAGES::APPENDIX_B {
     typedef struct example_t {

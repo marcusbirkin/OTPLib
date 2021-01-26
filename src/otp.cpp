@@ -22,10 +22,7 @@ namespace OTPLib {
     QString getVersion()
     {
         return QString("%1 (%2 %3 %4)")
-            .arg(OTPLib_GIT_CURRENT_SHA1)
-            .arg(OTPLib_GIT_DATE_DATE)
-            .arg(OTPLib_GIT_DATE_MONTH)
-            .arg(OTPLib_GIT_DATE_YEAR);
+            .arg(OTPLib_GIT_CURRENT_SHA1, OTPLib_GIT_DATE_DATE, OTPLib_GIT_DATE_MONTH, OTPLib_GIT_DATE_YEAR);
     }
 
     QString getAbout()
