@@ -19,7 +19,7 @@
 #ifndef PDU_TYPES_HPP
 #define PDU_TYPES_HPP
 
-#include "bugs.hpp"
+#include "../../bugs.hpp"
 #include <QByteArray>
 #include <QUuid>
 #include <QtEndian>
@@ -39,9 +39,9 @@ namespace OTP::PDU
     class name_t : public QByteArray
     {
     public:
-        name_t() : QByteArray() {}
-        name_t(const QByteArray &ba) : QByteArray(ba) {}
-        name_t(const QString &s) : QByteArray() { fromString(s); }
+        name_t();
+        name_t(const QByteArray &ba);
+        name_t(const QString &s);
         static int maxSize();
         QString toString() const;
         void fromString(const QString &s);
@@ -107,7 +107,9 @@ namespace OTP::PDU
             operator type() const { return footer; }
 
             flags_t &Flags() { return flags; }
+            const flags_t &constFlags() const { return flags; }
             length_t getLength() const { return footer.size(); }
+            void setLength(length_t value) { footer.resize(value); }
         private:
             flags_t flags;
             type footer;

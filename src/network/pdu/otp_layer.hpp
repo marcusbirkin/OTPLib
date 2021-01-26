@@ -43,16 +43,16 @@ public:
     explicit Layer(
             PDUByteArray layer,
             QObject *parent = nullptr);
-    bool isValid();
-    PDUByteArray toPDUByteArray();
+    bool isValid() const;
+    PDUByteArray toPDUByteArray() const;
     void fromPDUByteArray(PDUByteArray layer);
 
     otpIdent_t getPacketIdent() const { return PacketIdent; }
-    const vector_t &getVector() { return Vector; }
+    const vector_t &getVector() const { return Vector; }
     void setVector(vector_t value) { Vector = value; }
     const pduLength_t &getPDULength() const { return PDULength; }
     void setPDULength(pduLength_t value) { PDULength = value; }
-    const auto &getFooter() const { return Footer; }
+    const footer_t &getFooter() const { return Footer; }
     cid_t getCID() const { return CID; }
     void setCID(cid_t value) { CID = value; }
     const folio_t &getFolio() const { return Folio; }

@@ -110,27 +110,36 @@ namespace OTP::PDU {
         return l;
     }
 
-    int name_t::maxSize() { return NAME_LENGTH; }
+    name_t::name_t() : QByteArray() { fill(0, NAME_LENGTH); }
+    name_t::name_t(const QByteArray &ba) : name_t()
+    {
+        replace(0,
+            std::min(static_cast<size_t>(ba.size()), NAME_LENGTH),
+            ba.mid(0, NAME_LENGTH));
+    }
+    name_t::name_t(const QString &s) : name_t() { fromString(s); }
 
+    int name_t::maxSize() { return NAME_LENGTH; };
     QString name_t::toString() const
     {
         return QString::fromUtf8(this->data());
     }
-    void name_t::fromString(const QString &s) {
-        fill(0, static_cast<int>(maxSize()));
-        replace(0, s.toUtf8().size(), s.toUtf8());
+    void name_t::fromString(const QString &s)
+    {
+        replace(0,
+            std::min(static_cast<size_t>(s.toUtf8().size()), NAME_LENGTH),
+            s.toUtf8().mid(0, NAME_LENGTH));
     }
     PDUByteArray& operator<<(PDUByteArray &l, const name_t &r)
     {
-        auto r_copy = r;
-        r_copy.resize(name_t::maxSize());
-        l.append(r_copy);
+        Q_ASSERT(r.size() == NAME_LENGTH);
+        l.append(r);
         return l;
     }
     PDUByteArray& operator>>(PDUByteArray &l, name_t &r)
     {
-        r = l.left(name_t::maxSize());
-        l.remove(0, name_t::maxSize());
+        r = l.left(NAME_LENGTH);
+        l.remove(0, NAME_LENGTH);
         return l;
     }
 

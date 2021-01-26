@@ -25,6 +25,12 @@
 #include <exception>
 #include <memory>
 
+#if defined MAKE_OTP_LIB
+    #define OTP_LIB_EXPORT Q_DECL_EXPORT
+#else
+    #define OTP_LIB_EXPORT Q_DECL_IMPORT
+#endif
+
 namespace OTP
 {
     inline bool operator< (const Q_IPV6ADDR& l, const Q_IPV6ADDR& r){
@@ -39,7 +45,7 @@ namespace OTP
     inline bool operator<=(const Q_IPV6ADDR& l, const Q_IPV6ADDR& r){ return !(l > r); }
     inline bool operator>=(const Q_IPV6ADDR& l, const Q_IPV6ADDR& r){ return !(l < r); }
 
-    class SocketManager final : public QObject
+    class OTP_LIB_EXPORT SocketManager final : public QObject
     {
         Q_OBJECT
     public:
