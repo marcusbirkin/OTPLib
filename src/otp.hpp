@@ -19,7 +19,6 @@
 #ifndef OTP_H
 #define OTP_H
 
-#include "otp.hpp"
 #include "component.hpp"
 #include "bugs.hpp"
 #include <QCoreApplication>

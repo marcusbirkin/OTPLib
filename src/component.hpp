@@ -27,9 +27,15 @@
 #include <QNetworkInterface>
 #include <QAbstractSocket>
 
+#if defined MAKE_OTP_LIB
+    #define OTP_LIB_EXPORT Q_DECL_EXPORT
+#else
+    #define OTP_LIB_EXPORT Q_DECL_IMPORT
+#endif
+
 namespace OTP
 {
-    class Component : public QObject
+    class OTP_LIB_EXPORT Component : public QObject
     {
         Q_OBJECT
     protected:

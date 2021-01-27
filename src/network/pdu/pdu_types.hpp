@@ -26,6 +26,12 @@
 #include <QHostAddress>
 #include <bitset>
 
+#if defined MAKE_OTP_LIB
+    #define OTP_LIB_EXPORT Q_DECL_EXPORT
+#else
+    #define OTP_LIB_EXPORT Q_DECL_IMPORT
+#endif
+
 namespace OTP::PDU
 {
     class PDUByteArray;
@@ -36,7 +42,7 @@ namespace OTP::PDU
     typedef quint16 pduLength_t;
     typedef quint16 vector_t;
 
-    class name_t : public QByteArray
+    class OTP_LIB_EXPORT name_t : public QByteArray
     {
     public:
         name_t();
@@ -135,7 +141,7 @@ namespace OTP::PDU
     }
 
     namespace OTPTransformLayer {
-        class system_t
+        class OTP_LIB_EXPORT system_t
         {
             typedef quint8 type;
         public:
@@ -200,7 +206,7 @@ namespace OTP::PDU
 
 
     namespace OTPPointLayer {
-        class priority_t
+        class OTP_LIB_EXPORT priority_t
         {
             typedef quint8 type;
         public:
@@ -226,7 +232,7 @@ namespace OTP::PDU
             type data;
         };
 
-        class group_t
+        class OTP_LIB_EXPORT group_t
         {
             typedef quint16 type;
         public:
@@ -253,7 +259,7 @@ namespace OTP::PDU
         };
 
 
-        class point_t
+        class OTP_LIB_EXPORT point_t
         {
             typedef quint32 type;
         public:

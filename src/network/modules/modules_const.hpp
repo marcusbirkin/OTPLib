@@ -116,8 +116,8 @@ namespace OTP::MODULES {
                     };
                 }
 
-                QString getUnitString(moduleValue_t value, bool html = false);
-                QString getScaleString(PositionModule_t::scale_t value, bool html = false);
+                QString OTP_LIB_EXPORT getUnitString(moduleValue_t value, bool html = false);
+                QString OTP_LIB_EXPORT getScaleString(PositionModule_t::scale_t value, bool html = false);
             }
 
             namespace RANGES {
@@ -132,13 +132,13 @@ namespace OTP::MODULES {
 
                     {SCALE, {STANDARD::ScaleModule_t::scale_t(-2147483648LL),STANDARD::ScaleModule_t::scale_t(2147483647)}}
                 };
-                range_t getRange(moduleValue_t value);
+                range_t OTP_LIB_EXPORT getRange(moduleValue_t value);
             }
         }
     }
 
     MESSAGES::OTPModuleAdvertisementMessage::list_t const getSupportedModules();
-    module_t::moduleDescription_t const getModuleDescription(PDU::OTPModuleLayer::ident_t ident);
+    module_t::moduleDescription_t const OTP_LIB_EXPORT getModuleDescription(PDU::OTPModuleLayer::ident_t ident);
 }
 
 #endif // MODULES_CONST_HPP

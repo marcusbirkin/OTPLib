@@ -415,7 +415,7 @@ namespace OTP::MODULES {
         };
 
         // 16.5 Scale
-        class ScaleModule_t {
+        class OTP_LIB_EXPORT ScaleModule_t {
         public:
             typedef qint32 scale_t;
             typedef qreal percent_t;

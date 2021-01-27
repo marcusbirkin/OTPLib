@@ -229,7 +229,7 @@ namespace OTP
     };
     typedef std::shared_ptr<pointDetails> pointDetails_t;
 
-    typedef struct address_s {
+    typedef struct OTP_LIB_EXPORT address_s {
         address_s() :
             system(),
             group(),
