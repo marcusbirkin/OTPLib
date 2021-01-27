@@ -9,9 +9,8 @@ TEMPLATE = app
 
 include(network/pdu/test_pdu.pri)
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../src/release/ -lOTPLib
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../src/debug/ -lOTPLib
-else:unix: LIBS += -L$$OUT_PWD/../src/ -lOTPLib
+CONFIG(release, debug|release): LIBS += -L$$PWD/../build/release/ -lOTPLib
+else:CONFIG(debug, debug|release): LIBS += -L$$PWD/../build/debug/ -lOTPLib
 
 INCLUDEPATH += $$PWD/../src
 DEPENDPATH += $$PWD/../src
