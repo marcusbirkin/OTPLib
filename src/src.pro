@@ -68,7 +68,7 @@ HEADERS += \
 CONFIG(debug, debug|release) {
     DESTDIR = $$PWD/../build/debug
 } else {
-    DESTDIR = %%PWD/../build/release
+    DESTDIR = $$PWD/../build/release
 }
 
 # Default rules for deployment.
