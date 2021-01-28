@@ -1,5 +1,5 @@
 # OTPLib
-## A QT library for ANSI E1.59 - 2021 (OTP)<br>Entertainment Technology Object Transform Protocol (OTP)
+## A QT library for ANSI E1.59 - 2021<br>Entertainment Technology Object Transform Protocol (OTP)
 
 Based upon Document Number: CP/2018-1034r5 (Dated 19 January 2021)
 
