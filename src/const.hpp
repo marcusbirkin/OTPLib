@@ -47,8 +47,8 @@ namespace OTP {
     namespace PDU {
         /* Table A-1: Vector Defines */
         // OTP
-        inline const vector_t VECTOR_OTP_TRANSFORM_MESSAGE = 0xFF01;
-        inline const vector_t VECTOR_OTP_ADVERTISEMENT_MESSAGE = 0xFF02;
+        inline const vector_t VECTOR_OTP_TRANSFORM_MESSAGE = 0x0001;
+        inline const vector_t VECTOR_OTP_ADVERTISEMENT_MESSAGE = 0x0002;
         // OTP Transform
         inline const vector_t VECTOR_OTP_POINT = 0x0001;
         // OTP Point
