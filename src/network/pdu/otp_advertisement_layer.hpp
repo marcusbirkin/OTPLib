@@ -37,14 +37,15 @@ public:
     explicit Layer(
             PDUByteArray layer,
             QObject *parent = nullptr);
-    bool isValid();
-    PDUByteArray toPDUByteArray();
+    bool isValid() const;
+    PDUByteArray toPDUByteArray() const;
     void fromPDUByteArray(PDUByteArray layer);
 
-    const pduLength_t &getPDULength() { return PDULength; }
+    const pduLength_t &getPDULength() const { return PDULength; }
     void setPDULength(pduLength_t value) { PDULength = value; }
-    const vector_t &getVector() { return Vector; }
+    const vector_t &getVector() const { return Vector; }
     void setVector(vector_t value) { Vector = value; }
+    const reserved_t &getReserved() const { return Reserved; }
 
 private:
     vector_t Vector;

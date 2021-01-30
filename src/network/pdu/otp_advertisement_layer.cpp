@@ -42,14 +42,14 @@ Layer::Layer(
     fromPDUByteArray(layer);
 }
 
-bool Layer::isValid()
+bool Layer::isValid() const
 {
     if (!VECTOR.contains(Vector)) return false;
     if (PDULength <= toPDUByteArray().size() - LENGTHOFFSET) return false;
     return true;
 }
 
-OTP::PDU::PDUByteArray Layer::toPDUByteArray()
+OTP::PDU::PDUByteArray Layer::toPDUByteArray() const
 {
     PDUByteArray ret;
     return ret << Vector
