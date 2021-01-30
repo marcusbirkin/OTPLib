@@ -1,10 +1,13 @@
 #include "test_otp_layer.hpp"
 #include "test_appendix_B.h"
 
+const size_t PDUOctlet = 0;
+const size_t PDULength = (78+1) - PDUOctlet;
+
 void TEST_OTP::PDU::OTPLayer::initTestCase()
 {
     DefaultPDUByteArray = DefaultLayer.toPDUByteArray();
-    QCOMPARE(DefaultPDUByteArray.size(), 79);
+    QCOMPARE(DefaultPDUByteArray.size(), PDULength);
 }
 
 template <typename T>
@@ -32,7 +35,7 @@ void TEST_OTP::PDU::OTPLayer::isValid()
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QVERIFY2(layer.isValid(),
                  QString(
@@ -54,7 +57,7 @@ void TEST_OTP::PDU::OTPLayer::toFromPDUByteArray()
         for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
         {
             PDUByteArray pdu;
-            pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+            pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
             while (pdu.size())
             {
                 pdu.resize(pdu.size() - 1);
@@ -87,7 +90,7 @@ void TEST_OTP::PDU::OTPLayer::packetIdent()
     }
     {
         PDUByteArray pdu(DefaultPDUByteArray);
-        pdu.replace(octlet, fieldSize, QByteArrayLiteral("\x4f\x54\x50\x2d\x45\x31\x2e\x35\x39\x00\x00\x00"));
+        pdu.replace(octlet - PDUOctlet, fieldSize, QByteArrayLiteral("\x4f\x54\x50\x2d\x45\x31\x2e\x35\x39\x00\x00\x00"));
         Layer layer(pdu);
         QCOMPARE(layer.getPacketIdent(), OTP_PACKET_IDENT);
     }
@@ -96,7 +99,7 @@ void TEST_OTP::PDU::OTPLayer::packetIdent()
         for (auto n = 0; n <= 0xFF; ++n)
         {
             const auto value = QByteArray(fieldSize, char(n));
-            pdu.replace(octlet, fieldSize, value);
+            pdu.replace(octlet - PDUOctlet, fieldSize, value);
             Layer layer(pdu);
             QCOMPARE(layer.getPacketIdent(), value);
         }
@@ -112,7 +115,7 @@ void TEST_OTP::PDU::OTPLayer::packetIdent()
         for (auto n = 0; n <= 0xFF; ++n)
         {
             const auto value = QByteArray(fieldSize, char(n));
-            pdu.replace(octlet, fieldSize, value);
+            pdu.replace(octlet - PDUOctlet, fieldSize, value);
             layer.fromPDUByteArray(pdu);
             QCOMPARE(layer.toPDUByteArray(), pdu);
         }
@@ -122,7 +125,7 @@ void TEST_OTP::PDU::OTPLayer::packetIdent()
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QCOMPARE(layer.getPacketIdent(), OTP_PACKET_IDENT);
     }
@@ -155,7 +158,7 @@ void TEST_OTP::PDU::OTPLayer::vector()
         for (auto value = valueMin; value < valueMax; ++value)
         {
             Layer layer(value);
-            QCOMPARE(layer.getVector(), value);
+           QCOMPARE(layer.getVector(), value);
         }
     }
 
@@ -165,7 +168,7 @@ void TEST_OTP::PDU::OTPLayer::vector()
         for (auto value = valueMin; value < valueMax; ++value)
         {
             PDUByteArray ba; ba << value;
-            pdu.replace(octlet, fieldSize, ba);
+            pdu.replace(octlet - PDUOctlet, fieldSize, ba);
             Layer layer(pdu);
             QCOMPARE(layer.getVector(), value);
         }
@@ -182,13 +185,13 @@ void TEST_OTP::PDU::OTPLayer::vector()
     }
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet, fieldSize, valueMin, valueMax);
+    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QCOMPARE(layer.getVector(), example.second.OTPLayer.vector);
     }
@@ -225,7 +228,7 @@ void TEST_OTP::PDU::OTPLayer::length()
         for (auto value = valueMin; value < valueMax; ++value)
         {
             PDUByteArray ba; ba << value;
-            pdu.replace(octlet, fieldSize, ba);
+            pdu.replace(octlet - PDUOctlet, fieldSize, ba);
             Layer layer(pdu);
             QCOMPARE(layer.getPDULength(), value);
         }
@@ -242,13 +245,13 @@ void TEST_OTP::PDU::OTPLayer::length()
     }
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet, fieldSize, valueMin, valueMax);
+    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QCOMPARE(layer.getPDULength(), example.second.OTPLayer.length);
     }
@@ -277,7 +280,7 @@ void TEST_OTP::PDU::OTPLayer::footerOptions()
         for (auto value = valueMin; value < valueMax; ++value)
         {
             PDUByteArray ba; ba << value;
-            pdu.replace(octlet, fieldSize, ba);
+            pdu.replace(octlet - PDUOctlet, fieldSize, ba);
             Layer layer(pdu);
             QCOMPARE(layer.getFooter().constFlags(), value);
             QVERIFY(!layer.isValid());
@@ -288,13 +291,13 @@ void TEST_OTP::PDU::OTPLayer::footerOptions()
     // N/A
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet, fieldSize, valueMin, valueMax);
+    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QCOMPARE(layer.getFooter().constFlags(), example.second.OTPLayer.footerOptions);
     }
@@ -323,7 +326,7 @@ void TEST_OTP::PDU::OTPLayer::footerLength()
         for (auto value = valueMin; value < valueMax; ++value)
         {
             PDUByteArray ba; ba << value;
-            pdu.replace(octlet, fieldSize, ba);
+            pdu.replace(octlet - PDUOctlet, fieldSize, ba);
             Layer layer(pdu);
             QCOMPARE(layer.getFooter().getLength(), value);
             QVERIFY(!layer.isValid());
@@ -334,13 +337,13 @@ void TEST_OTP::PDU::OTPLayer::footerLength()
     // N/A
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet, fieldSize, valueMin, valueMax);
+    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QCOMPARE(layer.getFooter().getLength(), example.second.OTPLayer.footerLength);
     }
@@ -374,7 +377,7 @@ void TEST_OTP::PDU::OTPLayer::cid()
     {
         PDUByteArray pdu(DefaultPDUByteArray);
         const auto value = QUuid::createUuid().toRfc4122();
-        pdu.replace(octlet, fieldSize, value);
+        pdu.replace(octlet - PDUOctlet, fieldSize, value);
         Layer layer(pdu);
         QCOMPARE(layer.getCID().toRfc4122(), value);
     }
@@ -394,7 +397,7 @@ void TEST_OTP::PDU::OTPLayer::cid()
         for (auto n = 0; n <= 0xFF; ++n)
         {
             const auto value = QByteArray(fieldSize, char(n));
-            pdu.replace(octlet, fieldSize, value);
+            pdu.replace(octlet - PDUOctlet, fieldSize, value);
             layer.fromPDUByteArray(pdu);
             QCOMPARE(layer.toPDUByteArray(), pdu);
         }
@@ -404,7 +407,7 @@ void TEST_OTP::PDU::OTPLayer::cid()
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QCOMPARE(layer.getCID(), example.second.OTPLayer.cid);
     }
@@ -416,6 +419,7 @@ void TEST_OTP::PDU::OTPLayer::folio()
     const size_t fieldSize = 4;
     const quint32 valueMin = std::numeric_limits<quint32>::min();
     const quint32 valueMax = std::numeric_limits<quint32>::max();
+    const quint32 valueStep = valueMax / 0xFFFF;
     QVERIFY(sizeof(DefaultLayer.getFolio()) == fieldSize);
 
     /* Default constructor*/
@@ -426,7 +430,7 @@ void TEST_OTP::PDU::OTPLayer::folio()
 
     /* Constructor with options */
     {
-        for (auto value = valueMin; value < valueMax; value += valueMax / 0xFFFF)
+        for (auto value = valueMin; value < valueMax; value += valueStep)
         {
             Layer layer(vector_t(), pduLength_t(), cid_t(), value);
             QCOMPARE(layer.getFolio(), value);
@@ -437,10 +441,10 @@ void TEST_OTP::PDU::OTPLayer::folio()
     /* Constructor from PDUByteArray */
     {
         PDUByteArray pdu(DefaultPDUByteArray);
-        for (auto value = valueMin; value < valueMax; value += valueMax / 0xFFFF)
+        for (auto value = valueMin; value < valueMax; value += valueStep)
         {
             PDUByteArray ba; ba << value;
-            pdu.replace(octlet, fieldSize, ba);
+            pdu.replace(octlet - PDUOctlet, fieldSize, ba);
             Layer layer(pdu);
             QCOMPARE(layer.getFolio(), value);
         }
@@ -449,7 +453,7 @@ void TEST_OTP::PDU::OTPLayer::folio()
     /* set function */
     {
         Layer layer;
-        for (auto value = valueMin; value < valueMax; value += valueMax / 0xFFFF)
+        for (auto value = valueMin; value < valueMax; value += valueStep)
         {
             layer.setFolio(value);
             QCOMPARE(layer.getFolio(), value);
@@ -457,13 +461,13 @@ void TEST_OTP::PDU::OTPLayer::folio()
     }
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet, fieldSize, valueMin, valueMax, valueMax / 0xFFFF);
+    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax, valueStep);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QCOMPARE(layer.getFolio(), example.second.OTPLayer.folio);
     }
@@ -499,7 +503,7 @@ void TEST_OTP::PDU::OTPLayer::page()
         for (auto value = valueMin; value < valueMax; ++value)
         {
             PDUByteArray ba; ba << value;
-            pdu.replace(octlet, fieldSize, ba);
+            pdu.replace(octlet - PDUOctlet, fieldSize, ba);
             Layer layer(pdu);
             QCOMPARE(layer.getPage(), value);
         }
@@ -516,13 +520,13 @@ void TEST_OTP::PDU::OTPLayer::page()
     }
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet, fieldSize, valueMin, valueMax);
+    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QCOMPARE(layer.getPage(), example.second.OTPLayer.page);
     }
@@ -558,7 +562,7 @@ void TEST_OTP::PDU::OTPLayer::lastPage()
         for (auto value = valueMin; value < valueMax; ++value)
         {
             PDUByteArray ba; ba << value;
-            pdu.replace(octlet, fieldSize, ba);
+            pdu.replace(octlet - PDUOctlet, fieldSize, ba);
             Layer layer(pdu);
             QCOMPARE(layer.getLastPage(), value);
         }
@@ -575,13 +579,13 @@ void TEST_OTP::PDU::OTPLayer::lastPage()
     }
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet, fieldSize, valueMin, valueMax);
+    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QCOMPARE(layer.getLastPage(), example.second.OTPLayer.lastPage);
     }
@@ -593,6 +597,7 @@ void TEST_OTP::PDU::OTPLayer::reserved()
     const size_t fieldSize = 4;
     const quint32 valueMin = std::numeric_limits<quint32>::min();
     const quint32 valueMax = std::numeric_limits<quint32>::max();
+    const quint32 valueStep = valueMax / 0xFFFF;
     QVERIFY(sizeof(DefaultLayer.getReserved()) == fieldSize);
 
     /* Default constructor*/
@@ -607,10 +612,10 @@ void TEST_OTP::PDU::OTPLayer::reserved()
     /* Constructor from PDUByteArray */
     {
         PDUByteArray pdu(DefaultPDUByteArray);
-        for (auto value = valueMin; value < valueMax; value += valueMax / 0xFFFF)
+        for (auto value = valueMin; value < valueMax; value += valueStep)
         {
             PDUByteArray ba; ba << value;
-            pdu.replace(octlet, fieldSize, ba);
+            pdu.replace(octlet - PDUOctlet, fieldSize, ba);
             Layer layer(pdu);
             QCOMPARE(layer.getReserved(), value);
         }
@@ -620,13 +625,13 @@ void TEST_OTP::PDU::OTPLayer::reserved()
     // N/A
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet, fieldSize, valueMin, valueMax, valueMax / 0xFFFF);
+    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax, valueStep);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QCOMPARE(layer.getReserved(), example.second.OTPLayer.reserved);
     }
@@ -651,7 +656,7 @@ void TEST_OTP::PDU::OTPLayer::componentName()
         {
             Layer layer(vector_t(), pduLength_t(), cid_t(), folio_t(), page_t(), page_t(), value);
             QVERIFY(static_cast<size_t>(layer.getComponentName().size()) <= fieldSize);
-            QCOMPARE(layer.getComponentName().toString(), QString(value.mid(0, fieldSize)));
+            QCOMPARE(layer.getComponentName().toString(), QString(value.mid(PDUOctlet, fieldSize)));
             value += char('A') + n;
         }
     }
@@ -663,10 +668,10 @@ void TEST_OTP::PDU::OTPLayer::componentName()
         for (size_t n = 0; n <= fieldSize + 1; ++n)
         {
             PDUByteArray ba; ba << value;
-            pdu.replace(octlet, fieldSize, ba);
+            pdu.replace(octlet - PDUOctlet, fieldSize, ba);
             Layer layer(pdu);
             QVERIFY(static_cast<size_t>(layer.getComponentName().size()) <= fieldSize);
-            QCOMPARE(layer.getComponentName().toString(), QString(value.mid(0, fieldSize)));
+            QCOMPARE(layer.getComponentName().toString(), QString(value.mid(PDUOctlet, fieldSize)));
             value += char('A') + n;
         }
     }
@@ -679,7 +684,7 @@ void TEST_OTP::PDU::OTPLayer::componentName()
         {
             layer.setComponentName(value);
             QVERIFY(static_cast<size_t>(layer.getComponentName().size()) <= fieldSize);
-            QCOMPARE(layer.getComponentName().toString(), QString(value.mid(0, fieldSize)));
+            QCOMPARE(layer.getComponentName().toString(), QString(value.mid(PDUOctlet, fieldSize)));
             value += char('A') + n;
         }
     }
@@ -691,7 +696,7 @@ void TEST_OTP::PDU::OTPLayer::componentName()
         for (auto n = 0; n <= 0xFF; ++n)
         {
             const auto value = QByteArray(fieldSize, char(n));
-            pdu.replace(octlet, fieldSize, value);
+            pdu.replace(octlet - PDUOctlet, fieldSize, value);
             layer.fromPDUByteArray(pdu);
             QCOMPARE(layer.toPDUByteArray(), pdu);
         }
@@ -701,7 +706,7 @@ void TEST_OTP::PDU::OTPLayer::componentName()
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         PDUByteArray pdu;
-        pdu.append(example.first.mid(0, DefaultPDUByteArray.size()));
+        pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
         Layer layer(pdu);
         QCOMPARE(layer.getComponentName().toString(), example.second.OTPLayer.componentName);
     }

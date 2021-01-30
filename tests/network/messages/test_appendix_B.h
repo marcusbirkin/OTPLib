@@ -9,7 +9,7 @@
 namespace TEST_OTP::MESSAGES::APPENDIX_B {
     typedef struct example_t {
         QString TableName;
-        struct OTPLayer{
+        struct OTPLayer {
             quint16 vector;
             quint16 length;
             quint8 footerOptions;
@@ -22,6 +22,21 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             quint32 reserved;
             QString componentName;
         } OTPLayer;
+        struct OTPTransformLayer {
+            quint16 vector;
+            quint16 length;
+            quint8 system;
+            quint64 timestamp;
+            bool option_isFullPointSet;
+            quint32 reserved;
+        } OTPTransformLayer = {
+            .vector = std::numeric_limits<quint16>::max(),
+            .length = std::numeric_limits<quint16>::max(),
+            .system = std::numeric_limits<quint8>::max(),
+            .timestamp = std::numeric_limits<quint64>::max(),
+            .option_isFullPointSet = false,
+            .reserved = std::numeric_limits<quint32>::max()
+        };
     } exampleDetails_t;
 
     // Table B-1 Transform Message Example
@@ -41,7 +56,14 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             0x41,0x75,0x74,0x6f,0x6d,0x61,0x74,0x69,0x6f,0x6e,
             0x2d,0x53,0x65,0x72,0x76,0x65,0x72,0x2d,0x50,0x72,
             0x69,0x6d,0x61,0x72,0x79,0x00,0x00,0x00,0x00,0x00,
-            0x00,0x00 // Automation-Server-Primary
+            0x00,0x00, // Automation-Server-Primary
+        /* OTP Transform Layer */
+        /* Vector */ 0x00,0x01, // VECTOR_OTP_POINT
+        /* Length */ 0x00,0x76, // 118
+        /* System Number */ 0x01, // 1
+        /* Timestamp */  0x00,0x00,0x00,0x00,0xD6,0x93,0xA4,0x00, // 3,600,000,000 μs
+        /* Options */ 0x80, // Bit 7 = 1
+        /* Reserved */ 0x00,0x00,0x00,0x00,
     };
 
     // Table B-2: System Advertisement Message Consumer Example
@@ -61,7 +83,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             0x4c,0x69,0x67,0x68,0x74,0x69,0x6e,0x67,0x2d,0x43,
             0x6f,0x6e,0x73,0x6f,0x6c,0x65,0x2d,0x50,0x72,0x69,
             0x6d,0x61,0x72,0x79,0x00,0x00,0x00,0x00,0x00,0x00,
-            0x00,0x00 // Lighting-Console-Primary
+            0x00,0x00, // Lighting-Console-Primary
     };
 
     // Table B-3: System Advertisement Message Producer Example
@@ -81,7 +103,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             0x41,0x75,0x74,0x6f,0x6d,0x61,0x74,0x69,0x6f,0x6e,
             0x2d,0x53,0x65,0x72,0x76,0x65,0x72,0x2d,0x50,0x72,
             0x69,0x6d,0x61,0x72,0x79,0x00,0x00,0x00,0x00,0x00,
-            0x00,0x00 // Automation-Server-Primary
+            0x00,0x00, // Automation-Server-Primary
     };
 
     // Table B-4: Name Advertisement Message Consumer Example
@@ -101,7 +123,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             0x4c,0x69,0x67,0x68,0x74,0x69,0x6e,0x67,0x2d,0x43,
             0x6f,0x6e,0x73,0x6f,0x6c,0x65,0x2d,0x50,0x72,0x69,
             0x6d,0x61,0x72,0x79,0x00,0x00,0x00,0x00,0x00,0x00,
-            0x00,0x00 // Lighting-Console-Primary
+            0x00,0x00, // Lighting-Console-Primary
     };
 
     // Table B-5: Name Advertisement Message Producer Example
@@ -121,7 +143,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             0x41,0x75,0x74,0x6f,0x6d,0x61,0x74,0x69,0x6f,0x6e,
             0x2d,0x53,0x65,0x72,0x76,0x65,0x72,0x2d,0x50,0x72,
             0x69,0x6d,0x61,0x72,0x79,0x00,0x00,0x00,0x00,0x00,
-            0x00,0x00 // Automation-Server-Primary
+            0x00,0x00, // Automation-Server-Primary
     };
 
     // Table B-6: Module Advertisement Message Example
@@ -141,7 +163,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             0x4c,0x69,0x67,0x68,0x74,0x69,0x6e,0x67,0x2d,0x43,
             0x6f,0x6e,0x73,0x6f,0x6c,0x65,0x2d,0x50,0x72,0x69,
             0x6d,0x61,0x72,0x79,0x00,0x00,0x00,0x00,0x00,0x00,
-            0x00,0x00 // Lighting-Console-Primary
+            0x00,0x00, // Lighting-Console-Primary
     };
 
     const QList<std::pair<QByteArray,exampleDetails_t>> Examples = {
@@ -161,6 +183,14 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .options = 0,
                     .reserved = 0,
                     .componentName = "Automation-Server-Primary",
+                },
+                .OTPTransformLayer = {
+                    .vector = VECTOR_OTP_POINT,
+                    .length = 118,
+                    .system = 1,
+                    .timestamp = 3600000000,
+                    .option_isFullPointSet = true,
+                    .reserved = 0,
                 }
             }
         },
