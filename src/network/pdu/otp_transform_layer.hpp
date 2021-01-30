@@ -39,19 +39,19 @@ public:
     explicit Layer(
             PDUByteArray layer,
             QObject *parent = nullptr);
-    bool isValid();
-    PDUByteArray toPDUByteArray();
+    bool isValid() const;
+    PDUByteArray toPDUByteArray() const;
     void fromPDUByteArray(PDUByteArray layer);
 
-    const pduLength_t &getPDULength() { return PDULength; }
+    const pduLength_t &getPDULength() const { return PDULength; }
     void setPDULength(pduLength_t value) { PDULength = value; }
-    const vector_t &getVector() { return Vector; }
-    const system_t &getSystem() { return System; }
+    const vector_t &getVector() const { return Vector; }
+    const system_t &getSystem() const { return System; }
     void setSystem(system_t value) { System = value; }
-    const timestamp_t &getTimestamp() { return Timestamp; }
+    const timestamp_t &getTimestamp() const { return Timestamp; }
     void setTimestamp(timestamp_t value) { Timestamp = value; }
-    const options_t &getOptions() { return Options; }
-    const reserved_t &getReserved() { return Reserved; }
+    const options_t &getOptions() const { return Options; }
+    const reserved_t &getReserved() const { return Reserved; }
 
 private:
     vector_t Vector;
