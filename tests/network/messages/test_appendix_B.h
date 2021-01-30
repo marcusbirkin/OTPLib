@@ -27,7 +27,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     // Table B-1 Transform Message Example
     static const unsigned char ExampleB_1[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
-        /* Vector */ 0xff,0x01, // VECTOR_OTP_TRANSFORM_MESSAGE
+        /* Vector */ 0x00,0x01, // VECTOR_OTP_TRANSFORM_MESSAGE
         /* Length */ 0x00,0xB9, // 185
         /* Footer Options */ 0x00,
         /* Footer Length */ 0x00,
@@ -47,7 +47,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     // Table B-2: System Advertisement Message Consumer Example
     static const unsigned char ExampleB_2[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
-        /* Vector */ 0xff,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
+        /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
         /* Length */ 0x00,0x50, // 80
         /* Footer Options */ 0x00,
         /* Footer Length */ 0x00,
@@ -67,7 +67,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     // Table B-3: System Advertisement Message Producer Example
     static const unsigned char ExampleB_3[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
-        /* Vector */ 0xff,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
+        /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
         /* Length */ 0x00,0x52, // 82
         /* Footer Options */ 0x00,
         /* Footer Length */ 0x00,
@@ -87,7 +87,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     // Table B-4: Name Advertisement Message Consumer Example
     static const unsigned char ExampleB_4[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
-        /* Vector */ 0xff,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
+        /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
         /* Length */ 0x00,0x50, // 80
         /* Footer Options */ 0x00,
         /* Footer Length */ 0x00,
@@ -107,7 +107,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     // Table B-5: Name Advertisement Message Producer Example
     static const unsigned char ExampleB_5[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
-        /* Vector */ 0xff,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
+        /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
         /* Length */ 0x00,0xEC, // 236
         /* Footer Options */ 0x00,
         /* Footer Length */ 0x00,
@@ -127,7 +127,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     // Table B-6: Module Advertisement Message Example
     static const unsigned char ExampleB_6[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
-        /* Vector */ 0xff,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
+        /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
         /* Length */ 0x00,0x57, // 87
         /* Footer Options */ 0x00,
         /* Footer Length */ 0x00,
