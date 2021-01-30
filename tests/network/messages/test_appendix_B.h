@@ -37,6 +37,15 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             .option_isFullPointSet = false,
             .reserved = std::numeric_limits<quint32>::max()
         };
+        struct OTPAdvertisementLayer {
+            quint16 vector;
+            quint16 length;
+            quint32 reserved;
+        } OTPAdvertisementLayer = {
+            .vector = std::numeric_limits<quint16>::max(),
+            .length = std::numeric_limits<quint16>::max(),
+            .reserved = std::numeric_limits<quint32>::max()
+        };
     } exampleDetails_t;
 
     // Table B-1 Transform Message Example
@@ -84,6 +93,10 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             0x6f,0x6e,0x73,0x6f,0x6c,0x65,0x2d,0x50,0x72,0x69,
             0x6d,0x61,0x72,0x79,0x00,0x00,0x00,0x00,0x00,0x00,
             0x00,0x00, // Lighting-Console-Primary
+        /* OTP Advertisement Layer */
+        /* Vector */ 0x00,0x03, // VECTOR_OTP_ADVERTISEMENT_SYSTEM
+        /* Length */ 0x00,0x0D, // 13
+        /* Reserved */ 0x00,0x00,0x00,0x00,
     };
 
     // Table B-3: System Advertisement Message Producer Example
@@ -104,6 +117,10 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             0x2d,0x53,0x65,0x72,0x76,0x65,0x72,0x2d,0x50,0x72,
             0x69,0x6d,0x61,0x72,0x79,0x00,0x00,0x00,0x00,0x00,
             0x00,0x00, // Automation-Server-Primary
+        /* OTP Advertisement Layer */
+        /* Vector */ 0x00,0x03, // VECTOR_OTP_ADVERTISEMENT_SYSTEM
+        /* Length */ 0x00,0x0F, // 15
+        /* Reserved */ 0x00,0x00,0x00,0x00,
     };
 
     // Table B-4: Name Advertisement Message Consumer Example
@@ -124,6 +141,10 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             0x6f,0x6e,0x73,0x6f,0x6c,0x65,0x2d,0x50,0x72,0x69,
             0x6d,0x61,0x72,0x79,0x00,0x00,0x00,0x00,0x00,0x00,
             0x00,0x00, // Lighting-Console-Primary
+        /* OTP Advertisement Layer */
+        /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_NAME
+        /* Length */ 0x00,0x0D, // 13
+        /* Reserved */ 0x00,0x00,0x00,0x00,
     };
 
     // Table B-5: Name Advertisement Message Producer Example
@@ -144,6 +165,10 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             0x2d,0x53,0x65,0x72,0x76,0x65,0x72,0x2d,0x50,0x72,
             0x69,0x6d,0x61,0x72,0x79,0x00,0x00,0x00,0x00,0x00,
             0x00,0x00, // Automation-Server-Primary
+        /* OTP Advertisement Layer */
+        /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_NAME
+        /* Length */ 0x00,0xA9, // 169
+        /* Reserved */ 0x00,0x00,0x00,0x00,
     };
 
     // Table B-6: Module Advertisement Message Example
@@ -164,6 +189,10 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             0x6f,0x6e,0x73,0x6f,0x6c,0x65,0x2d,0x50,0x72,0x69,
             0x6d,0x61,0x72,0x79,0x00,0x00,0x00,0x00,0x00,0x00,
             0x00,0x00, // Lighting-Console-Primary
+        /* OTP Advertisement Layer */
+        /* Vector */ 0x00,0x01, // VECTOR_OTP_ADVERTISEMENT_MODULE
+        /* Length */ 0x00,0x14, // 20
+        /* Reserved */ 0x00,0x00,0x00,0x00,
     };
 
     const QList<std::pair<QByteArray,exampleDetails_t>> Examples = {
@@ -210,7 +239,12 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .options = 0,
                     .reserved = 0,
                     .componentName = "Lighting-Console-Primary",
-                }
+                },
+                .OTPAdvertisementLayer = {
+                    .vector = VECTOR_OTP_ADVERTISEMENT_SYSTEM,
+                    .length = 13,
+                    .reserved = 0,
+                },
             }
         },
         {
@@ -229,7 +263,12 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .options = 0,
                     .reserved = 0,
                     .componentName = "Automation-Server-Primary",
-                }
+                },
+                .OTPAdvertisementLayer = {
+                    .vector = VECTOR_OTP_ADVERTISEMENT_SYSTEM,
+                    .length = 15,
+                    .reserved = 0,
+                },
             }
         },
         {
@@ -248,7 +287,12 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .options = 0,
                     .reserved = 0,
                     .componentName = "Lighting-Console-Primary",
-                }
+                },
+                .OTPAdvertisementLayer = {
+                    .vector = VECTOR_OTP_ADVERTISEMENT_NAME,
+                    .length = 13,
+                    .reserved = 0,
+                },
             }
         },
         {
@@ -267,7 +311,12 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .options = 0,
                     .reserved = 0,
                     .componentName = "Automation-Server-Primary",
-                }
+                },
+                .OTPAdvertisementLayer = {
+                    .vector = VECTOR_OTP_ADVERTISEMENT_NAME,
+                    .length = 169,
+                    .reserved = 0,
+                },
             }
         },
         {
@@ -286,7 +335,12 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .options = 0,
                     .reserved = 0,
                     .componentName = "Lighting-Console-Primary",
-                }
+                },
+                .OTPAdvertisementLayer = {
+                    .vector = VECTOR_OTP_ADVERTISEMENT_MODULE,
+                    .length = 20,
+                    .reserved = 0,
+                },
             }
         }
     };
