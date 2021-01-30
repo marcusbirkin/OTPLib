@@ -8,3 +8,6 @@ Extract (emphasis added) from E1.59
 
 <b>Data transmitted is intended to coordinate visual and audio elements of a production and should not be
 used for safety critical applications.</b>"
+
+#### CI Status
+[![Build status](https://ci.appveyor.com/api/projects/status/3t7fj6rvo83f35mm/branch/master?svg=true)](https://ci.appveyor.com/project/marcusbirkin/otplib/branch/master)
