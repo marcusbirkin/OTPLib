@@ -58,6 +58,10 @@ void TEST_OTP::PDU::OTPLayer::toFromPDUByteArray()
         {
             PDUByteArray pdu;
             pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
+            {
+                Layer layer(pdu);
+                QVERIFY(layer.isValid());
+            }
             while (pdu.size())
             {
                 pdu.resize(pdu.size() - 1);

@@ -58,13 +58,15 @@ void TEST_OTP::PDU::OTPAdvertisementLayer::toFromPDUByteArray()
     {
         for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
         {
-            PDUByteArray pdu;
-            pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
-            while (pdu.size())
-            {
-                pdu.resize(pdu.size() - 1);
-                Layer layer(pdu);
-                QVERIFY(!layer.isValid());
+            if (example.second.OTPLayer.vector == VECTOR_OTP_ADVERTISEMENT_MESSAGE) {
+                PDUByteArray pdu;
+                pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
+                while (pdu.size())
+                {
+                    pdu.resize(pdu.size() - 1);
+                    Layer layer(pdu);
+                    QVERIFY(!layer.isValid());
+                }
             }
         }
     }
