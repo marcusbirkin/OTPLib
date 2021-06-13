@@ -44,7 +44,37 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
         } OTPAdvertisementLayer = {
             .vector = std::numeric_limits<quint16>::max(),
             .length = std::numeric_limits<quint16>::max(),
-            .reserved = std::numeric_limits<quint32>::max()
+            .reserved = std::numeric_limits<quint32>::max(),
+        };
+        struct OTPNameAdvertisementLayer {
+            quint16 vector;
+            quint16 length;
+            bool option_Response;
+            quint32 reserved;
+            struct description_t {
+                description_t() {
+                    system = std::numeric_limits<quint8>::max();
+                    group = std::numeric_limits<quint16>::max();
+                    point = std::numeric_limits<quint32>::max();
+                    description = QString("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+                }
+                description_t(quint8 system, quint32 group, quint16 point, QString description) :
+                    system(system),
+                    group(group),
+                    point(point),
+                    description(description) {}
+                quint8 system;
+                quint16 group;
+                quint32 point;
+                QString description;
+            };
+            QList<description_t> descriptions;
+        } OTPNameAdvertisementLayer = {
+            .vector = std::numeric_limits<quint16>::max(),
+            .length = std::numeric_limits<quint16>::max(),
+            .option_Response = false,
+            .reserved = std::numeric_limits<quint32>::max(),
+            .descriptions = { OTPNameAdvertisementLayer::description_t() },
         };
     } exampleDetails_t;
 
@@ -145,6 +175,11 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
         /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_NAME
         /* Length */ 0x00,0x0D, // 13
         /* Reserved */ 0x00,0x00,0x00,0x00,
+        /* OTP Name Advertisement Layer */
+        /* Vector */ 0x00,0x01, // VECTOR_OTP_ADVERTISEMENT_NAME_LIST
+        /* Length */ 0x00,0x05, // 5
+        /* Options */ 0x00, // Bit 7 = 0
+        /* Reserved */ 0x00,0x00,0x00,0x00,
     };
 
     // Table B-5: Name Advertisement Message Producer Example
@@ -169,6 +204,44 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
         /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_NAME
         /* Length */ 0x00,0xA9, // 169
         /* Reserved */ 0x00,0x00,0x00,0x00,
+        /* OTP Name Advertisement Layer */
+        /* Vector */ 0x00,0x01, // VECTOR_OTP_ADVERTISEMENT_NAME_LIST
+        /* Length */ 0x00,0xA1, // 161
+        /* Options */ 0x80, // Bit 7 = 1
+        /* Reserved */ 0x00,0x00,0x00,0x00,
+        /* List of Address Point Descriptions */
+            //1, 1000, 1, Slider B
+            0x01,                                       // System
+            0x03,0xE8,                                  // Group
+            0x00,0x00,0x00,0x01,                        // Point
+            0x53,0x6c,0x69,0x64,0x65,0x72,0x20,0x42,
+            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,    // Name
+            // 1, 1000, 201, Revolve A
+            0x01,                                       // System
+            0x03,0xE8,                                  // Group
+            0x00,0x00,0x00,0xC9,                        // Point
+            0x52,0x65,0x76,0x6f,0x6c,0x76,0x65,0x20,
+            0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,    // Name
+            // 5, 1, 1001, Audience Lift A
+            0x05,                                       // System
+            0x00,0x01,                                  // Group
+            0x00,0x00,0x03,0xE9,                        // Point
+            0x41,0x75,0x64,0x69,0x65,0x6e,0x63,0x65,
+            0x20,0x4c,0x69,0x66,0x74,0x20,0x41,0x00,
+            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,    // Name
+            // 5, 1, 1001, Audience Lift B
+            0x05,                                       // System
+            0x00,0x01,                                  // Group
+            0x00,0x00,0x03,0xE9,                        // Point
+            0x41,0x75,0x64,0x69,0x65,0x6e,0x63,0x65,
+            0x20,0x4c,0x69,0x66,0x74,0x20,0x42,0x00,
+            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+            0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,    // Name
     };
 
     // Table B-6: Module Advertisement Message Example
@@ -293,6 +366,13 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .length = 13,
                     .reserved = 0,
                 },
+                .OTPNameAdvertisementLayer = {
+                    .vector = VECTOR_OTP_ADVERTISEMENT_NAME_LIST,
+                    .length = 5,
+                    .option_Response = false,
+                    .reserved = 0,
+                    .descriptions = QList<exampleDetails_t::OTPNameAdvertisementLayer::description_t>(),
+                }
             }
         },
         {
@@ -317,6 +397,22 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .length = 169,
                     .reserved = 0,
                 },
+                .OTPNameAdvertisementLayer = {
+                    .vector = VECTOR_OTP_ADVERTISEMENT_NAME_LIST,
+                    .length = 161,
+                    .option_Response = true,
+                    .reserved = 0,
+                    .descriptions = {
+                        exampleDetails_t::OTPNameAdvertisementLayer::
+                            description_t(1,1000,1,"Slider B"),
+                        exampleDetails_t::OTPNameAdvertisementLayer::
+                            description_t(1,1000,201,"Revolve A"),
+                        exampleDetails_t::OTPNameAdvertisementLayer::
+                            description_t(5,1,1001,"Audience Lift A"),
+                        exampleDetails_t::OTPNameAdvertisementLayer::
+                            description_t(5,1,1001,"Audience Lift B"),
+                    }
+                }
             }
         },
         {
