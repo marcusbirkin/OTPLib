@@ -377,6 +377,9 @@ namespace OTP::PDU
                 r.data = std::bitset<bitWidth>(temp);
                 return l;
             }
+            friend bool operator==(const options_s &l, const options_s &r) {
+                return l.data == r.data;
+            }
         private:
             typedef quint8 type;
             static const quint8 bitWidth = sizeof(type) * 8;
@@ -408,7 +411,7 @@ namespace OTP::PDU
                 Group(Group),
                 Point(Point),
                 PointName(PointName) {}
-            size_t getSize();
+            size_t getSize() const;
             OTPTransformLayer::system_t System;
             OTPPointLayer::group_t Group;
             OTPPointLayer::point_t Point;
@@ -422,7 +425,23 @@ namespace OTP::PDU
             ra << r;
             return la == ra;
         }
-        inline bool operator!=(const addressPointDescriptions_t &l, const addressPointDescriptions_t &r) { return !(l == r); }
+        inline bool operator!=(const addressPointDescriptions_t &l, const addressPointDescriptions_t &r) {
+            return !(l == r);
+        }
+        inline bool operator<(const addressPointDescriptions_t &l, const addressPointDescriptions_t &r) {
+            return (
+              l.System < r.System &&
+              l.Group < r.Group &&
+              l.Point < r.Point
+            );
+        }
+        inline bool operator>(const addressPointDescriptions_t &l, const addressPointDescriptions_t &r) {
+            return (
+              l.System > r.System &&
+              l.Group > r.Group &&
+              l.Point > r.Point
+            );
+        }
         typedef addressPointDescriptions_t item_t;
         typedef QList<item_t> list_t;
         PDUByteArray& operator<<(PDUByteArray &l, const list_t &r);
