@@ -76,6 +76,27 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             .reserved = std::numeric_limits<quint32>::max(),
             .descriptions = { OTPNameAdvertisementLayer::description_t() },
         };
+        struct OTPSystemAdvertisementLayer {
+            quint16 vector;
+            quint16 length;
+            bool option_Response;
+            quint32 reserved;
+            struct systems_t {
+                systems_t() {
+                    system = std::numeric_limits<quint8>::max();
+                }
+                systems_t(quint8 system) :
+                    system(system) {}
+                quint8 system;
+            };
+            QList<systems_t> systems;
+        } OTPSystemAdvertisementLayer = {
+            .vector = std::numeric_limits<quint16>::max(),
+            .length = std::numeric_limits<quint16>::max(),
+            .option_Response = false,
+            .reserved = std::numeric_limits<quint32>::max(),
+            .systems = { OTPSystemAdvertisementLayer::systems_t() },
+        };
     } exampleDetails_t;
 
     // Table B-1 Transform Message Example
@@ -127,6 +148,11 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
         /* Vector */ 0x00,0x03, // VECTOR_OTP_ADVERTISEMENT_SYSTEM
         /* Length */ 0x00,0x0D, // 13
         /* Reserved */ 0x00,0x00,0x00,0x00,
+        /* OTP System Advertisement Layer */
+        /* Vector */ 0x00,0x01, // VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST
+        /* Length */ 0x00,0x05, // 5
+        /* Options */ 0x00, // Bit 7 = 0
+        /* Reserved */ 0x00,0x00,0x00,0x00,
     };
 
     // Table B-3: System Advertisement Message Producer Example
@@ -151,6 +177,14 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
         /* Vector */ 0x00,0x03, // VECTOR_OTP_ADVERTISEMENT_SYSTEM
         /* Length */ 0x00,0x0F, // 15
         /* Reserved */ 0x00,0x00,0x00,0x00,
+        /* OTP System Advertisement Layer */
+        /* Vector */ 0x00,0x01, // VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST
+        /* Length */ 0x00,0x07, // 7
+        /* Options */ 0x80, // Bit 7 = 1
+        /* Reserved */ 0x00,0x00,0x00,0x00,
+        /* List of System Numbers */
+            0x01, // System 1
+            0x05, // System 5
     };
 
     // Table B-4: Name Advertisement Message Consumer Example
