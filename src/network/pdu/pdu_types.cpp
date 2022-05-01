@@ -120,6 +120,13 @@ namespace OTP::PDU {
     name_t::name_t(const QString &s) : name_t() { fromString(s); }
 
     int name_t::maxSize() { return NAME_LENGTH; };
+    bool name_t::isValid() const {
+        if (static_cast<size_t>(toString().toUtf8().size()) > NAME_LENGTH)
+            return false;
+        if (this->data() != toString().toUtf8())
+            return false;
+        return true;
+    }
     QString name_t::toString() const
     {
         return QString::fromUtf8(this->data());
@@ -329,7 +336,7 @@ namespace OTP::PDU {
         }
 
         point_t::point_t() : point_t(RANGES::Point.getMin() - 1) {}
-        bool point_t::isValid() { return RANGES::Point.isValid(data); }
+        bool point_t::isValid() const { return RANGES::Point.isValid(data); }
         point_t point_t::getMin() { return static_cast<point_t>(RANGES::Point.getMin()); }
         point_t point_t::getMax() { return static_cast<point_t>(RANGES::Point.getMax()); }
         PDUByteArray& operator>>(PDUByteArray &l, point_t &r)
@@ -510,6 +517,12 @@ namespace OTP::PDU {
     }
 
     namespace OTPNameAdvertisementLayer  {
+        bool addressPointDescriptions_t::isValid() const {
+            return System.isValid() &&
+                    Group.isValid() &&
+                    Point.isValid() &&
+                    PointName.isValid();
+        }
         size_t addressPointDescriptions_t::getSize() const {
             PDUByteArray temp;
             temp << *this;

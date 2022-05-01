@@ -49,6 +49,7 @@ namespace OTP::PDU
         name_t(const QByteArray &ba);
         name_t(const QString &s);
         static int maxSize();
+        bool isValid() const;
         QString toString() const;
         void fromString(const QString &s);
     };
@@ -268,7 +269,7 @@ namespace OTP::PDU
             explicit point_t(quint64 value) : data(static_cast<type>(value)) {}
             explicit point_t(qint64 value) : data(static_cast<type>(value)) {}
             explicit point_t(qint32 value) : data(static_cast<type>(value)) {}
-            bool isValid();
+            bool isValid() const;
             static point_t getMin();
             static point_t getMax();
             size_t getSize() const { return sizeof(type); }
@@ -411,6 +412,7 @@ namespace OTP::PDU
                 Group(Group),
                 Point(Point),
                 PointName(PointName) {}
+            bool isValid() const;
             size_t getSize() const;
             OTPTransformLayer::system_t System;
             OTPPointLayer::group_t Group;

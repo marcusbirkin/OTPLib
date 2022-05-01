@@ -56,6 +56,8 @@ bool Layer::isValid() const
     if (Options.isResponse())
     {
         if (!RANGES::ListSize.isValid(List.size() * item_t().getSize())) return false;
+        for (const auto &item : List)
+            if (!item.isValid()) return false;
     }
     return true;
 }
@@ -102,6 +104,7 @@ bool Layer::setList(const list_t &value)
 bool Layer::addItem(item_t value)
 {
     if (List.contains(value)) return true;
+    if (!value.isValid()) return false;
     if (RANGES::ListSize.isValid((List.size() + 1) * item_t().getSize())) {
         List.append(value);
         std::sort(List.begin(), List.end());
