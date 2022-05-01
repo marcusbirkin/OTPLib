@@ -370,37 +370,65 @@ void TEST_OTP::PDU::OTPNameAdvertisementLayer::list()
 
     /* Constructor with options */
     {
-        list_t list;
-        for (size_t n = 0; n <= listCountMax; ++n) {
-            item_t item(
-                QRandomGenerator::global()->bounded(
-                    system_t::getMin(),
-                    system_t::getMax()
-                ),
-                QRandomGenerator::global()->bounded(
-                    group_t::getMin(),
-                    group_t::getMax()
-                ),
-                QRandomGenerator::global()->bounded(
-                    point_t::getMin(),
-                    point_t::getMax()
-                ),
-                QString(Q_FUNC_INFO)
-            );
-            list.append(item);
+        {
+            list_t list;
+            for (size_t n = 0; n < listCountMax; ++n) {
+                item_t item(
+                    QRandomGenerator::global()->bounded(
+                        system_t::getMin(),
+                        system_t::getMax() + 1
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        group_t::getMin(),
+                        group_t::getMax() + 1
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        point_t::getMin(),
+                        point_t::getMax() + 1
+                    ),
+                    QString(Q_FUNC_INFO)
+                );
+                list.append(item);
+            }
+            Layer layer(pduLength_t(), options_t(), list);
+            std::sort(list.begin(), list.end());
+            QVERIFY(layer.getList() == list);
         }
-        Layer layer(pduLength_t(), options_t(), list);
-        std::sort(list.begin(), list.end());
-        QVERIFY(layer.getList() == list);
+
+        {
+            list_t list;
+            for (size_t n = 0; n < listCountMax; ++n) {
+                item_t item(
+                    QRandomGenerator::global()->bounded(
+                        system_t::getMax(),
+                        std::numeric_limits<quint8>::max()
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        group_t::getMax(),
+                        std::numeric_limits<quint16>::max()
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        point_t::getMax(),
+                        std::numeric_limits<quint32>::max()
+                    ),
+                    QString(Q_FUNC_INFO)
+                );
+                list.append(item);
+            }
+            Layer layer(pduLength_t(), options_t(), list);
+            QVERIFY(!layer.isValid());
+        }
     }
 
     /* Constructor from PDUByteArray */
     {
         PDUByteArray pdu(DefaultPDUByteArray);
-        for (size_t n = 0; n < listCountMax -1; ++n)
+        for (size_t n = 0; n < listCountMax; ++n) {
             pdu.append(fieldSize, QRandomGenerator::global()->bounded(
                 std::numeric_limits<char>::min(),
                 std::numeric_limits<char>::max()));
+            QVERIFY(pdu.size() >= PDULength_Min && pdu.size() <= PDULength_Max);
+        }
         Layer layer(pdu);
         QVERIFY(layer.toPDUByteArray().mid(octlet) != pdu.mid(octlet));
         options_t options;
@@ -412,10 +440,12 @@ void TEST_OTP::PDU::OTPNameAdvertisementLayer::list()
     /* fromPDUByteArray <> toPDUByteArray */
     {
         PDUByteArray pdu(DefaultPDUByteArray);
-        for (size_t n = 0; n <= listCountMax; ++n)
+        for (size_t n = 0; n < listCountMax; ++n) {
             pdu.append(fieldSize, QRandomGenerator::global()->bounded(
                 std::numeric_limits<char>::min(),
                 std::numeric_limits<char>::max()));
+            QVERIFY(pdu.size() >= PDULength_Min && pdu.size() <= PDULength_Max);
+        }
         Layer layer;
         layer.fromPDUByteArray(pdu);
         QVERIFY(layer.toPDUByteArray().mid(octlet) != pdu.mid(octlet));
@@ -423,7 +453,6 @@ void TEST_OTP::PDU::OTPNameAdvertisementLayer::list()
         options.setResponse();
         layer.setOptions(options);
         QCOMPARE(layer.toPDUByteArray().mid(octlet), pdu.mid(octlet));
-
     }
 
     /* set function */
@@ -434,15 +463,15 @@ void TEST_OTP::PDU::OTPNameAdvertisementLayer::list()
                 item_t item(
                     QRandomGenerator::global()->bounded(
                         system_t::getMin(),
-                        system_t::getMax()
+                        system_t::getMax() + 1
                     ),
                     QRandomGenerator::global()->bounded(
                         group_t::getMin(),
-                        group_t::getMax()
+                        group_t::getMax() + 1
                     ),
                     QRandomGenerator::global()->bounded(
                         point_t::getMin(),
-                        point_t::getMax()
+                        point_t::getMax() + 1
                     ),
                     QString(Q_FUNC_INFO)
                 );
@@ -459,6 +488,31 @@ void TEST_OTP::PDU::OTPNameAdvertisementLayer::list()
             else
                 QVERIFY(layer.getList() != list);
         }
+
+        for (size_t count = 0; count <= listCountMax + 1; ++count) {
+            list_t list;
+            for (size_t n = 0; n < count; ++n) {
+                item_t item(
+                    QRandomGenerator::global()->bounded(
+                        system_t::getMax(),
+                        std::numeric_limits<quint8>::max()
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        group_t::getMax(),
+                        std::numeric_limits<quint16>::max()
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        point_t::getMax(),
+                        std::numeric_limits<quint32>::max()
+                    ),
+                    QString(Q_FUNC_INFO)
+                );
+                list.append(item);
+            }
+            Layer layer;
+            layer.setList(list);
+            QVERIFY(!layer.isValid());
+        }
     }
 
     /* add function */
@@ -469,15 +523,15 @@ void TEST_OTP::PDU::OTPNameAdvertisementLayer::list()
                 item_t item(
                     QRandomGenerator::global()->bounded(
                         system_t::getMin(),
-                        system_t::getMax()
+                        system_t::getMax() + 1
                     ),
                     QRandomGenerator::global()->bounded(
                         group_t::getMin(),
-                        group_t::getMax()
+                        group_t::getMax() + 1
                     ),
                     QRandomGenerator::global()->bounded(
                         point_t::getMin(),
-                        point_t::getMax()
+                        point_t::getMax() + 1
                     ),
                     QString(Q_FUNC_INFO)
                 );
@@ -488,6 +542,28 @@ void TEST_OTP::PDU::OTPNameAdvertisementLayer::list()
                     QVERIFY(!layer.addItem(item));
                     QVERIFY(!layer.getList().contains(item));
                 }
+            }
+        }
+
+        {
+            Layer layer;
+            for (size_t count = 0; count <= listCountMax + 1; ++count) {
+                item_t item(
+                    QRandomGenerator::global()->bounded(
+                        system_t::getMax(),
+                        std::numeric_limits<quint8>::max()
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        group_t::getMax(),
+                        std::numeric_limits<quint16>::max()
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        point_t::getMax(),
+                        std::numeric_limits<quint32>::max()
+                    ),
+                    QString(Q_FUNC_INFO)
+                );
+                QVERIFY(!layer.addItem(item));
             }
         }
     }
