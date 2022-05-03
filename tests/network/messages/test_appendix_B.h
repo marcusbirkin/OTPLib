@@ -97,6 +97,28 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
             .reserved = std::numeric_limits<quint32>::max(),
             .systems = { OTPSystemAdvertisementLayer::systems_t() },
         };
+        struct OTPModuleAdvertisementLayer {
+            quint16 vector;
+            quint16 length;
+            quint32 reserved;
+            struct idents_t {
+                idents_t() {
+                    manufacturerID = std::numeric_limits<quint16>::max();
+                    moduleNumber = std::numeric_limits<quint16>::max();
+                }
+                idents_t(quint16 manufacturerID, quint16 moduleNumber) :
+                    manufacturerID(manufacturerID),
+                    moduleNumber(moduleNumber) {}
+                quint16 manufacturerID;
+                quint16 moduleNumber;
+            };
+            QList<idents_t> idents;
+        } OTPModuleAdvertisementLayer = {
+            .vector = std::numeric_limits<quint16>::max(),
+            .length = std::numeric_limits<quint16>::max(),
+            .reserved = std::numeric_limits<quint32>::max(),
+            .idents = { OTPModuleAdvertisementLayer::idents_t() },
+        };
     } exampleDetails_t;
 
     // Table B-1 Transform Message Example
@@ -300,9 +322,20 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
         /* Vector */ 0x00,0x01, // VECTOR_OTP_ADVERTISEMENT_MODULE
         /* Length */ 0x00,0x14, // 20
         /* Reserved */ 0x00,0x00,0x00,0x00,
+        /* OTP Module Advertisement Layer */
+        /* Vector */ 0x00,0x01, // VECTOR_OTP_ADVERTISEMENT_MODULE_LIST
+        /* Length */ 0x00,0x0C, // 12
+        /* Reserved */ 0x00,0x00,0x00,0x00,
+        /* List of Module Identifiers */
+        // ESTA, Position
+        0x00,0x00,                                  // Manufacturer ID
+        0x00,0x01,                                  // Module Number
+        // ESTA, Rotation
+        0x00,0x00,                                  // Manufacturer ID
+        0x00,0x03,                                  // Module Number
     };
 
-    const QList<std::pair<QByteArray,exampleDetails_t>> Examples = {
+    static const QList<std::pair<QByteArray,exampleDetails_t>> Examples = {
         {
             QByteArray::fromRawData(reinterpret_cast<const char*>(ExampleB_1), sizeof(ExampleB_1)),
             {
@@ -352,6 +385,13 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .length = 13,
                     .reserved = 0,
                 },
+                .OTPSystemAdvertisementLayer = {
+                    .vector = VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST,
+                    .length = 5,
+                    .option_Response = 0,
+                    .reserved = 0,
+                    .systems = QList<exampleDetails_t::OTPSystemAdvertisementLayer::systems_t>(),
+                },
             }
         },
         {
@@ -375,6 +415,13 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .vector = VECTOR_OTP_ADVERTISEMENT_SYSTEM,
                     .length = 15,
                     .reserved = 0,
+                },
+                .OTPSystemAdvertisementLayer = {
+                    .vector = VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST,
+                    .length = 7,
+                    .option_Response = true,
+                    .reserved = 0,
+                    .systems = { 1, 5 },
                 },
             }
         },
@@ -470,6 +517,17 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .vector = VECTOR_OTP_ADVERTISEMENT_MODULE,
                     .length = 20,
                     .reserved = 0,
+                },
+                .OTPModuleAdvertisementLayer = {
+                    .vector = VECTOR_OTP_ADVERTISEMENT_MODULE_LIST,
+                    .length = 12,
+                    .reserved = 0,
+                    .idents = {
+                        exampleDetails_t::OTPModuleAdvertisementLayer::
+                            idents_t(0x0000, 0x0001),
+                        exampleDetails_t::OTPModuleAdvertisementLayer::
+                            idents_t(0x0000, 0x0003)
+                    },
                 },
             }
         }
