@@ -28,10 +28,9 @@ Layer::Layer(QObject *parent) :
     Additional(QByteArray())
 {}
 
-Layer::Layer(
-        ident_t::manufacturerID_t ManufacturerID,
+Layer::Layer(manufacturerID_t ManufacturerID,
         pduLength_t PDULength,
-        ident_t::moduleNumber_t ModuleNumber,
+        moduleNumber_t ModuleNumber,
         QObject *parent) :
     QObject(parent),
     ModuleIdent({ManufacturerID, ModuleNumber}),

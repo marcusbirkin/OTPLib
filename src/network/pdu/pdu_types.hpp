@@ -290,17 +290,51 @@ namespace OTP::PDU
     }
 
     namespace OTPModuleLayer {
+        class manufacturerID_t
+        {
+            typedef quint16 type;
+        public:
+            manufacturerID_t() : data(0xFFFF) {}
+            manufacturerID_t(type value) : data(value) {}
+            explicit manufacturerID_t(quint8 value) : data(static_cast<type>(value)) {}
+            bool isValid(bool allowPrototype = true, bool allowUnkown = true) const;
+            const static manufacturerID_t getMin() { return std::numeric_limits<type>::min(); };
+            const static manufacturerID_t getMax() { return std::numeric_limits<type>::max(); };
+            size_t getSize() const { return sizeof(type); }
+            QString getName() const;
+            operator type() const { return data; }
+            friend PDUByteArray& operator>>(PDUByteArray &l, manufacturerID_t &r);
+        private:
+            type data;
+        };
+
+        class moduleNumber_t
+        {
+            typedef quint16 type;
+        public:
+            constexpr moduleNumber_t() : data(0xFFFF) {}
+            constexpr moduleNumber_t(type value) : data(value) {}
+            explicit moduleNumber_t(quint8 value) : data(static_cast<type>(value)) {}
+            bool isValid() const;
+            const static manufacturerID_t getMin() { return std::numeric_limits<type>::min(); };
+            const static manufacturerID_t getMax() { return std::numeric_limits<type>::max(); };
+            size_t getSize() const { return sizeof(type); }
+            constexpr operator type() const { return data; }
+            friend PDUByteArray& operator>>(PDUByteArray &l, moduleNumber_t &r);
+        private:
+            type data;
+        };
+
         typedef struct ident_s
         {
-            typedef quint16 manufacturerID_t;
-            typedef quint16 moduleNumber_t;
             ident_s() :
-                ManufacturerID(0),
-                ModuleNumber(0) {}
+                ManufacturerID(),
+                ModuleNumber() {}
             ident_s(manufacturerID_t ManufacturerID, moduleNumber_t ModuleNumber) :
                 ManufacturerID(ManufacturerID),
                 ModuleNumber(ModuleNumber) {}
-            size_t getSize();
+            bool isValid() const;
+            size_t getSize() const;
             manufacturerID_t ManufacturerID;
             moduleNumber_t ModuleNumber;
         } ident_t;
@@ -312,8 +346,10 @@ namespace OTP::PDU
                 (l.ManufacturerID == r.ManufacturerID));
         }
         inline bool operator!=(const ident_t &l, const ident_t &r) { return !(l == r); };
-        inline bool operator< (const ident_t& l, const ident_t& r){
-            return ((l.ManufacturerID < r.ManufacturerID) || (l.ModuleNumber < r.ModuleNumber));
+        inline bool operator< (const ident_t& l, const ident_t& r) {
+            if (l.ManufacturerID == r.ManufacturerID)
+                return l.ModuleNumber < r.ModuleNumber;
+            return (l.ManufacturerID < r.ManufacturerID);
         }
 
         class additional_t : public QByteArray
@@ -352,12 +388,6 @@ namespace OTP::PDU
         typedef QList<item_t> list_t;
         PDUByteArray& operator<<(PDUByteArray &l, const list_t &r);
         PDUByteArray& operator>>(PDUByteArray &l, list_t &r);
-        inline bool operator==(const list_t &l, const list_t &r) {
-            if (l.count() != r.count()) return false;
-            for (int n = 0; n < l.count(); n++)
-                if (l.at(n) != r.at(n)) return false;
-            return true;
-        }
     }
 
     namespace OTPNameAdvertisementLayer {

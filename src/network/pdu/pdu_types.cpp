@@ -19,6 +19,7 @@
 #include "pdu_types.hpp"
 #include "pdu_const.hpp"
 #include "../../const.hpp"
+#include "esta_mfcrids.hpp"
 #include <QtEndian>
 
 namespace OTP::PDU {
@@ -380,7 +381,44 @@ namespace OTP::PDU {
     }
 
     namespace OTPModuleLayer {
-        size_t ident_t::getSize() {
+        bool manufacturerID_t::isValid(bool allowPrototype, bool allowUnkown) const {
+            using namespace ESTA::ManufacturerIDs;
+            if (!allowUnkown)
+                if (Manufacturers.find(data) != Manufacturers.end())
+                    return false;
+            if (!allowPrototype)
+                if (data >= PROTOTYPE_BEGIN && data <= PROTOTYPE_END)
+                    return false;
+            return true;
+        }
+        QString manufacturerID_t::getName() const {
+            using namespace ESTA::ManufacturerIDs;
+            const auto it = Manufacturers.find(data);
+            if (it != Manufacturers.end())
+                return QString::fromStdString(it->second);
+            else
+                return QObject::tr("Unknown");
+        }
+        PDUByteArray& operator>>(PDUByteArray &l, manufacturerID_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
+
+        bool moduleNumber_t::isValid() const {
+            return true;
+        }
+        PDUByteArray& operator>>(PDUByteArray &l, moduleNumber_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
+
+        bool ident_t::isValid() const {
+            return ManufacturerID.isValid() &&
+                    ModuleNumber.isValid();
+        }
+        size_t ident_t::getSize() const {
             PDUByteArray temp;
             temp << *this;
             return temp.size();
@@ -498,19 +536,19 @@ namespace OTP::PDU {
     namespace OTPModuleAdvertisementLayer {
         PDUByteArray& operator<<(PDUByteArray &l, const list_t &r)
         {
-            for (const auto &v : r)
+            for (const auto &item : r)
             {
-                l << v;
+                l << item;
             }
             return l;
         }
         PDUByteArray& operator>>(PDUByteArray &l, list_t &r)
         {
-            while (l.size())
+            while (l.size() >= list_t::value_type().getSize())
             {
-                item_t v;
-                l >> v;
-                r << v;
+                list_t::value_type item;
+                l >> item;
+                r.append(item);
             }
             return l;
         }

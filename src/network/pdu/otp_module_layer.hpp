@@ -32,9 +32,9 @@ class Layer : public QObject
 public:
     explicit Layer(QObject *parent = nullptr);
     explicit Layer(
-            ident_t::manufacturerID_t ManufacturerID,
+            manufacturerID_t ManufacturerID,
             pduLength_t PDULength,
-            ident_t::moduleNumber_t ModuleNumber,
+            moduleNumber_t ModuleNumber,
             QObject *parent = nullptr);
     explicit Layer(
             PDUByteArray layer,
@@ -43,8 +43,8 @@ public:
     PDUByteArray toPDUByteArray();
     void fromPDUByteArray(PDUByteArray layer);
 
-    const ident_t::manufacturerID_t &getManufacturerID() { return ModuleIdent.ManufacturerID; }
-    void setManufacturerID(ident_t::manufacturerID_t value) { ModuleIdent.ManufacturerID = value; }
+    const manufacturerID_t &getManufacturerID() { return ModuleIdent.ManufacturerID; }
+    void setManufacturerID(manufacturerID_t value) { ModuleIdent.ManufacturerID = value; }
     static pduLength_t getPDULength(PDUByteArray layer)
     {
         ident_t ModuleIdent;
@@ -55,8 +55,8 @@ public:
     const pduLength_t &getPDULength() { return PDULength; }
     void setPDULength(pduLength_t value) { PDULength = value; }
 
-    const ident_t::moduleNumber_t &getModuleNumber() { return ModuleIdent.ModuleNumber; }
-    void setModuleNumber(ident_t::moduleNumber_t value) { ModuleIdent.ModuleNumber = value; }
+    const moduleNumber_t &getModuleNumber() { return ModuleIdent.ModuleNumber; }
+    void setModuleNumber(moduleNumber_t value) { ModuleIdent.ModuleNumber = value; }
     const additional_t &getAdditional() { return Additional; }
     void setAdditional(QByteArray value) { Additional = value; }
 
