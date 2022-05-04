@@ -1,5 +1,6 @@
 #include "test_otp_layer.hpp"
 #include "test_appendix_B.h"
+#include "test_otp_helper.hpp"
 
 const size_t PDUOctlet = 0;
 const size_t PDULength = (78+1) - PDUOctlet;
@@ -8,24 +9,6 @@ void TEST_OTP::PDU::OTPLayer::initTestCase()
 {
     DefaultPDUByteArray = DefaultLayer.toPDUByteArray();
     QCOMPARE(DefaultPDUByteArray.size(), PDULength);
-}
-
-template <typename T>
-void TEST_OTP::PDU::OTPLayer::helper_toFromPDUByteArray(unsigned int octlet,
-        size_t fieldSize,
-        T valueMin,
-        T valueMax,
-        T forStep)
-{
-    PDUByteArray pdu(DefaultPDUByteArray);
-    Layer layer(pdu);
-    for (auto value = valueMin; value < valueMax; value += forStep)
-    {
-        PDUByteArray ba; ba << value;
-        pdu.replace(octlet, fieldSize, ba);
-        layer.fromPDUByteArray(pdu);
-        QCOMPARE(layer.toPDUByteArray(), pdu);
-    }
 }
 
 void TEST_OTP::PDU::OTPLayer::isValid()
@@ -189,7 +172,9 @@ void TEST_OTP::PDU::OTPLayer::vector()
     }
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
+    TEST_OTP::HELPER::COMPARE_toFromPDUByteArray(
+                DefaultPDUByteArray, Layer(),
+                octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
@@ -249,7 +234,9 @@ void TEST_OTP::PDU::OTPLayer::length()
     }
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
+    TEST_OTP::HELPER::COMPARE_toFromPDUByteArray(
+                DefaultPDUByteArray, Layer(),
+                octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
@@ -295,7 +282,9 @@ void TEST_OTP::PDU::OTPLayer::footerOptions()
     // N/A
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
+    TEST_OTP::HELPER::COMPARE_toFromPDUByteArray(
+                DefaultPDUByteArray, Layer(),
+                octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
@@ -341,7 +330,9 @@ void TEST_OTP::PDU::OTPLayer::footerLength()
     // N/A
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
+    TEST_OTP::HELPER::COMPARE_toFromPDUByteArray(
+                DefaultPDUByteArray, Layer(),
+                octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
@@ -465,7 +456,9 @@ void TEST_OTP::PDU::OTPLayer::folio()
     }
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax, valueStep);
+    TEST_OTP::HELPER::COMPARE_toFromPDUByteArray(
+                DefaultPDUByteArray, Layer(),
+                octlet - PDUOctlet, fieldSize, valueMin, valueMax, valueStep);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
@@ -524,7 +517,9 @@ void TEST_OTP::PDU::OTPLayer::page()
     }
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
+    TEST_OTP::HELPER::COMPARE_toFromPDUByteArray(
+                DefaultPDUByteArray, Layer(),
+                octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
@@ -583,7 +578,9 @@ void TEST_OTP::PDU::OTPLayer::lastPage()
     }
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
+    TEST_OTP::HELPER::COMPARE_toFromPDUByteArray(
+                DefaultPDUByteArray, Layer(),
+                octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
@@ -629,7 +626,9 @@ void TEST_OTP::PDU::OTPLayer::reserved()
     // N/A
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax, valueStep);
+    TEST_OTP::HELPER::COMPARE_toFromPDUByteArray(
+                DefaultPDUByteArray, Layer(),
+                octlet - PDUOctlet, fieldSize, valueMin, valueMax, valueStep);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)

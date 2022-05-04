@@ -1,5 +1,6 @@
 #include "test_otp_module_advertisement_layer.hpp"
 #include "test_appendix_B.h"
+#include "test_otp_helper.hpp"
 
 #include <QRandomGenerator>
 
@@ -11,24 +12,6 @@ void TEST_OTP::PDU::OTPModuleAdvertisementLayer::initTestCase()
 {
     DefaultPDUByteArray = DefaultLayer.toPDUByteArray();
     QCOMPARE(DefaultPDUByteArray.size(), PDULength_Min - 4);
-}
-
-template <typename T>
-void TEST_OTP::PDU::OTPModuleAdvertisementLayer::helper_toFromPDUByteArray(unsigned int octlet,
-        size_t fieldSize,
-        T valueMin,
-        T valueMax,
-        T forStep)
-{
-    PDUByteArray pdu(DefaultPDUByteArray);
-    Layer layer(pdu);
-    for (auto value = valueMin; value < valueMax; value += forStep)
-    {
-        PDUByteArray ba; ba << value;
-        pdu.replace(octlet, fieldSize, ba);
-        layer.fromPDUByteArray(pdu);
-        QCOMPARE(layer.toPDUByteArray(), pdu);
-    }
 }
 
 void TEST_OTP::PDU::OTPModuleAdvertisementLayer::isValid()
@@ -119,7 +102,9 @@ void TEST_OTP::PDU::OTPModuleAdvertisementLayer::vector()
     // N/A
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
+    TEST_OTP::HELPER::COMPARE_toFromPDUByteArray(
+                DefaultPDUByteArray, Layer(),
+                octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
@@ -187,7 +172,9 @@ void TEST_OTP::PDU::OTPModuleAdvertisementLayer::length()
     }
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax);
+    TEST_OTP::HELPER::COMPARE_toFromPDUByteArray(
+                DefaultPDUByteArray, Layer(),
+                octlet - PDUOctlet, fieldSize, valueMin, valueMax);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
@@ -238,7 +225,9 @@ void TEST_OTP::PDU::OTPModuleAdvertisementLayer::reserved()
     // N/A
 
     /* fromPDUByteArray <> toPDUByteArray */
-    helper_toFromPDUByteArray(octlet - PDUOctlet, fieldSize, valueMin, valueMax, valueStep);
+    TEST_OTP::HELPER::COMPARE_toFromPDUByteArray(
+                DefaultPDUByteArray, Layer(),
+                octlet - PDUOctlet, fieldSize, valueMin, valueMax, valueStep);
 
     /* Examples */
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)

@@ -29,13 +29,6 @@ namespace TEST_OTP::PDU
         void reserved();
 
     private:
-        template <typename T>
-        void helper_toFromPDUByteArray(unsigned int octlet,
-                size_t fieldSize,
-                T valueMin,
-                T valueMax,
-                T forStep = 1);
-
         const OTP::PDU::OTPTransformLayer::Layer DefaultLayer;
         PDUByteArray DefaultPDUByteArray;
     };
