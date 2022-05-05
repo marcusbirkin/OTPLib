@@ -190,7 +190,7 @@ namespace OTP
         public:
             timestamp_t getTimestamp() const
             {
-                timestamp_t ret;
+                timestamp_t ret(0);
                 ret = std::max(ret, position.getTimestamp());
                 ret = std::max(ret, positionVelAcc.getTimestamp());
                 ret = std::max(ret, rotation.getTimestamp());
