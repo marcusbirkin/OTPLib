@@ -8,3 +8,6 @@ Extract (emphasis added) from E1.59
 
 <b>Data transmitted is intended to coordinate visual and audio elements of a production and should not be
 used for safety critical applications.</b>"
+
+#### CI Status
+[![Build and Tests](https://github.com/marcusbirkin/OTPLib/actions/workflows/qmake.yml/badge.svg?branch=UnitTests)](https://github.com/marcusbirkin/OTPLib/actions/workflows/qmake.yml)

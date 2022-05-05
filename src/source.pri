@@ -39,6 +39,7 @@ HEADERS += \
     $$PWD/enums.hpp \
     $$PWD/types.hpp \
     $$PWD/socket.hpp \
+    $$PWD/esta_mfcrids.hpp \
     $$PWD/network/pdu/pdu.hpp \
     $$PWD/network/pdu/pdu_const.hpp \
     $$PWD/network/pdu/pdu_types.hpp \

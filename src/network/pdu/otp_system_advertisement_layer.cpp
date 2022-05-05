@@ -32,7 +32,9 @@ Layer::Layer(
     Options(Options),
     Reserved(RESERVED),
     List(List)
-{}
+{
+    std::sort(this->List.begin(), this->List.end());
+}
 
 Layer::Layer(
         OTP::PDU::PDUByteArray layer,
@@ -47,26 +49,28 @@ Layer::Layer(
     fromPDUByteArray(layer);
 }
 
-bool Layer::isValid()
+bool Layer::isValid() const
 {
     if (Vector != VECTOR) return false;
     if (PDULength != toPDUByteArray().size() - LENGTHOFFSET) return false;
     if (Options.isResponse())
     {
         if (!RANGES::ListSize.isValid(List.size() * item_t().getSize())) return false;
+        for (const auto &item : List)
+            if (!item.isValid()) return false;
     }
 
     return true;
 }
 
-OTP::PDU::PDUByteArray Layer::toPDUByteArray()
+OTP::PDU::PDUByteArray Layer::toPDUByteArray() const
 {
     PDUByteArray ret;
     ret << Vector
         << PDULength
         << Options
-        << Reserved
-        << List;
+        << Reserved;
+    if (Options.isResponse()) ret << List;
 
     return ret;
 }
@@ -89,17 +93,23 @@ void Layer::fromPDUByteArray(OTP::PDU::PDUByteArray layer)
         >> List;
 }
 
-bool Layer::setList(list_t value)
+bool Layer::setList(const list_t &value)
 {
+    if (!RANGES::ListSize.isValid(value.size() * item_t().getSize()))
+        return false;
     List = value;
-    return RANGES::ListSize.isValid(List.size() * item_t().getSize());
+    std::sort(List.begin(), List.end());
+    return true;
 }
 
 bool Layer::addItem(item_t value)
 {
     if (List.contains(value)) return true;
-    List.append(value);
-    if (RANGES::ListSize.isValid(List.size() * item_t().getSize())) return true;
-    List.removeLast();
+    if (!value.isValid()) return false;
+    if (RANGES::ListSize.isValid((List.size() + 1) * item_t().getSize())) {
+        List.append(value);
+        std::sort(List.begin(), List.end());
+        return true;
+    }
     return false;
 }

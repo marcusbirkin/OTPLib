@@ -25,17 +25,14 @@
 namespace OTP::MODULES {
     /* Section 16 Standard Modules */
     namespace STANDARD {
-        enum : MODULES::moduleNumber_t
-        {
-            POSITION = 0x0001,
-            POSITION_VELOCITY_ACCELERATION = 0x0002,
-            ROTATION = 0x0003,
-            ROTATION_VELOCITY_ACCELERATION = 0x0004,
-            SCALE = 0x0005,
-            REFERENCE_FRAME = 0x0006
-        };
+        constexpr static const MODULES::moduleNumber_t POSITION = 0x0001;
+        constexpr static const MODULES::moduleNumber_t POSITION_VELOCITY_ACCELERATION = 0x0002;
+        constexpr static const MODULES::moduleNumber_t ROTATION = 0x0003;
+        constexpr static const MODULES::moduleNumber_t ROTATION_VELOCITY_ACCELERATION = 0x0004;
+        constexpr static const MODULES::moduleNumber_t SCALE = 0x0005;
+        constexpr static const MODULES::moduleNumber_t REFERENCE_FRAME = 0x0006;
 
-        static QMap<moduleNumber_t, module_t> modules{
+        static const QMap<moduleNumber_t, module_t> modules{
             {POSITION, {{QObject::tr("ESTA"), QObject::tr("Position")},{ESTA_MANUFACTURER_ID, POSITION}}},
             {POSITION_VELOCITY_ACCELERATION, {{QObject::tr("ESTA"), QObject::tr("Position Velocity/Acceleration")},{ESTA_MANUFACTURER_ID, POSITION_VELOCITY_ACCELERATION}}},
             {ROTATION, {{QObject::tr("ESTA"), QObject::tr("Rotation")}, {ESTA_MANUFACTURER_ID, ROTATION}}},
@@ -62,7 +59,7 @@ namespace OTP::MODULES {
                     constexpr static const QChar degrees = char16_t(0x00B0);
                     constexpr static const QChar micro = char16_t(0x03BC);
 
-                    static QMap<moduleValue_t, QString> baseUnits{
+                    static const QMap<moduleValue_t, QString> baseUnits{
                         {POSITION, QString("m")},
                         {POSITION_VELOCITY, QString("%1m/sec")
                                     .arg(micro)},

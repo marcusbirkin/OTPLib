@@ -57,7 +57,7 @@ namespace OTP::PDU {
 
     /* 10 OTP Module Layer */
     namespace OTPModuleLayer {
-        constexpr size_t LENGTHOFFSET = sizeof(ident_t::manufacturerID_t) + sizeof(pduLength_t);
+        constexpr size_t LENGTHOFFSET = sizeof(manufacturerID_t) + sizeof(pduLength_t);
     }
 
     /* 11 OTP Advertisement Layer */

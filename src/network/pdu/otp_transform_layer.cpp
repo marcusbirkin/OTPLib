@@ -57,7 +57,7 @@ Layer::Layer(
         >> Reserved;
 }
 
-bool Layer::isValid()
+bool Layer::isValid() const
 {
     if (Vector != VECTOR) return false;
     if (PDULength <= toPDUByteArray().size() - LENGTHOFFSET) return false;
@@ -66,7 +66,7 @@ bool Layer::isValid()
     return true;
 }
 
-OTP::PDU::PDUByteArray Layer::toPDUByteArray()
+OTP::PDU::PDUByteArray Layer::toPDUByteArray() const
 {
     PDUByteArray ret;
     return ret << Vector

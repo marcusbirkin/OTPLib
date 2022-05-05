@@ -39,7 +39,7 @@ namespace OTP::MODULES {
         moduleDescription_t description;
         PDU::OTPModuleLayer::ident_t ident;
     } module_t;
-    typedef PDU::OTPModuleLayer::ident_t::moduleNumber_t moduleNumber_t;
+    typedef PDU::OTPModuleLayer::moduleNumber_t moduleNumber_t;
 
     /* Section 16 Standard Modules */
     namespace STANDARD {

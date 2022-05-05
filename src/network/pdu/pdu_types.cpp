@@ -19,6 +19,7 @@
 #include "pdu_types.hpp"
 #include "pdu_const.hpp"
 #include "../../const.hpp"
+#include "esta_mfcrids.hpp"
 #include <QtEndian>
 
 namespace OTP::PDU {
@@ -120,6 +121,13 @@ namespace OTP::PDU {
     name_t::name_t(const QString &s) : name_t() { fromString(s); }
 
     int name_t::maxSize() { return NAME_LENGTH; };
+    bool name_t::isValid() const {
+        if (static_cast<size_t>(toString().toUtf8().size()) > NAME_LENGTH)
+            return false;
+        if (this->data() != toString().toUtf8())
+            return false;
+        return true;
+    }
     QString name_t::toString() const
     {
         return QString::fromUtf8(this->data());
@@ -138,6 +146,8 @@ namespace OTP::PDU {
     }
     PDUByteArray& operator>>(PDUByteArray &l, name_t &r)
     {
+        if (l.size() < NAME_LENGTH)
+            return l;
         r = l.left(NAME_LENGTH);
         l.remove(0, NAME_LENGTH);
         return l;
@@ -327,7 +337,7 @@ namespace OTP::PDU {
         }
 
         point_t::point_t() : point_t(RANGES::Point.getMin() - 1) {}
-        bool point_t::isValid() { return RANGES::Point.isValid(data); }
+        bool point_t::isValid() const { return RANGES::Point.isValid(data); }
         point_t point_t::getMin() { return static_cast<point_t>(RANGES::Point.getMin()); }
         point_t point_t::getMax() { return static_cast<point_t>(RANGES::Point.getMax()); }
         PDUByteArray& operator>>(PDUByteArray &l, point_t &r)
@@ -371,7 +381,44 @@ namespace OTP::PDU {
     }
 
     namespace OTPModuleLayer {
-        size_t ident_t::getSize() {
+        bool manufacturerID_t::isValid(bool allowPrototype, bool allowUnkown) const {
+            using namespace ESTA::ManufacturerIDs;
+            if (!allowUnkown)
+                if (Manufacturers.find(data) != Manufacturers.end())
+                    return false;
+            if (!allowPrototype)
+                if (data >= PROTOTYPE_BEGIN && data <= PROTOTYPE_END)
+                    return false;
+            return true;
+        }
+        QString manufacturerID_t::getName() const {
+            using namespace ESTA::ManufacturerIDs;
+            const auto it = Manufacturers.find(data);
+            if (it != Manufacturers.end())
+                return QString::fromStdString(it->second);
+            else
+                return QObject::tr("Unknown");
+        }
+        PDUByteArray& operator>>(PDUByteArray &l, manufacturerID_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
+
+        bool moduleNumber_t::isValid() const {
+            return true;
+        }
+        PDUByteArray& operator>>(PDUByteArray &l, moduleNumber_t &r)
+        {
+            l >> r.data;
+            return l;
+        }
+
+        bool ident_t::isValid() const {
+            return ManufacturerID.isValid() &&
+                    ModuleNumber.isValid();
+        }
+        size_t ident_t::getSize() const {
             PDUByteArray temp;
             temp << *this;
             return temp.size();
@@ -489,26 +536,32 @@ namespace OTP::PDU {
     namespace OTPModuleAdvertisementLayer {
         PDUByteArray& operator<<(PDUByteArray &l, const list_t &r)
         {
-            for (const auto &v : r)
+            for (const auto &item : r)
             {
-                l << v;
+                l << item;
             }
             return l;
         }
         PDUByteArray& operator>>(PDUByteArray &l, list_t &r)
         {
-            while (l.size())
+            while (l.size() >= list_t::value_type().getSize())
             {
-                item_t v;
-                l >> v;
-                r << v;
+                list_t::value_type item;
+                l >> item;
+                r.append(item);
             }
             return l;
         }
     }
 
     namespace OTPNameAdvertisementLayer  {
-        size_t addressPointDescriptions_t::getSize() {
+        bool addressPointDescriptions_t::isValid() const {
+            return System.isValid() &&
+                    Group.isValid() &&
+                    Point.isValid() &&
+                    PointName.isValid();
+        }
+        size_t addressPointDescriptions_t::getSize() const {
             PDUByteArray temp;
             temp << *this;
             return temp.size();
@@ -535,7 +588,7 @@ namespace OTP::PDU {
         }
         PDUByteArray& operator>>(PDUByteArray &l, list_t &r)
         {
-            while (l.size())
+            while (l.size() >= list_t::value_type().getSize())
             {
                 list_t::value_type item;
                 l >> item;
