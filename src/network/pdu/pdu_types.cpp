@@ -391,14 +391,6 @@ namespace OTP::PDU {
                     return false;
             return true;
         }
-        QString manufacturerID_t::getName() const {
-            using namespace ESTA::ManufacturerIDs;
-            const auto it = Manufacturers.find(data);
-            if (it != Manufacturers.end())
-                return QString::fromStdString(it->second);
-            else
-                return QObject::tr("Unknown");
-        }
         PDUByteArray& operator>>(PDUByteArray &l, manufacturerID_t &r)
         {
             l >> r.data;

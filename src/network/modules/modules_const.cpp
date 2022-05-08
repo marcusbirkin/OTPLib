@@ -17,6 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "modules_const.hpp"
+#include "esta_mfcrids.hpp"
 
 namespace OTP::MODULES {
 
@@ -75,15 +76,17 @@ namespace OTP::MODULES {
         ret.Name = QObject::tr("Unknown");
         ret.Manufactuer = QObject::tr("Unknown");
 
+        using namespace ESTA::ManufacturerIDs;
+        const auto it = Manufacturers.find(ident.ManufacturerID);
+        if (it != Manufacturers.end())
+            ret.Manufactuer = QString::fromStdString(it->second);
+
         switch (ident.ManufacturerID)
         {
             case ESTA_MANUFACTURER_ID:
             {
                 if (STANDARD::modules.contains(ident.ModuleNumber))
-                {
-                    ret.Manufactuer = STANDARD::modules.value(ident.ModuleNumber).description.Manufactuer;
                     ret.Name = STANDARD::modules.value(ident.ModuleNumber).description.Name;
-                }
             } break;
 
             default: break;

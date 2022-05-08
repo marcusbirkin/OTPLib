@@ -14,7 +14,7 @@ namespace ESTA {
 		static const uint16_t PROTOTYPE_BEGIN = 0x7FF0;
 		static const uint16_t PROTOTYPE_END = 0x7FFF;
 
-		std::map<uint16_t, std::string> Manufacturers = {
+        static const std::map<uint16_t, std::string> Manufacturers = {
 			{0x0000, "ESTA"},
 			{0x0000, "PLASA"},
 			{0x0001, "GEE"},

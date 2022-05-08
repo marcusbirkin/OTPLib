@@ -301,7 +301,6 @@ namespace OTP::PDU
             const static manufacturerID_t getMin() { return std::numeric_limits<type>::min(); };
             const static manufacturerID_t getMax() { return std::numeric_limits<type>::max(); };
             size_t getSize() const { return sizeof(type); }
-            QString getName() const;
             operator type() const { return data; }
             friend PDUByteArray& operator>>(PDUByteArray &l, manufacturerID_t &r);
         private:

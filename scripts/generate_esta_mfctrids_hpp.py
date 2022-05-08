@@ -47,7 +47,7 @@ def main():
     headerFile.write('\r\n')
 
     # std::map of <Manufacturer ID, Company String>
-    headerFile.write('\t\t' + 'std::map<uint16_t, std::string> Manufacturers = {' + '\r\n')
+    headerFile.write('\t\t' + 'static const std::map<uint16_t, std::string> Manufacturers = {' + '\r\n')
     for row in table.find_all("tr")[1:]:
         data = [td.get_text() for td in row.find_all("td")]
 
