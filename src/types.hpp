@@ -64,12 +64,13 @@ namespace OTP
         ModuleList_t getModuleList() const {
             return moduleList.keys();
         }
-        void addModuleList(ModuleList_t list) {
-            for (const auto &item : list)
-                moduleList[item] = QDateTime::currentDateTime();
+        void addModuleItem(const ModuleItem_t &item) {
+            moduleList[item] = QDateTime::currentDateTime();
             updateLastSeen();
         }
-        void removeModuleItem(ModuleItem_t item) { moduleList.remove(item); }
+        void removeModuleItem(const ModuleItem_t &item) {
+            moduleList.remove(item);
+        }
         bool isExpired(ModuleItem_t item) const;
         static QString getModuleString(ModuleItem_t item, bool includeManf = true);
 

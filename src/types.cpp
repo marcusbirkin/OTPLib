@@ -70,7 +70,10 @@ namespace OTP
     }
 
     bool pointDetails::isExpired() {
-        return (QDateTime::currentDateTime() > getLastSeen().addMSecs(OTP_TRANSFORM_DATA_LOSS_TIMEOUT.count()));
+        return (QDateTime::currentDateTime()
+                > getLastSeen().addMSecs(
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        OTP_TRANSFORM_DATA_LOSS_TIMEOUT).count()));
     }
 
     bool address_t::isValid()
@@ -84,7 +87,10 @@ namespace OTP
     bool component_s::isExpired(ModuleItem_t item) const
     {
         if (!moduleList.contains(item)) return true;
-        return (QDateTime::currentDateTime() >= moduleList.value(item).addMSecs(OTP_ADVERTISEMENT_TIMEOUT.count()));
+        return (QDateTime::currentDateTime()
+                > moduleList.value(item).addMSecs(
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        OTP_ADVERTISEMENT_TIMEOUT).count()));
     }
 
     QString component_s::getModuleString(ModuleItem_t item, bool includeManf) {

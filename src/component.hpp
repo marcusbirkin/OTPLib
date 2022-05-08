@@ -111,6 +111,15 @@ namespace OTP
             void newLocalSystem(system_t);
             void removedLocalSystem(system_t);
 
+        /* Local Modules */
+        public:
+            moduleList_t getLocalModules() const;
+            void addLocalModule(moduleList_t::value_type);
+            void removeLocalModule(moduleList_t::value_type);
+        signals:
+            void newLocalModule(moduleList_t::value_type);
+            void removedLocalModule(moduleList_t::value_type);
+
         /* Components */
         public:
             QList<cid_t> getComponents() const { return otpNetwork->getComponentList(); }

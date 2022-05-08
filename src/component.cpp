@@ -100,7 +100,7 @@ void Component::setupListener()
 
     sockets.clear();
 
-    for (const auto &connection : listenerConnections)
+    for (const auto &connection : qAsConst(listenerConnections))
         disconnect(connection);
 
     if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
@@ -165,6 +165,27 @@ void Component::removeLocalSystem(system_t system)
 
     otpNetwork->removeSystem(getLocalCID(), system);
     emit removedLocalSystem(system);
+}
+
+/* Local Modules */
+moduleList_t Component::getLocalModules() const
+{
+    return otpNetwork->getModuleList(getLocalCID());
+}
+void Component::addLocalModule(moduleList_t::value_type module)
+{
+    if (!module.isValid()) return;
+
+    if (!getLocalModules().contains(module)) {
+        otpNetwork->addModule(getLocalCID(), module);
+        emit newLocalModule(module);
+    }
+}
+void Component::removeLocalModule(moduleList_t::value_type module)
+{
+    if (!module.isValid()) return;
+    otpNetwork->removeModule(getLocalCID(), module);
+    emit removedLocalModule(module);
 }
 
 /* Groups */

@@ -438,6 +438,9 @@ bool Consumer::receiveOTPTransformMessage(QNetworkDatagram datagram)
                         pointDetails::standardModules_t newStandardModules;
                         for (const auto &moduleLayer : transformMessage.getModuleLayers().values(address))
                         {
+                            otpNetwork->addModule(
+                                        cid,
+                                        {moduleLayer->getManufacturerID(), moduleLayer->getModuleNumber()});
                             switch (moduleLayer->getManufacturerID())
                             {
                                 case ESTA_MANUFACTURER_ID:
@@ -684,8 +687,10 @@ void Consumer::sendOTPModuleAdvertisementMessage()
 {
     using namespace OTP::MESSAGES::OTPModuleAdvertisementMessage;
 
-    // Get list of supported modules
+    // Supported modules
     list_t list = OTP::MODULES::getSupportedModules();
+    for (const auto &item : list)
+        Component::addLocalModule(item);
 
     // Generate messages
     QVector<std::shared_ptr<Message>> folioMessages;

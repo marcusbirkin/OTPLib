@@ -69,21 +69,7 @@ void Container::addComponent(
 
     if (!list.empty())
     {
-        if (!moduleListTimeoutMap.contains(cid)) {
-            moduleListTimeoutMap[cid]= std::make_shared<QTimer>(this);
-            moduleListTimeoutMap[cid]->setSingleShot(true);
-            moduleListTimeoutMap[cid]->start(OTP_ADVERTISEMENT_TIMEOUT);
-            connect(moduleListTimeoutMap[cid].get(), &QTimer::timeout, [this, cid]() {
-                pruneModuleList(cid);
-            });
-        }
-        pruneModuleList(cid);
-
-        if (componentMap.value(cid).getModuleList() != list) {
-            componentMap[cid].addModuleList(list);
-            qDebug() << parent() << "- Updated component (Module List)" << cid << name.toString() << IPAddr;
-            emit updatedComponent(cid, list);
-        }
+        addModule(cid, list);
     }
 }
 
@@ -233,6 +219,52 @@ QList<group_t> Container::getGroupList(cid_t cid, system_t system) const
     return ret;
 }
 
+void Container::addModule(cid_t cid, const moduleList_t &list)
+{
+    for (const auto &item : list)
+        addModule(cid, item);
+}
+void Container::addModule(cid_t cid, const component_s::ModuleItem_t &item)
+{
+    bool newItem = true;
+    if (getModuleList(cid).contains(item))
+        newItem = false;
+    componentMap[cid].addModuleItem(item);
+    if (newItem) {
+        qDebug() << parent() << "- Added module" << item.ManufacturerID << item.ModuleNumber << cid;
+        emit updatedComponent(cid, componentMap[cid].getModuleList());
+    }
+
+    if (!moduleListTimeoutMap.contains(cid)) {
+        moduleListTimeoutMap[cid]= std::make_shared<QTimer>(this);
+        moduleListTimeoutMap[cid]->setSingleShot(true);
+        moduleListTimeoutMap[cid]->start(OTP_ADVERTISEMENT_TIMEOUT);
+        connect(moduleListTimeoutMap[cid].get(), &QTimer::timeout,
+                this, [this, cid]()
+        {
+            pruneModuleList(cid);
+        });
+    }
+
+    pruneModuleList(cid);
+}
+void Container::removeModule(cid_t cid, const component_s::ModuleList_t &list)
+{
+    for (const auto &item : list)
+        removeModule(cid, item);
+}
+void Container::removeModule(cid_t cid, const component_s::ModuleItem_t &item)
+{
+    if (getModuleList(cid).contains(item)) {
+        componentMap[cid].removeModuleItem(item);
+        qDebug() << parent() << "- Removed module" << item.ManufacturerID << item.ModuleNumber << cid;
+        emit updatedComponent(cid, componentMap[cid].getModuleList());
+    }
+}
+moduleList_t Container::getModuleList(cid_t cid) const
+{
+    return componentMap[cid].getModuleList();
+}
 
 void Container::addPoint(cid_t cid, address_t address, priority_t priority)
 {
