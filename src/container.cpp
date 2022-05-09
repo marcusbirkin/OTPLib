@@ -135,7 +135,7 @@ void Container::removeSystem(cid_t cid, system_t system)
     {
         addressMap[cid].remove(system);
         qDebug() << parent() << "- Removed system" << cid << system;
-        removedSystem(cid, system);
+        emit removedSystem(cid, system);
     }
 }
 
