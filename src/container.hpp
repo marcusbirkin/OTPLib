@@ -75,6 +75,11 @@ namespace OTP
         void removePoint(cid_t cid, address_t address);
         void removePoint(cid_t cid, system_t system, group_t group, point_t point)
             { removePoint(cid, {system, group, point}); }
+        void movePoint(cid_t cid, address_t oldAddress, address_t newAddress);
+        void movePoint(cid_t cid,
+                       system_t oldSystem, group_t oldGroup, point_t oldPoint,
+                       system_t newSystem, group_t newGroup, point_t newPoint)
+            { movePoint(cid, {oldSystem, oldGroup, oldPoint}, {newSystem, newGroup, newPoint}); }
         QList<point_t> getPointList(system_t system, group_t group) const;
         QList<point_t> getPointList(cid_t cid, system_t system, group_t group) const;
         pointDetails_t PointDetails(cid_t cid, address_t address)

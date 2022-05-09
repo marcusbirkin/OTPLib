@@ -88,6 +88,11 @@ namespace OTP
             void removeLocalPoint(address_t);
             void removeLocalPoint(system_t system, group_t group, point_t point)
                 { removeLocalPoint(address_t(system, group, point)); }
+            void moveLocalPoint(address_t oldAddress, address_t newAddress);
+            void moveLocalPoint(
+                    system_t oldSystem, group_t oldGroup, point_t oldPoint,
+                    system_t newSystem, group_t newGroup, point_t newPoint)
+                { moveLocalPoint({oldSystem, oldGroup, oldPoint}, {newSystem, newGroup, newPoint}); }
         signals:
             void newLocalPoint(system_t, group_t, point_t);
             void removedLocalPoint(system_t, group_t, point_t);

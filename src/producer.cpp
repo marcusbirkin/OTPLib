@@ -100,6 +100,18 @@ void Producer::removeLocalPoint(address_t address)
 {
     otpNetwork->removePoint(getLocalCID(), address);
 }
+void Producer::moveLocalPoint(address_t oldAddress, address_t newAddress)
+{
+    otpNetwork->movePoint(getLocalCID(), oldAddress, newAddress);
+
+    // Update any self referencing frames
+    auto referenceFrame = getLocalReferenceFrame(newAddress);
+    if (referenceFrame.value == oldAddress) {
+        referenceFrame.value = newAddress;
+        setLocalReferenceFrame(newAddress, referenceFrame);
+    }
+
+}
 QString Producer::getLocalPointName(address_t address) const
 {
     if (!getLocalPoints(address.system, address.group).contains(address.point)) return QString();
@@ -342,7 +354,7 @@ void Producer::setLocalReferenceFrame(address_t address, ReferenceFrame_t refere
 void Producer::setupSender(std::chrono::milliseconds transformRate)
 {
     qDebug() << this << "- Starting OTP Transform Messages" << iface.name();
-    connect(&transformMsgTimer, &QTimer::timeout, [this]() {
+    connect(&transformMsgTimer, &QTimer::timeout, this, [this]() {
         for (const auto &system : getLocalSystems())
             sendOTPTransformMessage(system);
     });

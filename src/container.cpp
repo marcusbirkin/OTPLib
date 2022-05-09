@@ -310,6 +310,24 @@ void Container::removePoint(cid_t cid, address_t address)
     emit removedPoint(cid, address.system, address.group, address.point);
 }
 
+void Container::movePoint(cid_t cid, address_t oldAddress, address_t newAddress)
+{
+    if (!oldAddress.point.isValid()) return;
+    if (!getPointList(oldAddress.system, oldAddress.group).contains(oldAddress.point)) return;
+
+    if (!newAddress.point.isValid()) return;
+    if (getPointList(newAddress.system, newAddress.group).contains(newAddress.point)) return;
+
+    addPoint(cid, newAddress);
+    addressMap[cid][newAddress.system][newAddress.group][newAddress.point] =
+            addressMap[cid][oldAddress.system][oldAddress.group][oldAddress.point];
+    removePoint(cid, oldAddress);
+
+    qDebug() << parent() << "- Moved point" << cid
+             << "From" << oldAddress.system << oldAddress.group << oldAddress.point
+             << "To" << newAddress.system << newAddress.group << newAddress.point;
+}
+
 QList<point_t> Container::getPointList(system_t system, group_t group) const
 {
     QList<point_t> ret;
