@@ -117,7 +117,7 @@ void Component::setupListener()
         qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv6;
     }
 
-    for (const auto &socket : sockets) {
+    for (const auto &socket : qAsConst(sockets)) {
         listenerConnections.append(
                     connect(
                         socket.get(), &SocketManager::newDatagram,
@@ -197,7 +197,7 @@ bool Component::isGroupExpired(cid_t cid, system_t system, group_t group) const
     else
         pointList = getPoints(cid, system, group);
 
-    for (const auto &point : pointList)
+    for (const auto &point : qAsConst(pointList))
     {
         auto address = address_t{system, group, point};
         if (!isPointExpired(cid, address)) return false;
@@ -208,23 +208,11 @@ bool Component::isGroupExpired(cid_t cid, system_t system, group_t group) const
 /* Points */
 QString Component::getPointName(cid_t cid, address_t address) const
 {
+    if (cid.isNull())
+        cid = otpNetwork->getWinningComponent(address);
+
     if (!isPointValid(cid, address)) return QString();
     if (!getPoints(cid, address.system, address.group).contains(address.point)) return QString();
-    if (cid.isNull())
-    {
-        cid_t newestCid;
-        QDateTime lastSeen;
-        for (const auto &cid : getComponents())
-        {
-            auto tempSeen = otpNetwork->PointDetails(cid, address)->getLastSeen();
-            if (tempSeen > lastSeen)
-            {
-                lastSeen = tempSeen;
-                newestCid = cid;
-            }
-        }
-        return otpNetwork->PointDetails(newestCid, address)->getName();
-    }
     return otpNetwork->PointDetails(cid, address)->getName();
 }
 bool Component::isPointValid(address_t address) const
@@ -248,18 +236,7 @@ bool Component::isPointValid(cid_t cid, address_t address) const
 QDateTime Component::getPointLastSeen(cid_t cid, address_t address) const
 {
     if (cid.isNull())
-    {
-        QDateTime ret;
-        for (const auto &cid : getComponents())
-        {
-            if (isPointValid(cid, address))
-            {
-                auto temp = otpNetwork->PointDetails(cid, address)->getLastSeen();
-                if (temp > ret) ret = temp;
-            }
-        }
-        return ret;
-    }
+        cid = otpNetwork->getWinningComponent(address);
 
     if (!isPointValid(cid, address)) return QDateTime();
     return otpNetwork->PointDetails(cid, address)->getLastSeen();
@@ -267,12 +244,7 @@ QDateTime Component::getPointLastSeen(cid_t cid, address_t address) const
 bool Component::isPointExpired(cid_t cid, address_t address) const
 {
     if (cid.isNull())
-    {
-        for (const auto &cid : getComponents())
-            if (isPointValid(cid, address))
-                if (!otpNetwork->PointDetails(cid, address)->isExpired()) return false;
-        return true;
-    }
+        cid = otpNetwork->getWinningComponent(address);
 
     if (!isPointValid(cid, address)) return true;
     return otpNetwork->PointDetails(cid, address)->isExpired();

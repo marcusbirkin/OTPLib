@@ -165,7 +165,7 @@ namespace OTP
                 { return getPointName(cid_t(), address); }
             QString getPointName(system_t system, group_t group, point_t point) const
                 { return getPointName(address_t(system, group, point)); }
-                        QDateTime getPointLastSeen(cid_t, address_t) const;
+            QDateTime getPointLastSeen(cid_t, address_t) const;
             QDateTime getPointLastSeen(cid_t cid, system_t system, group_t group, point_t point) const
                 { return getPointLastSeen(cid, address_t(system, group, point)); }
             QDateTime getPointLastSeen(address_t address) const
