@@ -49,7 +49,7 @@ Consumer::Consumer(
     QTimer *moduleAdvertTimer = new QTimer(this);
     moduleAdvertTimer->setInterval(OTP_ADVERTISEMENT_TIMING);
     moduleAdvertTimer->setSingleShot(false);
-    connect(moduleAdvertTimer, &QTimer::timeout, [this]() {sendOTPModuleAdvertisementMessage();});
+    connect(moduleAdvertTimer, &QTimer::timeout, this, [this]() {sendOTPModuleAdvertisementMessage();});
     moduleAdvertTimer->start();
     sendOTPModuleAdvertisementMessage();
 };
@@ -356,20 +356,7 @@ void Consumer::setupListener()
         addLocalSystem(system);
 }
 
-void Consumer::newDatagram(QNetworkDatagram datagram)
-{
-    /* Unicast packets to self have no senderAddress */
-    if (datagram.senderAddress().isNull()) datagram.setSender(datagram.destinationAddress());
-
-    // Transform Messages
-    if (receiveOTPTransformMessage(datagram)) return;
-
-    // Advertisement Messages
-    if (receiveOTPNameAdvertisementMessage(datagram)) return;
-    if (receiveOTPSystemAdvertisementMessage(datagram)) return;
-}
-
-bool Consumer::receiveOTPTransformMessage(QNetworkDatagram datagram)
+bool Consumer::receiveOTPTransformMessage(const QNetworkDatagram &datagram)
 {
     if (
         ((datagram.destinationAddress().toIPv4Address() >= OTP_Transform_Message_IPv4.toIPv4Address()) &&
@@ -535,7 +522,66 @@ bool Consumer::receiveOTPTransformMessage(QNetworkDatagram datagram)
     return false;
 }
 
-bool Consumer::receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram)
+bool Consumer::receiveOTPModuleAdvertisementMessage(const QNetworkDatagram &datagram)
+{
+    MESSAGES::OTPModuleAdvertisementMessage::Message moduleAdvert(datagram);
+
+    // Module Advertisement Message?
+    if (moduleAdvert.isValid())
+    {
+        auto cid = moduleAdvert.getOTPLayer()->getCID();
+        auto folio = moduleAdvert.getOTPLayer()->getFolio();
+        if (cid != getLocalCID() && !folioMap.checkSequence(
+                    cid,
+                    PDU::VECTOR_OTP_ADVERTISEMENT_MODULE,
+                    folio))
+        {
+            qDebug() << this << "- Out of Sequence OTP Module Advertisement Message Request Received From" << datagram.senderAddress();
+            return true;
+        }
+
+        qDebug() << this << "- OTP Module Advertisement Message Request Received From" << datagram.senderAddress();
+
+        otpNetwork->addComponent(
+                cid,
+                datagram.senderAddress(),
+                moduleAdvert.getOTPLayer()->getComponentName(),
+                component_t::type_t::consumer);
+
+        // Add page to folio map
+        folioMap.addPage(
+                    cid,
+                    PDU::VECTOR_OTP_ADVERTISEMENT_MODULE,
+                    folio,
+                    moduleAdvert.getOTPLayer()->getPage(),
+                    datagram);
+
+        // Last page?
+        if (folioMap.checkAllPages(
+                    cid,
+                    PDU::VECTOR_OTP_ADVERTISEMENT_MODULE,
+                    folio,
+                    moduleAdvert.getOTPLayer()->getLastPage()))
+        {
+            // Process all pages
+            MESSAGES::OTPModuleAdvertisementMessage::list_t list;
+            for (const auto &datagram : folioMap.getDatagrams(cid,
+                        PDU::VECTOR_OTP_ADVERTISEMENT_MODULE,
+                        folio))
+            {
+                MESSAGES::OTPModuleAdvertisementMessage::Message moduleAdvert(datagram);
+                list.append(moduleAdvert.getModuleAdvertisementLayer()->getList());
+            }
+
+            // Add Modules
+            otpNetwork->addModule(cid, list);
+        }
+        return true;
+    }
+    return false;
+}
+
+bool Consumer::receiveOTPNameAdvertisementMessage(const QNetworkDatagram &datagram)
 {
     MESSAGES::OTPNameAdvertisementMessage::Message nameAdvert(datagram);
 
@@ -603,7 +649,7 @@ bool Consumer::receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram)
     return false;
 }
 
-bool Consumer::receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram)
+bool Consumer::receiveOTPSystemAdvertisementMessage(const QNetworkDatagram &datagram)
 {
     MESSAGES::OTPSystemAdvertisementMessage::Message systemAdvert(datagram);
 

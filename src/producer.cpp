@@ -44,21 +44,21 @@ Producer::Producer(
 {    
     // Group Signals
     connect(otpNetwork.get(), &Container::newGroup,
-        [this](cid_t cid, system_t system, group_t group) {
+        this, [this](cid_t cid, system_t system, group_t group) {
             if (cid == getLocalCID()) emit newLocalGroup(system, group);
         });
     connect(otpNetwork.get(), &Container::removedGroup,
-        [this](cid_t cid, system_t system, group_t group) {
+        this, [this](cid_t cid, system_t system, group_t group) {
             if (cid == getLocalCID()) emit removedLocalGroup(system, group);
         });
 
     // Point Signals
     connect(otpNetwork.get(), &Container::newPoint,
-        [this](cid_t cid, system_t system, group_t group, point_t point) {
+        this, [this](cid_t cid, system_t system, group_t group, point_t point) {
             if (cid == getLocalCID()) emit newLocalPoint(system, group, point);
         });
     connect(otpNetwork.get(), &Container::removedPoint,
-        [this](cid_t cid, system_t system, group_t group, point_t point) {
+        this, [this](cid_t cid, system_t system, group_t group, point_t point) {
             if (cid == getLocalCID()) emit removedLocalPoint(system, group, point);
         });
 
@@ -362,126 +362,142 @@ void Producer::setupSender(std::chrono::milliseconds transformRate)
     transformMsgTimer.start(transformRate);
 }
 
-void Producer::newDatagram(QNetworkDatagram datagram)
+bool Producer::receiveOTPTransformMessage(const QNetworkDatagram &datagram)
 {
-    /* Unicast packets to self have no senderAddress */
-    if (datagram.senderAddress().isNull()) datagram.setSender(datagram.destinationAddress());
-
-    //  Advertisement Message
-    if ((datagram.destinationAddress() == OTP_Advertisement_Message_IPv4) ||
+    if ((datagram.destinationAddress() == OTP_Advertisement_Message_IPv4) &&
             (datagram.destinationAddress() == OTP_Advertisement_Message_IPv6))
+        return false; // It's an advertisement message
+
+    // Transform message ignored by Producer
+    return false;
+};
+
+bool Producer::receiveOTPNameAdvertisementMessage(const QNetworkDatagram &datagram)
+{
+    MESSAGES::OTPNameAdvertisementMessage::Message nameAdvert(datagram);
+
+    // Name Advertisement Message?
+    if (nameAdvert.isValid())
     {
-        MESSAGES::OTPModuleAdvertisementMessage::Message moduleAdvert(datagram);
-        MESSAGES::OTPNameAdvertisementMessage::Message nameAdvert(datagram);
-        MESSAGES::OTPSystemAdvertisementMessage::Message systemAdvert(datagram);
-
-        // Module Advertisement Message?
-        if (moduleAdvert.isValid())
+        auto cid = nameAdvert.getOTPLayer()->getCID();
+        if (!folioMap.checkSequence(
+                    cid,
+                    PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
+                    nameAdvert.getOTPLayer()->getFolio()))
         {
-            auto cid = moduleAdvert.getOTPLayer()->getCID();
-            if (!folioMap.checkSequence(
-                        cid,
-                        PDU::VECTOR_OTP_ADVERTISEMENT_MODULE,
-                        moduleAdvert.getOTPLayer()->getFolio()))
-            {
-                qDebug() << this << "- Out of Sequence OTP Module Advertisement Message Request Received From" << datagram.senderAddress();
-                return;
-            }
-
-            qDebug() << this << "- OTP Module Advertisement Message Request Received From" << datagram.senderAddress();
-
-            otpNetwork->addComponent(
-                        cid,
-                        datagram.senderAddress(),
-                        moduleAdvert.getOTPLayer()->getComponentName(),
-                        component_t::type_t::consumer,
-                        moduleAdvert.getModuleAdvertisementLayer()->getList());
-            return;
+            qDebug() << this << "- Out of Sequence OTP Name Advertisement Message Request Received From" << datagram.senderAddress();
+            return true;
         }
 
-        // Name Advertisement Message?
-        if (nameAdvert.isValid())
+        auto type = (nameAdvert.getNameAdvertisementLayer()->getOptions().isResponse()) ? component_t::type_t::produder : component_t::type_t::consumer;
+        if (type == component_t::type_t::produder)
+            qDebug() << this << "- OTP Name Advertisement Message Response Received From" << datagram.senderAddress();
+        else if (type == component_t::type_t::consumer)
+            qDebug() << this << "- OTP Name Advertisement Message Request Received From" << datagram.senderAddress();
+
+        otpNetwork->addComponent(
+                cid,
+                datagram.senderAddress(),
+                nameAdvert.getOTPLayer()->getComponentName(),
+                type);
+
+        if (type == component_t::type_t::consumer)
         {
-            auto cid = nameAdvert.getOTPLayer()->getCID();
-            if (!folioMap.checkSequence(
-                        cid,
-                        PDU::VECTOR_OTP_ADVERTISEMENT_NAME,
-                        nameAdvert.getOTPLayer()->getFolio()))
-            {
-                qDebug() << this << "- Out of Sequence OTP Name Advertisement Message Request Received From" << datagram.senderAddress();
-                return;
-            }
+            auto folio = nameAdvert.getOTPLayer()->getFolio();
+            auto destAddr = datagram.senderAddress();
+            auto timer = getBackoffTimer(OTP_NAME_ADVERTISEMENT_MAX_BACKOFF);
+            connect(timer, &QTimer::timeout, this, [this, destAddr, folio]() {
+                sendOTPNameAdvertisementMessage(destAddr, folio);
+            });
+            timer->start();
+        }
+        return true;
+    }
 
-            auto type = (nameAdvert.getNameAdvertisementLayer()->getOptions().isResponse()) ? component_t::type_t::produder : component_t::type_t::consumer;
-            if (type == component_t::type_t::produder)
-                qDebug() << this << "- OTP Name Advertisement Message Response Received From" << datagram.senderAddress();
-            else if (type == component_t::type_t::consumer)
-                qDebug() << this << "- OTP Name Advertisement Message Request Received From" << datagram.senderAddress();
+    return false;
+}
 
+bool Producer::receiveOTPSystemAdvertisementMessage(const QNetworkDatagram &datagram)
+{
+    MESSAGES::OTPSystemAdvertisementMessage::Message systemAdvert(datagram);
+
+    // System Advertisement Message?
+    if (systemAdvert.isValid() && systemAdvert.getSystemAdvertisementLayer()->getOptions().isRequest())
+    {
+        auto cid = systemAdvert.getOTPLayer()->getCID();
+        if (!folioMap.checkSequence(
+                    cid,
+                    PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
+                    systemAdvert.getOTPLayer()->getFolio()))
+        {
+            qDebug() << this << "- Out of Sequence OTP System Advertisement Message Request Received From" << datagram.senderAddress();
+            return true;
+        }
+
+        auto type = (systemAdvert.getSystemAdvertisementLayer()->getOptions().isResponse()) ? component_t::type_t::produder : component_t::type_t::consumer;
+        if (type == component_t::type_t::produder)
+            qDebug() << this << "- OTP System Advertisement Message Response Received From" << datagram.senderAddress();
+        else if (type == component_t::type_t::consumer)
+            qDebug() << this << "- OTP System Advertisement Message Request Received From" << datagram.senderAddress();
+
+        for (const auto &system : systemAdvert.getSystemAdvertisementLayer()->getList())
+        {
             otpNetwork->addComponent(
                     cid,
                     datagram.senderAddress(),
-                    nameAdvert.getOTPLayer()->getComponentName(),
+                    systemAdvert.getOTPLayer()->getComponentName(),
                     type);
 
-            if (type == component_t::type_t::consumer)
-            {
-                auto folio = nameAdvert.getOTPLayer()->getFolio();
-                auto destAddr = datagram.senderAddress();
-                auto timer = getBackoffTimer(OTP_NAME_ADVERTISEMENT_MAX_BACKOFF);
-                connect(timer, &QTimer::timeout, this, [this, destAddr, folio]() {
-                    sendOTPNameAdvertisementMessage(destAddr, folio);
-                });
-                timer->start();
-            }
-            return;
+            otpNetwork->addSystem(
+                    cid,
+                    system);
         }
 
-        // System Advertisement Message?
-        if (systemAdvert.isValid() && systemAdvert.getSystemAdvertisementLayer()->getOptions().isRequest())
+        if (type == component_t::type_t::consumer)
         {
-            auto cid = systemAdvert.getOTPLayer()->getCID();
-            if (!folioMap.checkSequence(
-                        cid,
-                        PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM,
-                        systemAdvert.getOTPLayer()->getFolio()))
-            {
-                qDebug() << this << "- Out of Sequence OTP System Advertisement Message Request Received From" << datagram.senderAddress();
-                return;
-            }
-
-            auto type = (systemAdvert.getSystemAdvertisementLayer()->getOptions().isResponse()) ? component_t::type_t::produder : component_t::type_t::consumer;
-            if (type == component_t::type_t::produder)
-                qDebug() << this << "- OTP System Advertisement Message Response Received From" << datagram.senderAddress();
-            else if (type == component_t::type_t::consumer)
-                qDebug() << this << "- OTP System Advertisement Message Request Received From" << datagram.senderAddress();
-
-            for (const auto &system : systemAdvert.getSystemAdvertisementLayer()->getList())
-            {
-                otpNetwork->addComponent(
-                        cid,
-                        datagram.senderAddress(),
-                        systemAdvert.getOTPLayer()->getComponentName(),
-                        type);
-
-                otpNetwork->addSystem(
-                        cid,
-                        system);
-            }
-
-            if (type == component_t::type_t::consumer)
-            {
-                auto folio = systemAdvert.getOTPLayer()->getFolio();
-                auto destAddr = datagram.senderAddress();
-                auto timer = getBackoffTimer(OTP_SYSTEM_ADVERTISEMENT_MAX_BACKOFF);
-                connect(timer, &QTimer::timeout, this, [this, destAddr, folio]() {
-                    sendOTPSystemAdvertisementMessage(destAddr, folio);
-                });
-                timer->start();
-            }
-            return;
+            auto folio = systemAdvert.getOTPLayer()->getFolio();
+            auto destAddr = datagram.senderAddress();
+            auto timer = getBackoffTimer(OTP_SYSTEM_ADVERTISEMENT_MAX_BACKOFF);
+            connect(timer, &QTimer::timeout, this, [this, destAddr, folio]() {
+                sendOTPSystemAdvertisementMessage(destAddr, folio);
+            });
+            timer->start();
         }
+        return true;
     }
+
+    return false;
+}
+
+bool Producer::receiveOTPModuleAdvertisementMessage(const QNetworkDatagram &datagram)
+{
+    MESSAGES::OTPModuleAdvertisementMessage::Message moduleAdvert(datagram);
+
+    // Module Advertisement Message?
+    if (moduleAdvert.isValid())
+    {
+        auto cid = moduleAdvert.getOTPLayer()->getCID();
+        if (!folioMap.checkSequence(
+                    cid,
+                    PDU::VECTOR_OTP_ADVERTISEMENT_MODULE,
+                    moduleAdvert.getOTPLayer()->getFolio()))
+        {
+            qDebug() << this << "- Out of Sequence OTP Module Advertisement Message Request Received From" << datagram.senderAddress();
+            return true;
+        }
+
+        qDebug() << this << "- OTP Module Advertisement Message Request Received From" << datagram.senderAddress();
+
+        otpNetwork->addComponent(
+                    cid,
+                    datagram.senderAddress(),
+                    moduleAdvert.getOTPLayer()->getComponentName(),
+                    component_t::type_t::consumer,
+                    moduleAdvert.getModuleAdvertisementLayer()->getList());
+        return true;
+    }
+
+    return false;
 }
 
 QTimer* Producer::getBackoffTimer(std::chrono::milliseconds maximum)

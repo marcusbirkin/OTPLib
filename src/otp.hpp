@@ -225,12 +225,14 @@ namespace OTP
         signals:
             void updatedReferenceFrame(address_t);
 
-    private slots:
-        void newDatagram(QNetworkDatagram datagram) override;
-
     private:
         void setupSender(std::chrono::milliseconds transformRate);
         QTimer transformMsgTimer;
+
+        bool receiveOTPTransformMessage(const QNetworkDatagram &datagram) override;
+        bool receiveOTPModuleAdvertisementMessage(const QNetworkDatagram &datagram) override;
+        bool receiveOTPNameAdvertisementMessage(const QNetworkDatagram &datagram) override;
+        bool receiveOTPSystemAdvertisementMessage(const QNetworkDatagram &datagram) override;
 
         QTimer* getBackoffTimer(std::chrono::milliseconds maximum);
         void sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MESSAGES::OTPNameAdvertisementMessage::folio_t folio);
@@ -388,15 +390,13 @@ namespace OTP
         signals:
             void updatedReferenceFrame(cid_t, address_t);
 
-    private slots:
-        void newDatagram(QNetworkDatagram datagram) override;
-
     private:
         void setupListener() override;
 
-        bool receiveOTPTransformMessage(QNetworkDatagram datagram);
-        bool receiveOTPNameAdvertisementMessage(QNetworkDatagram datagram);
-        bool receiveOTPSystemAdvertisementMessage(QNetworkDatagram datagram);
+        bool receiveOTPTransformMessage(const QNetworkDatagram &datagram) override;
+        bool receiveOTPModuleAdvertisementMessage(const QNetworkDatagram &datagram) override;
+        bool receiveOTPNameAdvertisementMessage(const QNetworkDatagram &datagram) override;
+        bool receiveOTPSystemAdvertisementMessage(const QNetworkDatagram &datagram) override;
 
         void sendOTPModuleAdvertisementMessage();
         PDU::OTPLayer::folio_t ModuleAdvertisementMessage_Folio = 0;

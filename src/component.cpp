@@ -49,11 +49,11 @@ Component::Component(
 
     // System Signals
     connect(otpNetwork.get(), &Container::newSystem,
-        [this](cid_t cid, system_t system) {
+        this, [this](cid_t cid, system_t system) {
             if (cid == getLocalCID()) emit newLocalSystem(system);
         });
     connect(otpNetwork.get(), &Container::removedSystem,
-        [this](cid_t cid, system_t system) {
+        this, [this](cid_t cid, system_t system) {
             if (cid == getLocalCID()) emit removedLocalSystem(system);
         });
     connect(otpNetwork.get(), &Container::newSystem, this, &Component::newSystem);
@@ -127,6 +127,19 @@ void Component::setupListener()
                         socket.get(), &SocketManager::stateChanged,
                         this, &Component::stateChangedNetworkInterface));
     }
+}
+void Component::newDatagram(QNetworkDatagram datagram)
+{
+    /* Unicast packets to self have no senderAddress */
+    if (datagram.senderAddress().isNull()) datagram.setSender(datagram.destinationAddress());
+
+    // Transform Messages
+    if (receiveOTPTransformMessage(datagram)) return;
+
+    // Advertisement Messages
+    if (receiveOTPModuleAdvertisementMessage(datagram)) return;
+    if (receiveOTPNameAdvertisementMessage(datagram)) return;
+    if (receiveOTPSystemAdvertisementMessage(datagram)) return;
 }
 
 /* Local CID */

@@ -72,7 +72,14 @@ namespace OTP
         void stateChangedNetworkInterface(QAbstractSocket::SocketState);
 
     private slots:
-        virtual void newDatagram(QNetworkDatagram) {}
+        virtual void newDatagram(QNetworkDatagram);
+
+    private:
+        virtual bool receiveOTPTransformMessage(const QNetworkDatagram &datagram) = 0;
+        virtual bool receiveOTPModuleAdvertisementMessage(const QNetworkDatagram &datagram)  = 0;
+        virtual bool receiveOTPNameAdvertisementMessage(const QNetworkDatagram &datagram) = 0;
+        virtual bool receiveOTPSystemAdvertisementMessage(const QNetworkDatagram &datagram) = 0;
+
     protected:
         folioMap_t folioMap;
 
