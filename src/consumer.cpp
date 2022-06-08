@@ -52,6 +52,13 @@ Consumer::Consumer(
     connect(moduleAdvertTimer, &QTimer::timeout, this, [this]() {sendOTPModuleAdvertisementMessage();});
     moduleAdvertTimer->start();
     sendOTPModuleAdvertisementMessage();
+
+    // Removed components
+    connect(otpNetwork.get(), &Container::removedComponent, this,
+            [this](cid_t cid)
+    {
+        folioMap.removeComponent(cid);
+    });
 };
 
 void Consumer::UpdateOTPMap()

@@ -69,6 +69,15 @@ namespace OTP
         return folioMap[key].datagrams;
     }
 
+    void folioMap_s::removeComponent(cid_t cid)
+    {
+        const auto keys = folioMap.keys();
+        for (const auto &key : keys) {
+            if (key.first == cid)
+                folioMap.remove(key);
+        }
+    }
+
     bool pointDetails::isExpired() const {
         return (QDateTime::currentDateTime()
                 > getLastSeen().addMSecs(

@@ -154,6 +154,8 @@ namespace OTP
                 vector_t vector,
                 OTPLayer::folio_t folio);
 
+        void removeComponent(cid_t);
+
     private:
         typedef std::pair<cid_t, std::pair<system_t, vector_t>> key_t;
         struct folioMapPrivate_s {
