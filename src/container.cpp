@@ -24,12 +24,15 @@ using namespace OTP;
 
 Container::Container(QObject *parent) :
     QObject(parent)
-{}
+{
+    componentTimeout.start(OTP_COMPONENT_TIMEOUT);
+    connect(&componentTimeout, &QTimer::timeout, this, &Container::pruneComponentList);
+}
 
 void Container::clearComponents()
 {
     for (const auto &cid : getComponentList())
-        removedComponent(cid);
+        removeComponent(cid);
 }
 
 void Container::addComponent(
@@ -71,14 +74,19 @@ void Container::addComponent(
     {
         addModule(cid, list);
     }
+
+    componentMap[cid].updateLastSeen();
 }
 
 void Container::removeComponent(const cid_t &cid)
 {
     if (componentMap.contains(cid))
     {
+        const auto name = componentMap.value(cid).getName().toString();
+        const auto IPAddr = componentMap.value(cid).getIPAddr();
         componentMap.remove(cid);
-        emit removeComponent(cid);
+        qDebug() << parent() << "- Removed component" << cid << name << IPAddr;
+        emit removedComponent(cid);
     }
 }
 
@@ -270,6 +278,7 @@ void Container::addPoint(cid_t cid, address_t address, priority_t priority)
 {
     if (!address.point.isValid()) return;
     if (!priority.isValid()) return;
+    componentMap[cid].updateLastSeen();
 
     addGroup(cid, address.system, address.group);
     bool existing = getPointList(cid, address.system, address.group).contains(address.point);
@@ -375,4 +384,14 @@ void Container::pruneModuleList(cid_t cid)
         emit updatedComponent(cid, componentMap.value(cid).getModuleList());
 
     moduleListTimeoutMap[cid]->start(OTP_ADVERTISEMENT_TIMEOUT); // (re)start the timer
+}
+
+void Container::pruneComponentList()
+{
+    const auto componentList = getComponentList();
+    for (const auto &cid : componentList)
+        if (componentMap[cid].isExpired()) {
+            qDebug() << parent() << "- Expired Component" << cid;
+            removeComponent(cid);
+        }
 }

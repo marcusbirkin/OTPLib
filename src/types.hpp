@@ -41,8 +41,10 @@ namespace OTP
     typedef OTP::PDU::OTPTransformLayer::timestamp_t timestamp_t;
     typedef OTP::MESSAGES::OTPModuleAdvertisementMessage::list_t moduleList_t;
     typedef OTP::MODULES::STANDARD::axis_t axis_t;
+    class Container;
 
     typedef struct component_s {
+        friend Container;
     public:
         component_s() {}
         typedef enum type_e
@@ -74,10 +76,13 @@ namespace OTP
         bool isExpired(ModuleItem_t item) const;
         static QString getModuleString(ModuleItem_t item, bool includeManf = true);
 
-        QDateTime getLastSeen() const { return lastSeen; }
+        QDateTime getLastSeen() const { return lastSeen; };
+        bool isExpired() const;
+
+    protected:
+        void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
 
     private:
-        void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
         name_t name;
         QHostAddress ipAddr;
         QDateTime lastSeen;
@@ -182,7 +187,7 @@ namespace OTP
 
         QDateTime getLastSeen() const { return std::max(lastSeen, standardModules.getLastSeen()); }
         void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
-        bool isExpired();
+        bool isExpired() const;
 
         priority_t getPriority() const { return priority; }
         void setPriority(priority_t value) { priority = value; updateLastSeen(); }

@@ -118,10 +118,12 @@ namespace OTP
 
     private slots:
         void pruneModuleList(cid_t cid);
+        void pruneComponentList();
 
     private:
         addressMap_t addressMap;
         componentMap_t componentMap;
+        QTimer componentTimeout;
         QMap<cid_t, std::shared_ptr<QTimer>> moduleListTimeoutMap;
         QMap<address_t, std::shared_ptr<QTimer>> pointTimeoutMap;
     };

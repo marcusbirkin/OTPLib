@@ -69,7 +69,7 @@ namespace OTP
         return folioMap[key].datagrams;
     }
 
-    bool pointDetails::isExpired() {
+    bool pointDetails::isExpired() const {
         return (QDateTime::currentDateTime()
                 > getLastSeen().addMSecs(
                     std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -91,6 +91,13 @@ namespace OTP
                 > moduleList.value(item).addMSecs(
                     std::chrono::duration_cast<std::chrono::milliseconds>(
                         OTP_ADVERTISEMENT_TIMEOUT).count()));
+    }
+
+    bool component_s::isExpired() const {
+        return (QDateTime::currentDateTime()
+                > getLastSeen().addMSecs(
+                    std::chrono::duration_cast<std::chrono::milliseconds>(
+                        OTP_COMPONENT_TIMEOUT).count()));
     }
 
     QString component_s::getModuleString(ModuleItem_t item, bool includeManf) {
