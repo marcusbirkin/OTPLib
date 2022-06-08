@@ -131,6 +131,7 @@ namespace OTP
         public:
             QList<cid_t> getComponents() const { return otpNetwork->getComponentList(); }
             component_t getComponent(cid_t cid) const { return otpNetwork->getComponent(cid); }
+            bool isComponentExpired(cid_t cid) const;
         signals:
             void newComponent(cid_t);
             void removedComponent(cid_t);

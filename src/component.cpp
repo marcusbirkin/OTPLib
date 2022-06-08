@@ -201,6 +201,12 @@ void Component::removeLocalModule(moduleList_t::value_type module)
     emit removedLocalModule(module);
 }
 
+/* Components */
+bool Component::isComponentExpired(cid_t cid) const
+{
+    return otpNetwork->getComponent(cid).isExpired();
+}
+
 /* Groups */
 bool Component::isGroupExpired(cid_t cid, system_t system, group_t group) const
 {
