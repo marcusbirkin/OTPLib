@@ -261,7 +261,7 @@ namespace OTP::MODULES {
                 rotation_t() : data(0) {}
                 rotation_t(type value) : data(value) {}
 
-                operator type() {
+                operator type() const {
                     return data;
                 }
 

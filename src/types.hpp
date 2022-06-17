@@ -220,6 +220,50 @@ namespace OTP
                 return ret;
             }
 
+            template <class T>
+            T &getModule() {
+                using namespace MODULES::STANDARD;
+                if constexpr (std::is_base_of<PositionModule_t, T>())
+                    return position;
+
+                if constexpr (std::is_base_of<PositionVelAccModule_t, T>())
+                    return positionVelAcc;
+
+                if constexpr (std::is_base_of<RotationModule_t, T>())
+                    return rotation;
+
+                if constexpr (std::is_base_of<RotationVelAccModule_t, T>())
+                    return rotationVelAcc;
+
+                if constexpr (std::is_base_of<ScaleModule_t, T>())
+                    return scale;
+
+                if constexpr (std::is_base_of<ReferenceFrameModule_t, T>())
+                    return referenceFrame;
+            }
+
+            template <class T>
+            const T &getModule() const {
+                using namespace MODULES::STANDARD;
+                if constexpr (std::is_base_of<PositionModule_t, T>())
+                    return position;
+
+                if constexpr (std::is_base_of<PositionVelAccModule_t, T>())
+                    return positionVelAcc;
+
+                if constexpr (std::is_base_of<RotationModule_t, T>())
+                    return rotation;
+
+                if constexpr (std::is_base_of<RotationVelAccModule_t, T>())
+                    return rotationVelAcc;
+
+                if constexpr (std::is_base_of<ScaleModule_t, T>())
+                    return scale;
+
+                if constexpr (std::is_base_of<ReferenceFrameModule_t, T>())
+                    return referenceFrame;
+            }
+
             MODULES::STANDARD::PositionModule_t position;
             MODULES::STANDARD::PositionVelAccModule_t positionVelAcc;
             MODULES::STANDARD::RotationModule_t rotation;

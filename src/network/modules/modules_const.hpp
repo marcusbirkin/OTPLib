@@ -64,18 +64,16 @@ namespace OTP::MODULES {
                         {POSITION_VELOCITY, QString("%1m/sec")
                                     .arg(micro)},
                         {POSITION_ACCELERATION, QString("%1m/sec%2")
-                                    .arg(micro)
-                                    .arg(superscript2)},
+                                    .arg(micro, superscript2)},
                         {ROTATION, QString("%1%2")
-                                    .arg(micro)
-                                    .arg(degrees)},
+                                    .arg(micro, degrees)},
                         {ROTATION_VELOCITY, QString("%1%2/sec")
-                                    .arg(micro)
-                                    .arg(degrees)},
+                                    .arg(micro, degrees)},
                         {ROTATION_ACCELERATION, QString("%1%2/sec%3")
-                                    .arg(micro)
-                                    .arg(degrees)
-                                    .arg(superscript2)}
+                                    .arg(micro, degrees, superscript2)},
+                        // Unitless
+                        {SCALE, QString("")},
+                        {REFERENCE_FRAME, QString("")}
                     };
 
                     static QMap<PositionModule_t::scale_t, QString> scale{
@@ -93,18 +91,21 @@ namespace OTP::MODULES {
                         {POSITION_VELOCITY, QString("%1m/sec")
                                     .arg(std::string(micro).c_str())},
                         {POSITION_ACCELERATION, QString("%1m/sec%2")
-                                    .arg(std::string(micro).c_str())
-                                    .arg(std::string(superscript2).c_str())},
+                                    .arg(std::string(micro).c_str(),
+                                         std::string(superscript2).c_str())},
                         {ROTATION, QString("%1%2")
-                                    .arg(std::string(micro).c_str())
-                                    .arg(std::string(degrees).c_str())},
+                                    .arg(std::string(micro).c_str(),
+                                        std::string(degrees).c_str())},
                         {ROTATION_VELOCITY, QString("%1%2/sec")
-                                    .arg(std::string(micro).c_str())
-                                    .arg(std::string(degrees).c_str())},
+                                    .arg(std::string(micro).c_str(),
+                                        std::string(degrees).c_str())},
                         {ROTATION_ACCELERATION, QString("%1%2/sec%3")
-                                    .arg(std::string(micro).c_str())
-                                    .arg(std::string(degrees).c_str())
-                                    .arg(std::string(superscript2).c_str())}
+                                    .arg(std::string(micro).c_str(),
+                                        std::string(degrees).c_str(),
+                                        std::string(superscript2).c_str())},
+                        // Unitless
+                        {SCALE, QString("")},
+                        {REFERENCE_FRAME, QString("")}
                     };
 
                     static QMap<PositionModule_t::scale_t, QString> scale{

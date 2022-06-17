@@ -273,6 +273,11 @@ namespace OTP
             void removeLocalSystem(system_t) override;
 
         /* Standard Modules */
+        private:
+            template <class T, class T2>
+            T getValueHelper(T2 &, cid_t, address_t, bool respectRelative = true) const;
+            template <class T>
+            QMap<cid_t, T> getValuesHelper(std::function<T(cid_t, address_t, axis_t, bool)>, address_t, axis_t, bool respectRelative = true, bool excludeWinner = false) const;
         /* -Position */
         public:
             typedef struct PositionValue_s
@@ -286,6 +291,7 @@ namespace OTP
             } PositionValue_t;
             PositionValue_t getPosition(cid_t, address_t, axis_t, bool respectRelative = true) const;
             PositionValue_t getPosition(address_t, axis_t, bool respectRelative = true) const;
+            QMap<cid_t, PositionValue_t> getPositions(address_t, axis_t, bool respectRelative = true, bool excludeWinner = false) const;
 
         signals:
             void updatedPosition(cid_t, address_t, axis_t);
@@ -302,6 +308,7 @@ namespace OTP
             } PositionVelocity_t;
             PositionVelocity_t getPositionVelocity(cid_t, address_t, axis_t, bool respectRelative = true) const;
             PositionVelocity_t getPositionVelocity(address_t, axis_t, bool respectRelative = true) const;
+            QMap<cid_t, PositionVelocity_t> getPositionVelocitys(address_t, axis_t, bool respectRelative = true, bool excludeWinner = false) const;
 
             typedef struct PositionAcceleration_s
             {
@@ -313,6 +320,7 @@ namespace OTP
             } PositionAcceleration_t;
             PositionAcceleration_t getPositionAcceleration(cid_t, address_t, axis_t, bool respectRelative = true) const;
             PositionAcceleration_t getPositionAcceleration(address_t, axis_t, bool respectRelative = true) const;
+            QMap<cid_t, PositionAcceleration_t> getPositionAccelerations(address_t, axis_t, bool respectRelative = true, bool excludeWinner = false) const;
         signals:
             void updatedPositionVelocity(cid_t, address_t, axis_t);
             void updatedPositionAcceleration(cid_t, address_t, axis_t);
@@ -329,6 +337,7 @@ namespace OTP
             } RotationValue_t;
             RotationValue_t getRotation(cid_t, address_t, axis_t, bool respectRelative = true) const;
             RotationValue_t getRotation(address_t, axis_t, bool respectRelative = true) const;
+            QMap<cid_t, RotationValue_t> getRotations(address_t, axis_t, bool respectRelative = true, bool excludeWinner = false) const;
         signals:
             void updatedRotation(cid_t, address_t, axis_t);
 
@@ -344,6 +353,7 @@ namespace OTP
             } RotationVelocity_t;
             RotationVelocity_t getRotationVelocity(cid_t, address_t, axis_t, bool respectRelative = true) const;
             RotationVelocity_t getRotationVelocity(address_t, axis_t, bool respectRelative = true) const;
+            QMap<cid_t, RotationVelocity_t> getRotationVelocitys(address_t, axis_t, bool respectRelative = true, bool excludeWinner = false) const;
 
             typedef struct RotationAcceleration_s
             {
@@ -355,6 +365,7 @@ namespace OTP
             } RotationAcceleration_t;
             RotationAcceleration_t getRotationAcceleration(cid_t, address_t, axis_t, bool respectRelative = true) const;
             RotationAcceleration_t getRotationAcceleration(address_t, axis_t, bool respectRelative = true) const;
+            QMap<cid_t, RotationAcceleration_t> getRotationAccelerations(address_t, axis_t, bool respectRelative = true, bool excludeWinner = false) const;
         signals:
             void updatedRotationVelocity(cid_t, address_t, axis_t);
             void updatedRotationAcceleration(cid_t, address_t, axis_t);
@@ -365,7 +376,8 @@ namespace OTP
             {
                 MODULES::STANDARD::ScaleModule_t::scale_t value = 0;
                 MODULES::STANDARD::ScaleModule_t::percent_t getPercent() { return MODULES::STANDARD::ScaleModule_t::toPercent(value); }
-                operator QString() { return MODULES::STANDARD::ScaleModule_t::toPercentString(value).append("%"); }
+                QString unit;
+                operator QString() const { return MODULES::STANDARD::ScaleModule_t::toPercentString(value).append("%"); }
                 void setPercent(MODULES::STANDARD::ScaleModule_t::percent_t value) { value = MODULES::STANDARD::ScaleModule_t::fromPercent(value); }
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
@@ -373,6 +385,7 @@ namespace OTP
             } Scale_t;
             Scale_t getScale(cid_t, address_t, axis_t) const;
             Scale_t getScale(address_t, axis_t) const;
+            QMap<cid_t, Scale_t> getScales(address_t, axis_t, bool excludeWinner = false) const;
         signals:
             void updatedScale(cid_t, address_t, axis_t);
 

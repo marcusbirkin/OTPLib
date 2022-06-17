@@ -109,32 +109,63 @@ void Consumer::removeLocalSystem(system_t system)
     }
 }
 
-/* Standard Modules - Position */
-Consumer::PositionValue_t Consumer::getPosition(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
+
+/* Standard Modules */
+template <class T, class T2>
+T Consumer::getValueHelper(T2 &module, cid_t cid, address_t address, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
-    Consumer::PositionValue_t ret;
+    T ret;
     if (!isPointValid(cid, address))
         return ret;
 
-    auto module = otpNetwork->PointDetails(cid, address)->standardModules.position;
+    module = otpNetwork->PointDetails(cid, address)->standardModules.getModule<T2>();
     if (respectRelative) {
         QList<address_t> previous({address});
         auto referenceFrame = getReferenceFrame(cid, address);
         while (isPointValid(referenceFrame.value) &&
                !previous.contains(referenceFrame.value))
         {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.position;
+            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.getModule<T2>();
             previous << referenceFrame.value;
             referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
         }
     }
-    ret.value = module.getPosition(axis);
-    ret.scale = module.getScaling();
-    ret.unit = getUnitString(ret.scale, VALUES::POSITION);
     ret.timestamp = module.getTimestamp();
     ret.sourceCID = cid;
     ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
+
+    return ret;
+}
+
+template <class T>
+QMap<cid_t, T> Consumer::getValuesHelper(
+        std::function<T(cid_t, address_t, axis_t, bool)> getFunc,
+        address_t address,
+        axis_t axis,
+        bool respectRelative, bool excludeWinner) const
+{
+    QMap<cid_t, T> ret;
+    const auto components = otpNetwork->getComponentList();
+    const auto winningComponent = otpNetwork->getWinningComponent(address);
+    for (const auto &cid : components)
+        if (isPointValid(cid, address))
+            if (!(excludeWinner && cid == winningComponent))
+                ret.insert(cid, getFunc(cid, address, axis, respectRelative));
+
+    return ret;
+}
+
+
+/* Standard Modules - Position */
+Consumer::PositionValue_t Consumer::getPosition(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
+{
+    using namespace MODULES::STANDARD;
+    PositionModule_t module;
+    auto ret = getValueHelper<PositionValue_t>(module, cid, address, respectRelative);
+    ret.value = module.getPosition(axis);
+    ret.scale = module.getScaling();
+    ret.unit = getUnitString(ret.scale, VALUES::POSITION);
     return ret;
 }
 
@@ -144,31 +175,25 @@ Consumer::PositionValue_t Consumer::getPosition(address_t address, axis_t axis, 
     return getPosition(cid, address, axis, respectRelative);
 }
 
+QMap<cid_t, Consumer::PositionValue_t> Consumer::getPositions(address_t address, axis_t axis, bool respectRelative, bool excludeWinner) const
+{
+    return (getValuesHelper<PositionValue_t>(
+        [this](cid_t cid, address_t address, axis_t axis, bool respectRelative)
+            {
+                return getPosition(cid, address, axis, respectRelative);
+            },
+        address, axis, respectRelative, excludeWinner));
+}
+
+
 /* Standard Modules - Position Velocity/Acceleration */
 Consumer::PositionVelocity_t Consumer::getPositionVelocity(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
-    Consumer::PositionVelocity_t ret;
-    if (!isPointValid(cid, address))
-        return ret;
-
-    auto module = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc;
-    if (respectRelative) {
-        QList<address_t> previous({address});
-        auto referenceFrame = getReferenceFrame(cid, address);
-        while (isPointValid(referenceFrame.value) &&
-               !previous.contains(referenceFrame.value))
-        {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.positionVelAcc;
-            previous << referenceFrame.value;
-            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
-        }
-    }
+    PositionVelAccModule_t module;
+    auto ret = getValueHelper<PositionVelocity_t>(module, cid, address, respectRelative);
     ret.value = module.getVelocity(axis);
     ret.unit = getUnitString(VALUES::POSITION_VELOCITY);
-    ret.timestamp = module.getTimestamp();
-    ret.sourceCID = cid;
-    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
@@ -178,30 +203,23 @@ Consumer::PositionVelocity_t Consumer::getPositionVelocity(address_t address, ax
     return getPositionVelocity(cid, address, axis, respectRelative);
 }
 
+QMap<cid_t, Consumer::PositionVelocity_t> Consumer::getPositionVelocitys(address_t address, axis_t axis, bool respectRelative, bool excludeWinner) const
+{
+    return (getValuesHelper<PositionVelocity_t>(
+        [this](cid_t cid, address_t address, axis_t axis, bool respectRelative)
+            {
+                return getPositionVelocity(cid, address, axis, respectRelative);
+            },
+        address, axis, respectRelative, excludeWinner));
+}
+
 Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
-    Consumer::PositionAcceleration_t ret;
-    if (!isPointValid(cid, address))
-        return ret;
-
-    auto module = otpNetwork->PointDetails(cid, address)->standardModules.positionVelAcc;
-    if (respectRelative) {
-        QList<address_t> previous({address});
-        auto referenceFrame = getReferenceFrame(cid, address);
-        while (isPointValid(referenceFrame.value) &&
-               !previous.contains(referenceFrame.value))
-        {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.positionVelAcc;
-            previous << referenceFrame.value;
-            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
-        }
-    }
+    PositionVelAccModule_t module;
+    auto ret = getValueHelper<PositionAcceleration_t>(module, cid, address, respectRelative);
     ret.value = module.getAcceleration(axis);
     ret.unit = getUnitString(VALUES::POSITION_ACCELERATION);
-    ret.timestamp = module.getTimestamp();
-    ret.sourceCID = cid;
-    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
@@ -211,32 +229,25 @@ Consumer::PositionAcceleration_t Consumer::getPositionAcceleration(address_t add
     return getPositionAcceleration(cid, address, axis, respectRelative);
 }
 
+QMap<cid_t, Consumer::PositionAcceleration_t> Consumer::getPositionAccelerations(address_t address, axis_t axis, bool respectRelative, bool excludeWinner) const
+{
+    return (getValuesHelper<PositionAcceleration_t>(
+        [this](cid_t cid, address_t address, axis_t axis, bool respectRelative)
+            {
+                return getPositionAcceleration(cid, address, axis, respectRelative);
+            },
+        address, axis, respectRelative, excludeWinner));
+}
+
 
 /* Standard Modules - Rotation */
 Consumer::RotationValue_t Consumer::getRotation(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
-    Consumer::RotationValue_t ret;
-    if (!isPointValid(cid, address))
-        return ret;
-
-    auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotation;
-    if (respectRelative) {
-        QList<address_t> previous({address});
-        auto referenceFrame = getReferenceFrame(cid, address);
-        while (isPointValid(referenceFrame.value) &&
-               !previous.contains(referenceFrame.value))
-        {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.rotation;
-            previous << referenceFrame.value;
-            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
-        }
-    }
+    RotationModule_t module;
+    auto ret = getValueHelper<RotationValue_t>(module, cid, address, respectRelative);
     ret.value = module.getRotation(axis);
     ret.unit = getUnitString(VALUES::ROTATION);
-    ret.timestamp = module.getTimestamp();
-    ret.sourceCID = cid;
-    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
@@ -246,32 +257,25 @@ Consumer::RotationValue_t Consumer::getRotation(address_t address, axis_t axis, 
     return getRotation(cid, address, axis, respectRelative);
 }
 
+QMap<cid_t, Consumer::RotationValue_t> Consumer::getRotations(address_t address, axis_t axis, bool respectRelative, bool excludeWinner) const
+{
+    return (getValuesHelper<RotationValue_t>(
+        [this](cid_t cid, address_t address, axis_t axis, bool respectRelative)
+            {
+                return getRotation(cid, address, axis, respectRelative);
+            },
+        address, axis, respectRelative, excludeWinner));
+}
+
 
 /* Standard Modules - Position Velocity/Acceleration */
 Consumer::RotationVelocity_t Consumer::getRotationVelocity(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
-    Consumer::RotationVelocity_t ret;
-    if (!isPointValid(cid, address))
-        return ret;
-
-    auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc;
-    if (respectRelative) {
-        QList<address_t> previous({address});
-        auto referenceFrame = getReferenceFrame(cid, address);
-        while (isPointValid(referenceFrame.value) &&
-               !previous.contains(referenceFrame.value))
-        {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.rotationVelAcc;
-            previous << referenceFrame.value;
-            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
-        }
-    }
+    RotationVelAccModule_t module;
+    auto ret = getValueHelper<RotationVelocity_t>(module, cid, address, respectRelative);
     ret.value = module.getVelocity(axis);
     ret.unit = getUnitString(VALUES::ROTATION_VELOCITY);
-    ret.timestamp = module.getTimestamp();
-    ret.sourceCID = cid;
-    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
@@ -281,30 +285,23 @@ Consumer::RotationVelocity_t Consumer::getRotationVelocity(address_t address, ax
     return getRotationVelocity(cid, address, axis, respectRelative);
 }
 
+QMap<cid_t, Consumer::RotationVelocity_t> Consumer::getRotationVelocitys(address_t address, axis_t axis, bool respectRelative, bool excludeWinner) const
+{
+    return (getValuesHelper<RotationVelocity_t>(
+        [this](cid_t cid, address_t address, axis_t axis, bool respectRelative)
+            {
+                return getRotationVelocity(cid, address, axis, respectRelative);
+            },
+        address, axis, respectRelative, excludeWinner));
+}
+
 Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(cid_t cid, address_t address, axis_t axis, bool respectRelative) const
 {
     using namespace MODULES::STANDARD;
-    Consumer::RotationAcceleration_t ret;
-    if (!isPointValid(cid, address))
-        return ret;
-
-    auto module = otpNetwork->PointDetails(cid, address)->standardModules.rotationVelAcc;
-    if (respectRelative) {
-        QList<address_t> previous({address});
-        auto referenceFrame = getReferenceFrame(cid, address);
-        while (isPointValid(referenceFrame.value) &&
-               !previous.contains(referenceFrame.value))
-        {
-            module += otpNetwork->PointDetails(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value)->standardModules.rotationVelAcc;
-            previous << referenceFrame.value;
-            referenceFrame = getReferenceFrame(otpNetwork->getWinningComponent(referenceFrame.value), referenceFrame.value);
-        }
-    }
+    RotationVelAccModule_t module;
+    auto ret = getValueHelper<RotationAcceleration_t>(module, cid, address, respectRelative);
     ret.value = module.getAcceleration(axis);
     ret.unit = getUnitString(VALUES::ROTATION_ACCELERATION);
-    ret.timestamp = module.getTimestamp();
-    ret.sourceCID = cid;
-    ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
     return ret;
 }
 
@@ -312,6 +309,16 @@ Consumer::RotationAcceleration_t Consumer::getRotationAcceleration(address_t add
 {
     auto cid = otpNetwork->getWinningComponent(address);
     return getRotationAcceleration(cid, address, axis, respectRelative);
+}
+
+QMap<cid_t, Consumer::RotationAcceleration_t> Consumer::getRotationAccelerations(address_t address, axis_t axis, bool respectRelative, bool excludeWinner) const
+{
+    return (getValuesHelper<RotationAcceleration_t>(
+        [this](cid_t cid, address_t address, axis_t axis, bool respectRelative)
+            {
+                return getRotationAcceleration(cid, address, axis, respectRelative);
+            },
+        address, axis, respectRelative, excludeWinner));
 }
 
 Consumer::Scale_t Consumer::getScale(cid_t cid, address_t address, axis_t axis) const
@@ -322,6 +329,7 @@ Consumer::Scale_t Consumer::getScale(cid_t cid, address_t address, axis_t axis) 
         return ret;
 
     ret.value = otpNetwork->PointDetails(cid, address)->standardModules.scale.getScale(axis);
+    ret.unit = getUnitString(VALUES::SCALE);
     ret.timestamp = otpNetwork->PointDetails(cid, address)->standardModules.scale.getTimestamp();
     ret.sourceCID = cid;
     ret.priority = otpNetwork->PointDetails(cid, address)->getPriority();
@@ -332,6 +340,16 @@ Consumer::Scale_t Consumer::getScale(address_t address, axis_t axis) const
 {
     auto cid = otpNetwork->getWinningComponent(address);
     return getScale(cid, address, axis);
+}
+
+QMap<cid_t, Consumer::Scale_t> Consumer::getScales(address_t address, axis_t axis, bool excludeWinner) const
+{
+    return (getValuesHelper<Scale_t>(
+        [this](cid_t cid, address_t address, axis_t axis, bool)
+            {
+                return getScale(cid, address, axis);
+            },
+        address, axis, bool(), excludeWinner));
 }
 
 Consumer::ReferenceFrame_t Consumer::getReferenceFrame(cid_t cid, address_t address) const
