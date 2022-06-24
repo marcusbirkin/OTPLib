@@ -31,29 +31,32 @@ SocketManager::SocketManager(QNetworkInterface interface, QAbstractSocket::Netwo
     assert( (transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::IPv6Protocol) );
     RXSocket.reset(new QUdpSocket(this));
 
-    QVector<QHostAddress> bindAddr;
     switch (transport) {
         case QAbstractSocket::IPv4Protocol:
         {
-            RXSocket->bind(QHostAddress::AnyIPv4, OTP::OTP_PORT);
+            RXSocket->bind(QHostAddress::AnyIPv4,
+                           OTP::OTP_PORT,
+                           QUdpSocket::ShareAddress|QUdpSocket::ReuseAddressHint);
         } break;
 
         case QAbstractSocket::IPv6Protocol:
         {
-            RXSocket->bind(QHostAddress::AnyIPv6, OTP::OTP_PORT);
+            RXSocket->bind(QHostAddress::AnyIPv6,
+                           OTP::OTP_PORT,
+                           QUdpSocket::ShareAddress|QUdpSocket::ReuseAddressHint);
         } break;
 
         default: return;
     }
 
-    connect(RXSocket.get(), &QUdpSocket::readyRead,
+    connect(RXSocket.get(), &QUdpSocket::readyRead, this,
         [this]() {
             if (!RXSocket || !RXSocket->isValid()) return;
             while (RXSocket->hasPendingDatagrams())
                 emit this->newDatagram(RXSocket->receiveDatagram());
         });
 
-    connect(RXSocket.get(), &QUdpSocket::stateChanged,
+    connect(RXSocket.get(), &QUdpSocket::stateChanged, this,
         [this](QAbstractSocket::SocketState state) {
             if (!RXSocket || !RXSocket->isValid()) return;
             emit this->stateChanged(state);
