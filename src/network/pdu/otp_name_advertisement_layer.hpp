@@ -46,7 +46,7 @@ public:
     void setPDULength(pduLength_t value) { PDULength = value; }
     const vector_t &getVector() const { return Vector; }
     const options_t &getOptions() const { return Options; }
-    void setOptions(options_t value) { Options = value; }
+    void setOptions(const options_t &value) { Options = value; }
     const reserved_t &getReserved() const { return Reserved; }
     const list_t &getList() const { return List; }
     bool setList(const list_t &value);

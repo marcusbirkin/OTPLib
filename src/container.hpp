@@ -63,10 +63,10 @@ namespace OTP
         QList<group_t> getGroupList(system_t system) const;
         QList<group_t> getGroupList(cid_t cid, system_t system) const;
 
-        void addModule(cid_t cid, const component_s::ModuleList_t&);
-        void addModule(cid_t cid, const component_s::ModuleItem_t&);
-        void removeModule(cid_t cid, const component_s::ModuleList_t&);
-        void removeModule(cid_t cid, const component_s::ModuleItem_t&);
+        void addModule(cid_t cid, const component_t::ModuleList_t&);
+        void addModule(cid_t cid, const component_t::ModuleItem_t&);
+        void removeModule(cid_t cid, const component_t::ModuleList_t&);
+        void removeModule(cid_t cid, const component_t::ModuleItem_t&);
         moduleList_t getModuleList(cid_t cid) const;
 
         void addPoint(cid_t cid, address_t address, priority_t priority = priority_t());

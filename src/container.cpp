@@ -232,7 +232,7 @@ void Container::addModule(cid_t cid, const moduleList_t &list)
     for (const auto &item : list)
         addModule(cid, item);
 }
-void Container::addModule(cid_t cid, const component_s::ModuleItem_t &item)
+void Container::addModule(cid_t cid, const component_t::ModuleItem_t &item)
 {
     bool newItem = true;
     if (getModuleList(cid).contains(item))
@@ -256,12 +256,12 @@ void Container::addModule(cid_t cid, const component_s::ModuleItem_t &item)
 
     pruneModuleList(cid);
 }
-void Container::removeModule(cid_t cid, const component_s::ModuleList_t &list)
+void Container::removeModule(cid_t cid, const component_t::ModuleList_t &list)
 {
     for (const auto &item : list)
         removeModule(cid, item);
 }
-void Container::removeModule(cid_t cid, const component_s::ModuleItem_t &item)
+void Container::removeModule(cid_t cid, const component_t::ModuleItem_t &item)
 {
     if (getModuleList(cid).contains(item)) {
         componentMap[cid].removeModuleItem(item);

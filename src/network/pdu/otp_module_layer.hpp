@@ -58,7 +58,7 @@ public:
     const moduleNumber_t &getModuleNumber() { return ModuleIdent.ModuleNumber; }
     void setModuleNumber(moduleNumber_t value) { ModuleIdent.ModuleNumber = value; }
     const additional_t &getAdditional() { return Additional; }
-    void setAdditional(QByteArray value) { Additional = value; }
+    void setAdditional(const QByteArray &value) { Additional = value; }
 
 private:
     ident_t ModuleIdent;

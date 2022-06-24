@@ -42,8 +42,8 @@ Consumer::Consumer(
 {
     // Setup Systems
     for (const auto &system : systems)
-        addLocalSystem(system);
-    setupListener();
+        Consumer::addLocalSystem(system);
+    Consumer::setupListener();
 
     // Module Advertisement Message Timer
     QTimer *moduleAdvertTimer = new QTimer(this);

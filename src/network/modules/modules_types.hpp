@@ -31,7 +31,7 @@ namespace OTP::MODULES {
 
     typedef struct module_t
     {
-        typedef struct
+        typedef struct moduleDescription_t
         {
             QString Manufactuer;
             QString Name;
@@ -66,16 +66,16 @@ namespace OTP::MODULES {
         // 16.1 Position Module
         class PositionModule_t {
         public:
-            typedef struct options_s
+            typedef struct options_t
             {
-                options_s() : data(0) {}
+                options_t() : data(0) {}
                 bool isScaling() const { return data[SCALING_BIT]; }
                 void setScaling(bool value) { data[SCALING_BIT] = value; }
-                friend additional_t& operator<<(additional_t &l, const options_s &r) {
+                friend additional_t& operator<<(additional_t &l, const options_t &r) {
                     l << type(r.data.to_ulong());
                     return l;
                 }
-                friend additional_t& operator>>(additional_t &l, options_s &r) {
+                friend additional_t& operator>>(additional_t &l, options_t &r) {
                     type temp;
                     l >> temp;
                     r.data = std::bitset<bitWidth>(temp);

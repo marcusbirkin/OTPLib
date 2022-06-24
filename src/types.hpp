@@ -43,10 +43,10 @@ namespace OTP
     typedef OTP::MODULES::STANDARD::axis_t axis_t;
     class Container;
 
-    typedef struct component_s {
+    typedef struct component_t {
         friend Container;
     public:
-        component_s() {}
+        component_t() {}
         typedef enum type_e
         {
             consumer,
@@ -91,7 +91,7 @@ namespace OTP
     } component_t;
     typedef QMap<cid_t, component_t> componentMap_t;
 
-    typedef struct folioMap_s {
+    typedef struct folioMap_t {
     private: auto noSystem() { return system_t().getMin() - 1; }
     public:
         bool checkSequence(cid_t cid, vector_t vector, OTPLayer::folio_t value)
@@ -158,9 +158,9 @@ namespace OTP
 
     private:
         typedef std::pair<cid_t, std::pair<system_t, vector_t>> key_t;
-        struct folioMapPrivate_s {
-            folioMapPrivate_s() : folio(0) {}
-            folioMapPrivate_s(OTPLayer::folio_t folio)
+        struct folioMapPrivate_t {
+            folioMapPrivate_t() : folio(0) {}
+            explicit folioMapPrivate_t(OTPLayer::folio_t folio)
                 : folio(folio) {}
 
             bool checkSequence(OTPLayer::folio_t value) { return folio.checkSequence(value); }
@@ -169,7 +169,7 @@ namespace OTP
             QVector<OTPLayer::page_t> pages;
             QVector<QNetworkDatagram> datagrams;
         };
-        QMap<key_t, folioMapPrivate_s> folioMap;
+        QMap<key_t, folioMapPrivate_t> folioMap;
     } folioMap_t;
 
     class pointDetails
@@ -179,7 +179,7 @@ namespace OTP
         pointDetails(priority_t priority) :
             lastSeen(QDateTime::currentDateTime()),
             priority(priority) {}
-        pointDetails(QString name, priority_t priority) :
+        pointDetails(const QString &name, priority_t priority) :
             name(name),
             lastSeen(QDateTime::currentDateTime()),
             priority(priority) {}
@@ -281,12 +281,12 @@ namespace OTP
     };
     typedef std::shared_ptr<pointDetails> pointDetails_t;
 
-    typedef struct OTP_LIB_EXPORT address_s {
-        address_s() :
+    typedef struct OTP_LIB_EXPORT address_t {
+        address_t() :
             system(),
             group(),
             point() {}
-        address_s(system_t system, group_t group, point_t point) :
+        address_t(system_t system, group_t group, point_t point) :
             system(system),
             group(group),
             point(point) {}
@@ -313,9 +313,9 @@ namespace OTP
     typedef QHash<system_t, groupMap_t> systemMap_t;
     typedef QHash<cid_t, systemMap_t> addressMap_t;
 
-    typedef struct range_s {
-        range_s() : min(0), max(0) {}
-        range_s(qint64 min, qint64 max) : min(min), max(max) {}
+    typedef struct range_t {
+        range_t() : min(0), max(0) {}
+        range_t(qint64 min, qint64 max) : min(min), max(max) {}
 
         qint64 getMin() const { return min; }
         qint64 getMax() const { return max; }

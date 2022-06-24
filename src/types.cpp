@@ -22,7 +22,7 @@
 
 namespace OTP
 {
-    void folioMap_s::addPage(
+    void folioMap_t::addPage(
         cid_t cid,
         system_t system,
         OTP::PDU::vector_t vector,
@@ -41,7 +41,7 @@ namespace OTP
         folioMap[key].datagrams.append(datagram);
     }
 
-    bool folioMap_s::checkAllPages(
+    bool folioMap_t::checkAllPages(
             cid_t cid,
             system_t system,
             OTP::PDU::vector_t vector,
@@ -58,7 +58,7 @@ namespace OTP
         return true;
     }
 
-    QVector<QNetworkDatagram> folioMap_s::getDatagrams(
+    QVector<QNetworkDatagram> folioMap_t::getDatagrams(
             cid_t cid,
             system_t system,
             OTP::PDU::vector_t vector,
@@ -69,7 +69,7 @@ namespace OTP
         return folioMap[key].datagrams;
     }
 
-    void folioMap_s::removeComponent(cid_t cid)
+    void folioMap_t::removeComponent(cid_t cid)
     {
         const auto keys = folioMap.keys();
         for (const auto &key : keys) {
@@ -93,7 +93,7 @@ namespace OTP
         return true;
     }
 
-    bool component_s::isExpired(ModuleItem_t item) const
+    bool component_t::isExpired(ModuleItem_t item) const
     {
         if (!moduleList.contains(item)) return true;
         return (QDateTime::currentDateTime()
@@ -102,19 +102,19 @@ namespace OTP
                         OTP_ADVERTISEMENT_TIMEOUT).count()));
     }
 
-    bool component_s::isExpired() const {
+    bool component_t::isExpired() const {
         return (QDateTime::currentDateTime()
                 > getLastSeen().addMSecs(
                     std::chrono::duration_cast<std::chrono::milliseconds>(
                         OTP_COMPONENT_TIMEOUT).count()));
     }
 
-    QString component_s::getModuleString(ModuleItem_t item, bool includeManf) {
+    QString component_t::getModuleString(ModuleItem_t item, bool includeManf) {
         for (const auto &module : OTP::MODULES::getSupportedModules())
         {
-            QString ret;
             if (module == item)
             {
+                QString ret;
                 auto moduleStrings = MODULES::getModuleDescription(module);
                 if (includeManf) ret.append(QString("%1 ").arg(moduleStrings.Manufactuer));
                 ret.append(moduleStrings.Name);

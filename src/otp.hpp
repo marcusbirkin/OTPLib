@@ -102,7 +102,7 @@ namespace OTP
             QString getLocalPointName(system_t system, group_t group, point_t point)
                 { return getLocalPointName(address_t(system, group, point)); }
             void setLocalPointName(address_t, QString);
-            void setLocalPointName(system_t system, group_t group, point_t point, QString name)
+            void setLocalPointName(system_t system, group_t group, point_t point, const QString &name)
                 { setLocalPointName(address_t(system, group, point), name); }
         signals:
             void updatedLocalPointName(OTP::address_t);

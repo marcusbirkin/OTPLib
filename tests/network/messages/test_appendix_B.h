@@ -58,7 +58,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     point = std::numeric_limits<quint32>::max();
                     description = QString("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
                 }
-                description_t(quint8 system, quint32 group, quint16 point, QString description) :
+                description_t(quint8 system, quint32 group, quint16 point, const QString &description) :
                     system(system),
                     group(group),
                     point(point),
