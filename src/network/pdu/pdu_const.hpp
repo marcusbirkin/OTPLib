@@ -29,7 +29,7 @@ namespace OTP::PDU {
     /* Section 6 OTP Layer */
     namespace OTPLayer {
         inline const otpIdent_t OTP_PACKET_IDENT = QByteArrayLiteral("\x4f\x54\x50\x2d\x45\x31\x2e\x35\x39\x00\x00\x00");
-        const pduLength_t LENGTHOFFSET = OTP_PACKET_IDENT.size() + sizeof(vector_t) + sizeof(pduLength_t);
+        const pduLength_t LENGTHOFFSET = static_cast<pduLength_t>(OTP_PACKET_IDENT.size() + sizeof(vector_t) + sizeof(pduLength_t));
 
         inline const QList<vector_t> VECTOR = {
             VECTOR_OTP_TRANSFORM_MESSAGE,
@@ -40,7 +40,7 @@ namespace OTP::PDU {
 
     /* Section 8 OTP Transform Layer */
     namespace OTPTransformLayer {
-        constexpr pduLength_t LENGTHOFFSET = sizeof(vector_t) + sizeof(pduLength_t);
+        constexpr pduLength_t LENGTHOFFSET = static_cast<pduLength_t>(sizeof(vector_t) + sizeof(pduLength_t));
 
         const vector_t VECTOR = VECTOR_OTP_POINT;
         const reserved_t RESERVED = 0x0;
@@ -48,7 +48,7 @@ namespace OTP::PDU {
 
     /* Section 9 OTP Point Layer */
     namespace OTPPointLayer {
-        constexpr pduLength_t LENGTHOFFSET = sizeof(vector_t) + sizeof(pduLength_t);
+        constexpr pduLength_t LENGTHOFFSET = static_cast<pduLength_t>(sizeof(vector_t) + sizeof(pduLength_t));
 
         const vector_t VECTOR = VECTOR_OTP_POINT;
         const options_t OPTIONS = 0x0;
@@ -57,12 +57,12 @@ namespace OTP::PDU {
 
     /* 10 OTP Module Layer */
     namespace OTPModuleLayer {
-        constexpr pduLength_t LENGTHOFFSET = sizeof(manufacturerID_t) + sizeof(pduLength_t);
+        constexpr pduLength_t LENGTHOFFSET = static_cast<pduLength_t>(sizeof(manufacturerID_t) + sizeof(pduLength_t));
     }
 
     /* 11 OTP Advertisement Layer */
     namespace OTPAdvertisementLayer {
-        constexpr pduLength_t LENGTHOFFSET = sizeof(vector_t) + sizeof(pduLength_t);
+        constexpr pduLength_t LENGTHOFFSET = static_cast<pduLength_t>(sizeof(vector_t) + sizeof(pduLength_t));
 
         inline const QList<vector_t> VECTOR = {
             VECTOR_OTP_ADVERTISEMENT_MODULE,
@@ -73,7 +73,7 @@ namespace OTP::PDU {
 
     /* 12 OTP Module Advertisement Layer */
     namespace OTPModuleAdvertisementLayer {
-        constexpr pduLength_t LENGTHOFFSET = sizeof(vector_t) + sizeof(pduLength_t);
+        constexpr pduLength_t LENGTHOFFSET = static_cast<pduLength_t>(sizeof(vector_t) + sizeof(pduLength_t));
 
         const vector_t VECTOR = VECTOR_OTP_ADVERTISEMENT_MODULE_LIST;
         const reserved_t RESERVED = 0x0;
@@ -84,7 +84,7 @@ namespace OTP::PDU {
 
     /* 13 OTP Name Advertisement Layer */
     namespace OTPNameAdvertisementLayer {
-        constexpr pduLength_t LENGTHOFFSET = sizeof(vector_t) + sizeof(pduLength_t);
+        constexpr pduLength_t LENGTHOFFSET = static_cast<pduLength_t>(sizeof(vector_t) + sizeof(pduLength_t));
 
         const vector_t VECTOR = VECTOR_OTP_ADVERTISEMENT_NAME_LIST;
         const reserved_t RESERVED = 0x0;
@@ -95,7 +95,7 @@ namespace OTP::PDU {
 
     /* 14 OTP System Advertisement Layer */
     namespace OTPSystemAdvertisementLayer {
-        constexpr pduLength_t LENGTHOFFSET = sizeof(vector_t) + sizeof(pduLength_t);
+        constexpr pduLength_t LENGTHOFFSET = static_cast<pduLength_t>(sizeof(vector_t) + sizeof(pduLength_t));
 
         const vector_t VECTOR = VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST;
         const reserved_t RESERVED = 0x0;

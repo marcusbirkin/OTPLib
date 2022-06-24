@@ -88,18 +88,18 @@ Message::Message(
 bool Message::isValid()
 {
     size_t lengthCheck = toByteArray().length();
-    if (lengthCheck != otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET)
+    if (lengthCheck != static_cast<size_t>(otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET))
         return false;
     if (!otpLayer->isValid()) return false;
 
     lengthCheck -= otpLayer->toPDUByteArray().length();
-    if (lengthCheck != advertisementLayer->getPDULength() + OTPAdvertisementLayer::LENGTHOFFSET)
+    if (lengthCheck != static_cast<size_t>(advertisementLayer->getPDULength() + OTPAdvertisementLayer::LENGTHOFFSET))
         return false;
     if (advertisementLayer->getVector() != PDU::VECTOR_OTP_ADVERTISEMENT_SYSTEM) return false;
     if (!advertisementLayer->isValid()) return false;
 
     lengthCheck -= advertisementLayer->toPDUByteArray().length();
-    if (lengthCheck != systemAdvertisementLayer->getPDULength() + OTPSystemAdvertisementLayer::LENGTHOFFSET)
+    if (lengthCheck != static_cast<size_t>(systemAdvertisementLayer->getPDULength() + OTPSystemAdvertisementLayer::LENGTHOFFSET))
         return false;
     if (!systemAdvertisementLayer->isValid()) return false;
     if (!RANGES::MESSAGE_SIZE.isValid(toByteArray().size())) return false;

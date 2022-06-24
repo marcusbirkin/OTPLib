@@ -103,12 +103,12 @@ Message::Message(
 bool Message::isValid() const
 {
     size_t lengthCheck = toByteArray().length();
-    if (lengthCheck != otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET)
+    if (lengthCheck != static_cast<size_t>(otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET))
         return false;
     if (!otpLayer->isValid()) return false;
 
     lengthCheck -= otpLayer->toPDUByteArray().length();
-    if (lengthCheck != transformLayer->getPDULength() + OTPTransformLayer::LENGTHOFFSET)
+    if (lengthCheck != static_cast<size_t>(transformLayer->getPDULength() + OTPTransformLayer::LENGTHOFFSET))
         return false;
     if (!transformLayer->isValid()) return false;
 
