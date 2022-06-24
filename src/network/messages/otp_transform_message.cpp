@@ -190,7 +190,7 @@ void Message::updatePduLength()
 {
     pduLength_t length = 0;
 
-    for (const auto &pointLayer : pointLayers)
+    for (const auto &pointLayer : qAsConst(pointLayers))
     {
         pduLength_t modulesLength = 0;
         address_t address = {transformLayer->getSystem(), pointLayer->getGroup(), pointLayer->getPoint()};
@@ -221,5 +221,4 @@ void Message::updatePduLength()
     /* 6.3 Length */
     length += otpLayer->toPDUByteArray().size();
     otpLayer->setPDULength(length - OTPLayer::LENGTHOFFSET);
-    auto test = toByteArray();
 }

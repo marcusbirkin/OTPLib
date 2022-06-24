@@ -28,10 +28,10 @@ namespace OTP::PDU {
 
     /* Section 6 OTP Layer */
     namespace OTPLayer {
-        const otpIdent_t OTP_PACKET_IDENT = QByteArrayLiteral("\x4f\x54\x50\x2d\x45\x31\x2e\x35\x39\x00\x00\x00");
+        inline const otpIdent_t OTP_PACKET_IDENT = QByteArrayLiteral("\x4f\x54\x50\x2d\x45\x31\x2e\x35\x39\x00\x00\x00");
         const pduLength_t LENGTHOFFSET = OTP_PACKET_IDENT.size() + sizeof(vector_t) + sizeof(pduLength_t);
 
-        const QList<vector_t> VECTOR = {
+        inline const QList<vector_t> VECTOR = {
             VECTOR_OTP_TRANSFORM_MESSAGE,
             VECTOR_OTP_ADVERTISEMENT_MESSAGE};
         const options_t OPTIONS = 0x0;
@@ -64,7 +64,7 @@ namespace OTP::PDU {
     namespace OTPAdvertisementLayer {
         constexpr pduLength_t LENGTHOFFSET = sizeof(vector_t) + sizeof(pduLength_t);
 
-        const QList<vector_t> VECTOR = {
+        inline const QList<vector_t> VECTOR = {
             VECTOR_OTP_ADVERTISEMENT_MODULE,
             VECTOR_OTP_ADVERTISEMENT_NAME,
             VECTOR_OTP_ADVERTISEMENT_SYSTEM};
@@ -78,7 +78,7 @@ namespace OTP::PDU {
         const vector_t VECTOR = VECTOR_OTP_ADVERTISEMENT_MODULE_LIST;
         const reserved_t RESERVED = 0x0;
         namespace RANGES {
-            const range_t ListSize = {4,1376};
+            inline const range_t ListSize = {4,1376};
         }
     }
 
@@ -89,7 +89,7 @@ namespace OTP::PDU {
         const vector_t VECTOR = VECTOR_OTP_ADVERTISEMENT_NAME_LIST;
         const reserved_t RESERVED = 0x0;
         namespace RANGES {
-            const range_t ListSize = {0,1365};
+            inline const range_t ListSize = {0,1365};
         }
     }
 
@@ -100,7 +100,7 @@ namespace OTP::PDU {
         const vector_t VECTOR = VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST;
         const reserved_t RESERVED = 0x0;
         namespace RANGES {
-            const range_t ListSize = {0,200};
+            inline const range_t ListSize = {0,200};
         }
     }
 }

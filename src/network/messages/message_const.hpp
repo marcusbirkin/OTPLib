@@ -32,25 +32,25 @@ namespace OTP::MESSAGES
 
     namespace OTPTransformMessage {
         namespace RANGES {
-            const range_t MESSAGE_SIZE = {134, 1472};
+            inline const range_t MESSAGE_SIZE = {134, 1472};
         }
     }
 
     namespace OTPSystemAdvertisementMessage {
         namespace RANGES {
-            const range_t MESSAGE_SIZE = {96, 296};
+            inline const range_t MESSAGE_SIZE = {96, 296};
         }
     }
 
     namespace OTPNameAdvertisementMessage {
         namespace RANGES {
-            const range_t MESSAGE_SIZE = {96, 1461};
+            inline const range_t MESSAGE_SIZE = {96, 1461};
         }
     }
 
     namespace OTPModuleAdvertisementMessage {
         namespace RANGES {
-            const range_t MESSAGE_SIZE = {96, 1471};
+            inline const range_t MESSAGE_SIZE = {96, 1471};
         }
     }
 }

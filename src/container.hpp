@@ -97,27 +97,27 @@ namespace OTP
             { return isExpired(cid, {system, group, point}); }
 
     signals:
-        void newComponent(cid_t);
-        void newSystem(cid_t, system_t);
-        void newGroup(cid_t, system_t, group_t);
-        void newPoint(cid_t, system_t, group_t, point_t);
+        void newComponent(OTP::cid_t);
+        void newSystem(OTP::cid_t, OTP::system_t);
+        void newGroup(OTP::cid_t, OTP::system_t, OTP::group_t);
+        void newPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
 
-        void updatedComponent(const cid_t&, const name_t&);
-        void updatedComponent(const cid_t&, const QHostAddress&);
-        void updatedComponent(const cid_t&, const moduleList_t&);
+        void updatedComponent(const OTP::cid_t&, const OTP::name_t&);
+        void updatedComponent(const OTP::cid_t&, const QHostAddress&);
+        void updatedComponent(const OTP::cid_t&, const OTP::moduleList_t&);
         void updatedComponent(const OTP::cid_t&, OTP::component_t::type_t);
-        void updatedSystem(cid_t, system_t);
-        void updatedGroup(cid_t, system_t, group_t);
-        void updatedPoint(cid_t, system_t, group_t, point_t);
+        void updatedSystem(OTP::cid_t, OTP::system_t);
+        void updatedGroup(OTP::cid_t, OTP::system_t, OTP::group_t);
+        void updatedPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
 
-        void removedComponent(cid_t);
-        void removedSystem(cid_t, system_t);
-        void removedGroup(cid_t, system_t, group_t);
-        void expiredPoint(cid_t, system_t, group_t, point_t);
-        void removedPoint(cid_t, system_t, group_t, point_t);
+        void removedComponent(OTP::cid_t);
+        void removedSystem(OTP::cid_t, OTP::system_t);
+        void removedGroup(OTP::cid_t, OTP::system_t, OTP::group_t);
+        void expiredPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
+        void removedPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
 
     private slots:
-        void pruneModuleList(cid_t cid);
+        void pruneModuleList(OTP::cid_t cid);
         void pruneComponentList();
 
     private:

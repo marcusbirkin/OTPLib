@@ -312,7 +312,7 @@ QString Component::getUnitString(
         bool html) const
 {
     using namespace MODULES::STANDARD::VALUES;
-    return QString ("%1%2")
-            .arg(getScaleString(scale, html))
-            .arg(UNITS::getUnitString(moduleValue, html));
+    return QString ("%1%2").arg(
+                getScaleString(scale, html),
+                UNITS::getUnitString(moduleValue, html));
 }

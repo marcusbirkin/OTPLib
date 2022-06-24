@@ -94,18 +94,18 @@ namespace OTP
         /* Local CID */
         public:
             cid_t getLocalCID() const { return CID; }
-            void setLocalCID(cid_t);
+            void setLocalCID(OTP::cid_t);
         signals:
-            void newLocalCID(cid_t);
+            void newLocalCID(OTP::cid_t);
         protected:
             cid_t CID;
 
         /* Local Name */
         public:
             name_t getLocalName() const { return name; }
-            void setLocalName(name_t);
+            void setLocalName(OTP::name_t);
         signals:
-            void newLocalName(name_t);
+            void newLocalName(OTP::name_t);
         protected:
             name_t name;
 
@@ -115,8 +115,8 @@ namespace OTP
             virtual void addLocalSystem(system_t);
             virtual void removeLocalSystem(system_t);
         signals:
-            void newLocalSystem(system_t);
-            void removedLocalSystem(system_t);
+            void newLocalSystem(OTP::system_t);
+            void removedLocalSystem(OTP::system_t);
 
         /* Local Modules */
         public:
@@ -133,8 +133,8 @@ namespace OTP
             component_t getComponent(cid_t cid) const { return otpNetwork->getComponent(cid); }
             bool isComponentExpired(cid_t cid) const;
         signals:
-            void newComponent(cid_t);
-            void removedComponent(cid_t);
+            void newComponent(OTP::cid_t);
+            void removedComponent(OTP::cid_t);
             void updatedComponent(const OTP::cid_t&, const OTP::name_t&);
             void updatedComponent(const OTP::cid_t&, const QHostAddress&);
             void updatedComponent(const OTP::cid_t&, const OTP::moduleList_t &);
@@ -145,8 +145,8 @@ namespace OTP
             QList<system_t> getSystems() const { return otpNetwork->getSystemList(); }
             QList<system_t> getSystems(cid_t cid) const { return otpNetwork->getSystemList(cid); }
         signals:
-            void newSystem(cid_t, system_t);
-            void removedSystem(cid_t, system_t);
+            void newSystem(OTP::cid_t, OTP::system_t);
+            void removedSystem(OTP::cid_t, OTP::system_t);
 
         /* Groups */
         public:
@@ -157,8 +157,8 @@ namespace OTP
             bool isGroupExpired(system_t system, group_t group) const
                 { return isGroupExpired(cid_t(), system, group); }
         signals:
-            void newGroup(cid_t, system_t, group_t);
-            void removedGroup(cid_t, system_t, group_t);
+            void newGroup(OTP::cid_t, OTP::system_t, OTP::group_t);
+            void removedGroup(OTP::cid_t, OTP::system_t, OTP::group_t);
 
         /* Points */
         public:
@@ -188,10 +188,10 @@ namespace OTP
             bool isPointExpired(system_t system, group_t group, point_t point) const
                 { return isPointExpired(address_t(system, group, point)); }
         signals:
-            void newPoint(cid_t, system_t, group_t, point_t);
-            void removedPoint(cid_t, system_t, group_t, point_t);
-            void updatedPoint(cid_t, system_t, group_t, point_t);
-            void expiredPoint(cid_t, system_t, group_t, point_t);
+            void newPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
+            void removedPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
+            void updatedPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
+            void expiredPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
 
         /* Addresses */
         public:

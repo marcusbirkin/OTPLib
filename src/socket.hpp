@@ -96,6 +96,10 @@ namespace OTP
         SocketManager(SocketManager&&) = delete;
         SocketManager& operator=(SocketManager&&) = delete;
 
+        typedef std::pair<QString, QAbstractSocket::NetworkLayerProtocol> instanceKey_t;
+        typedef QMap<instanceKey_t, QWeakPointer<SocketManager>> instances_t;
+        static instances_t& getInstances();
+
         QNetworkInterface interface;
         QAbstractSocket::NetworkLayerProtocol transport;
         void setupRXSocket();

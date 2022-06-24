@@ -297,7 +297,7 @@ void Container::addPoint(cid_t cid, address_t address, priority_t priority)
     if (!pointTimeoutMap.contains(address)) {
         pointTimeoutMap[address] = std::make_shared<QTimer>(this);
         pointTimeoutMap[address]->setSingleShot(true);
-        connect(pointTimeoutMap[address].get(), &QTimer::timeout,
+        connect(pointTimeoutMap[address].get(), &QTimer::timeout, this,
             [this, cid, address]() {
                 if(!isValid(address) || isExpired(cid, address))
                 {

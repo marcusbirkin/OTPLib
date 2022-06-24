@@ -76,8 +76,8 @@ namespace OTP
             void addLocalGroup(system_t, group_t);
             void removeLocalGroup(system_t, group_t);
         signals:
-            void newLocalGroup(system_t, group_t);
-            void removedLocalGroup(system_t, group_t);
+            void newLocalGroup(OTP::system_t, OTP::group_t);
+            void removedLocalGroup(OTP::system_t, OTP::group_t);
 
         /* Local Points */
         public:
@@ -94,8 +94,8 @@ namespace OTP
                     system_t newSystem, group_t newGroup, point_t newPoint)
                 { moveLocalPoint({oldSystem, oldGroup, oldPoint}, {newSystem, newGroup, newPoint}); }
         signals:
-            void newLocalPoint(system_t, group_t, point_t);
-            void removedLocalPoint(system_t, group_t, point_t);
+            void newLocalPoint(OTP::system_t, OTP::group_t, OTP::point_t);
+            void removedLocalPoint(OTP::system_t, OTP::group_t, OTP::point_t);
 
         public:
             QString getLocalPointName(address_t) const;
@@ -105,7 +105,7 @@ namespace OTP
             void setLocalPointName(system_t system, group_t group, point_t point, QString name)
                 { setLocalPointName(address_t(system, group, point), name); }
         signals:
-            void updatedLocalPointName(address_t);
+            void updatedLocalPointName(OTP::address_t);
 
         public:
             priority_t getLocalPointPriority(address_t) const;
@@ -115,7 +115,7 @@ namespace OTP
             void setLocalPointPriority(system_t system, group_t group, point_t point, priority_t priority)
                 { setLocalPointPriority(address_t(system, group, point), priority); }
         signals:
-            void updatedLocalPointPriority(address_t);
+            void updatedLocalPointPriority(OTP::address_t);
 
         /* Local Addresses */
         public:
@@ -136,7 +136,7 @@ namespace OTP
             PositionValue_t getLocalPosition(address_t, axis_t) const;
             void setLocalPosition(address_t, axis_t, PositionValue_t);
         signals:
-            void updatedPosition(address_t, axis_t);
+            void updatedPosition(OTP::address_t, OTP::axis_t);
 
         /* -Position Velocity/Acceleration */
         public:
@@ -158,8 +158,8 @@ namespace OTP
             PositionAcceleration_t getLocalPositionAcceleration( address_t, axis_t) const;
             void setLocalPositionAcceleration(address_t, axis_t, PositionAcceleration_t);
         signals:
-            void updatedPositionVelocity(address_t, axis_t);
-            void updatedPositionAcceleration(address_t, axis_t);
+            void updatedPositionVelocity(OTP::address_t, OTP::axis_t);
+            void updatedPositionAcceleration(OTP::address_t, OTP::axis_t);
 
         /* -Rotation */
         public:
@@ -172,7 +172,7 @@ namespace OTP
             RotationValue_t getLocalRotation(address_t, axis_t) const;
             void setLocalRotation(address_t, axis_t, RotationValue_t);
         signals:
-            void updatedRotation(address_t, axis_t);
+            void updatedRotation(OTP::address_t, OTP::axis_t);
 
         /* -Rotation Velocity/Acceleration */
         public:
@@ -194,8 +194,8 @@ namespace OTP
             RotationAcceleration_t getLocalRotationAcceleration(address_t, axis_t) const;
             void setLocalRotationAcceleration(address_t, axis_t, RotationAcceleration_t);
         signals:
-            void updatedRotationVelocity(address_t, axis_t);
-            void updatedRotationAcceleration(address_t, axis_t);
+            void updatedRotationVelocity(OTP::address_t, OTP::axis_t);
+            void updatedRotationAcceleration(OTP::address_t, OTP::axis_t);
 
         /* -Scale */
         public:
@@ -204,13 +204,15 @@ namespace OTP
                 MODULES::STANDARD::ScaleModule_t::scale_t value = 0;
                 MODULES::STANDARD::ScaleModule_t::percent_t getPercent() { return MODULES::STANDARD::ScaleModule_t::toPercent(value); }
                 operator QString() { return MODULES::STANDARD::ScaleModule_t::toPercentString(value).append("%"); }
-                void setPercent(MODULES::STANDARD::ScaleModule_t::percent_t value) { value = MODULES::STANDARD::ScaleModule_t::fromPercent(value); }
+                void setPercent(MODULES::STANDARD::ScaleModule_t::percent_t value) {
+                    Scale_t::value = MODULES::STANDARD::ScaleModule_t::fromPercent(value);
+                }
                 timestamp_t timestamp = 0;
             } Scale_t;
             Scale_t getLocalScale(address_t, axis_t) const;
             void setLocalScale(address_t, axis_t, Scale_t);
         signals:
-            void updatedScale(address_t, axis_t);
+            void updatedScale(OTP::address_t, OTP::axis_t);
 
         /* -Reference Frame */
         public:
@@ -223,7 +225,7 @@ namespace OTP
             ReferenceFrame_t getLocalReferenceFrame(address_t) const;
             void setLocalReferenceFrame(address_t, ReferenceFrame_t);
         signals:
-            void updatedReferenceFrame(address_t);
+            void updatedReferenceFrame(OTP::address_t);
 
     private:
         void setupSender(std::chrono::milliseconds transformRate);
@@ -294,7 +296,7 @@ namespace OTP
             QMap<cid_t, PositionValue_t> getPositions(address_t, axis_t, bool respectRelative = true, bool excludeWinner = false) const;
 
         signals:
-            void updatedPosition(cid_t, address_t, axis_t);
+            void updatedPosition(OTP::cid_t, OTP::address_t, OTP::axis_t);
 
         /* -Position Velocity/Acceleration */
         public:
@@ -322,8 +324,8 @@ namespace OTP
             PositionAcceleration_t getPositionAcceleration(address_t, axis_t, bool respectRelative = true) const;
             QMap<cid_t, PositionAcceleration_t> getPositionAccelerations(address_t, axis_t, bool respectRelative = true, bool excludeWinner = false) const;
         signals:
-            void updatedPositionVelocity(cid_t, address_t, axis_t);
-            void updatedPositionAcceleration(cid_t, address_t, axis_t);
+            void updatedPositionVelocity(OTP::cid_t, OTP::address_t, OTP::axis_t);
+            void updatedPositionAcceleration(OTP::cid_t, OTP::address_t, OTP::axis_t);
 
         /* -Rotation */
         public:
@@ -339,7 +341,7 @@ namespace OTP
             RotationValue_t getRotation(address_t, axis_t, bool respectRelative = true) const;
             QMap<cid_t, RotationValue_t> getRotations(address_t, axis_t, bool respectRelative = true, bool excludeWinner = false) const;
         signals:
-            void updatedRotation(cid_t, address_t, axis_t);
+            void updatedRotation(OTP::cid_t, OTP::address_t, OTP::axis_t);
 
         /* -Position Velocity/Acceleration */
         public:
@@ -367,8 +369,8 @@ namespace OTP
             RotationAcceleration_t getRotationAcceleration(address_t, axis_t, bool respectRelative = true) const;
             QMap<cid_t, RotationAcceleration_t> getRotationAccelerations(address_t, axis_t, bool respectRelative = true, bool excludeWinner = false) const;
         signals:
-            void updatedRotationVelocity(cid_t, address_t, axis_t);
-            void updatedRotationAcceleration(cid_t, address_t, axis_t);
+            void updatedRotationVelocity(OTP::cid_t, OTP::address_t, OTP::axis_t);
+            void updatedRotationAcceleration(OTP::cid_t, OTP::address_t, OTP::axis_t);
 
         /* -Scale */
         public:
@@ -378,7 +380,9 @@ namespace OTP
                 MODULES::STANDARD::ScaleModule_t::percent_t getPercent() { return MODULES::STANDARD::ScaleModule_t::toPercent(value); }
                 QString unit;
                 operator QString() const { return MODULES::STANDARD::ScaleModule_t::toPercentString(value).append("%"); }
-                void setPercent(MODULES::STANDARD::ScaleModule_t::percent_t value) { value = MODULES::STANDARD::ScaleModule_t::fromPercent(value); }
+                void setPercent(MODULES::STANDARD::ScaleModule_t::percent_t value) {
+                    Scale_t::value = MODULES::STANDARD::ScaleModule_t::fromPercent(value);
+                }
                 timestamp_t timestamp = 0;
                 cid_t sourceCID;
                 priority_t priority;
@@ -387,7 +391,7 @@ namespace OTP
             Scale_t getScale(address_t, axis_t) const;
             QMap<cid_t, Scale_t> getScales(address_t, axis_t, bool excludeWinner = false) const;
         signals:
-            void updatedScale(cid_t, address_t, axis_t);
+            void updatedScale(OTP::cid_t, OTP::address_t, OTP::axis_t);
 
         /* -Reference Frame */
         public:
@@ -401,7 +405,7 @@ namespace OTP
             ReferenceFrame_t getReferenceFrame(cid_t, address_t) const;
             ReferenceFrame_t getReferenceFrame(address_t) const;
         signals:
-            void updatedReferenceFrame(cid_t, address_t);
+            void updatedReferenceFrame(OTP::cid_t, OTP::address_t);
 
     private:
         void setupListener() override;

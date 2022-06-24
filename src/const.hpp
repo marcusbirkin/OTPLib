@@ -28,7 +28,7 @@ namespace OTP {
 
     namespace RANGES {
         /* 9.3 Priority */
-        const range_t Priority = {0, 200};
+        inline const range_t Priority = {0,200};
 
         /* Table 7-2: Address Numbering */
         inline const range_t System = {1,200};

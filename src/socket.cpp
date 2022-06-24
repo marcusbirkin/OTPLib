@@ -22,9 +22,6 @@
 
 using namespace OTP;
 
-typedef std::pair<QString, QAbstractSocket::NetworkLayerProtocol> instanceKey_t;
-static QMap<instanceKey_t, QWeakPointer<SocketManager>> instances;
-
 SocketManager::SocketManager(QNetworkInterface interface, QAbstractSocket::NetworkLayerProtocol transport) : QObject(),
     interface(interface), transport(transport)
 {
@@ -66,20 +63,26 @@ SocketManager::SocketManager(QNetworkInterface interface, QAbstractSocket::Netwo
 SocketManager::~SocketManager()
 {
     instanceKey_t key = {interface.name(), transport};
-    instances.remove(key);
+    getInstances().remove(key);
     RXSocket->close();
     RXSocket.release();
+}
+
+SocketManager::instances_t& SocketManager::getInstances()
+{
+    static instances_t instances;
+    return instances;
 }
 
 QSharedPointer<SocketManager> SocketManager::getSocket(QNetworkInterface interface, QAbstractSocket::NetworkLayerProtocol transport)
 {
     instanceKey_t key = {interface.name(), transport};
     QSharedPointer<SocketManager> sp;
-    if (!instances.contains(key)) {
+    if (!getInstances().contains(key)) {
         sp = QSharedPointer<SocketManager>(new SocketManager(interface, transport));
-        instances.insert(key, sp);
+        getInstances().insert(key, sp);
     } else {
-        sp = instances.value(key).lock();
+        sp = getInstances().value(key).lock();
     }
     return sp;
 }

@@ -79,7 +79,7 @@ namespace OTP::MODULES {
         using namespace ESTA::ManufacturerIDs;
         const auto it = Manufacturers.find(ident.ManufacturerID);
         if (it != Manufacturers.end())
-            ret.Manufactuer = QString::fromStdString(it->second);
+            ret.Manufactuer = QString::fromStdWString(it->second);
 
         switch (ident.ManufacturerID)
         {
