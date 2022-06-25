@@ -100,6 +100,9 @@ namespace OTP::PDU
         public:
             cid_t() : QUuid() {}
             cid_t(const QUuid &id) : QUuid(id) {}
+            explicit cid_t(const QByteArray &id) : QUuid(id) {}
+
+            static cid_t createUuid();
         };
         PDUByteArray& operator<<(PDUByteArray &l, const cid_t &r);
         PDUByteArray& operator>>(PDUByteArray &l, cid_t &r);

@@ -168,6 +168,11 @@ namespace OTP::PDU {
             return l;
         }
 
+        cid_t cid_t::createUuid()
+        {
+            return cid_t(QUuid::createUuid());
+        }
+
         PDUByteArray& operator<<(PDUByteArray &l, const cid_t &r)
         {
             l.append(r.toRfc4122());

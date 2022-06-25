@@ -21,6 +21,7 @@
 
 #include "../../bugs.hpp"
 #include <QDateTime>
+#include <QRegularExpression>
 #include <bitset>
 #include "../messages/message_types.hpp"
 #include "../pdu/pdu_types.hpp"
@@ -445,9 +446,11 @@ namespace OTP::MODULES {
             }
 
             static percent_t toPercent(scale_t scale);
-            static QString toPercentString(scale_t scale) {
-                auto ret = QString::number(toPercent(scale), 'f', 4);
-                ret.remove( QRegExp("\\.?0+$") );
+            static QString toPercentString(scale_t scale, int precision = 4) {
+                auto ret = QString::number(toPercent(scale), 'f', precision);
+                // Remove trailing fractional zeros. i.e. 10.0100 becomes 10.01
+                static auto trailingZeros = QRegularExpression("\\.?0+$");
+                ret.remove(trailingZeros);
                 return ret;
             }
             static scale_t fromPercent(percent_t percent);
