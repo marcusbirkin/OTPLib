@@ -1,0 +1,64 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  tests:
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        qtltsver: ['5.15.2', '6.2.4']
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v2.14.0
+      with:
+        version: ${{ matrix.qtltsver }}
+      
+    - name: MSVC Environment Setup
+      if: startsWith(matrix.os, 'windows')
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Create Makefile
+      run: qmake
+
+    - name: Build (nmake)
+      if: (startsWith(matrix.os, 'windows'))
+      run: nmake
+      
+    - name: Build (make)
+      if: (!startsWith(matrix.os, 'windows'))
+      run: make
+
+    - name: Run Unit Tests
+      shell: bash
+      continue-on-error: true
+      working-directory: ${{github.workspace}}/tests
+      run: |
+        if [ "$RUNNER_OS" == "Windows" ]; then
+          ./release/OTPLib_TESTS.exe -junitxml > tests.xml
+        else
+          chmod +x OTPLib_TESTS
+          ./OTPLib_TESTS -junitxml > tests.xml
+        fi
+        awk 'BEGIN {NUM=0} /xml version="1.0"/ {NUM++; filename="test_"NUM".xml"} {print > filename}' tests.xml
+
+    - name: Publish Unit Test Results (Linux)
+      if: runner.os == 'Linux'
+      uses: EnricoMi/publish-unit-test-result-action@v1
+      with:
+        check_name: "results_${{ matrix.os }}_Qt${{ matrix.qtltsver }}"
+        files:  "${{github.workspace}}/**/test_*.xml"
+        
+    - name: Publish Unit Test Results (Windows/macOS)
+      if: runner.os == 'Windows' || runner.os == 'macOS'
+      uses: EnricoMi/publish-unit-test-result-action/composite@v1
+      with:
+        check_name: "results_${{ matrix.os }}_Qt${{ matrix.qtltsver }}"
+        files:  "${{github.workspace}}/**/test_*.xml"
