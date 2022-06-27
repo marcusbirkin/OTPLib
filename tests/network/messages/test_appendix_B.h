@@ -390,7 +390,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .length = 5,
                     .option_Response = 0,
                     .reserved = 0,
-                    .systems = QList<exampleDetails_t::OTPSystemAdvertisementLayer::systems_t>(),
+                    .systems = {},
                 },
             }
         },
@@ -452,7 +452,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .length = 5,
                     .option_Response = false,
                     .reserved = 0,
-                    .descriptions = QList<exampleDetails_t::OTPNameAdvertisementLayer::description_t>(),
+                    .descriptions = {},
                 }
             }
         },

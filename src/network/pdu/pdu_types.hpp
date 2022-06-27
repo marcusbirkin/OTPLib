@@ -95,7 +95,7 @@ namespace OTP::PDU
         };
         PDUByteArray& operator<<(PDUByteArray &l, const otpIdent_t &r);
         PDUByteArray& operator>>(PDUByteArray &l, otpIdent_t &r);
-        class cid_t : public QUuid
+        class OTP_LIB_EXPORT cid_t : public QUuid
         {
         public:
             cid_t() : QUuid() {}
