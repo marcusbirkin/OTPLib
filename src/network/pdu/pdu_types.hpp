@@ -50,13 +50,14 @@ namespace OTP::PDU
         name_t(const QString &s);
         static int maxSize();
         bool isValid() const;
+        operator QString() const;
         QString toString() const;
         void fromString(const QString &s);
     };
     PDUByteArray& operator<<(PDUByteArray &l, const name_t &r);
     PDUByteArray& operator>>(PDUByteArray &l, name_t &r);
     inline bool operator==(const name_t &l, const name_t &r) {
-        return (l.toString().toUtf8() == r.toString().toUtf8());
+        return (static_cast<QString>(l).toUtf8() == static_cast<QString>(r).toUtf8());
     }
     inline bool operator!=(const name_t &l, const name_t &r) { return !(l == r); }
 

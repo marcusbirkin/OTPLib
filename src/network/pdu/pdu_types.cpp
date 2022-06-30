@@ -118,19 +118,26 @@ namespace OTP::PDU {
             std::min(static_cast<size_t>(ba.size()), NAME_LENGTH),
             ba.mid(0, NAME_LENGTH));
     }
-    name_t::name_t(const QString &s) : name_t() { fromString(s); }
-
+    name_t::name_t(const QString &s) : name_t()
+    {
+        fromString(s);
+    }
     int name_t::maxSize() { return NAME_LENGTH; };
-    bool name_t::isValid() const {
-        if (static_cast<size_t>(toString().toUtf8().size()) > NAME_LENGTH)
+    bool name_t::isValid() const
+    {
+        if (static_cast<size_t>(static_cast<QString>(this->data()).toUtf8().size()) > NAME_LENGTH)
             return false;
-        if (this->data() != toString().toUtf8())
+        if (this->data() != static_cast<QString>(this->data()).toUtf8())
             return false;
         return true;
     }
-    QString name_t::toString() const
+    name_t::operator QString() const
     {
         return QString::fromUtf8(this->data());
+    }
+    QString name_t::toString() const
+    {
+        return static_cast<QString>(this->data());
     }
     void name_t::fromString(const QString &s)
     {
