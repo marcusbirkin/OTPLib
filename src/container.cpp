@@ -387,7 +387,7 @@ pointDetails_t Container::PointDetails(cid_t cid, address_t address) const
     if (addressMap[cid][address.system][address.group].contains(address.point))
         return addressMap[cid][address.system][address.group].value(address.point);
     else
-        return std::make_shared<pointDetails>(pointDetails());
+        return std::make_shared<pointDetails>();
 }
 
 bool Container::isValid(const address_t address) const
