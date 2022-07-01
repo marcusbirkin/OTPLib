@@ -175,7 +175,7 @@ namespace OTP
     class pointDetails
     {
     public:
-        pointDetails() : lastSeen(QDateTime::currentDateTime()) {}
+        pointDetails() : lastSeen(QDateTime()) {}
         pointDetails(priority_t priority) :
             lastSeen(QDateTime::currentDateTime()),
             priority(priority) {}

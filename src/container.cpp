@@ -96,13 +96,12 @@ bool Container::changeComponentCID(cid_t oldCID, cid_t newCID)
         return false;
 
     // Move
-    componentMap[newCID] = componentMap[oldCID];
-    addressMap[newCID] = addressMap[oldCID];
+    componentMap[newCID] = std::move(componentMap[oldCID]);
+    addressMap[newCID] = std::move(addressMap[oldCID]);
+    removeComponent(oldCID);
 
     qDebug() << parent() << "- Changed component CID" << oldCID << newCID;
     emit newComponent(newCID);
-
-    removeComponent(oldCID);
 
     return true;
 }
@@ -346,7 +345,7 @@ void Container::movePoint(cid_t cid, address_t oldAddress, address_t newAddress)
 
     addPoint(cid, newAddress);
     addressMap[cid][newAddress.system][newAddress.group][newAddress.point] =
-            addressMap[cid][oldAddress.system][oldAddress.group][oldAddress.point];
+            std::move(addressMap[cid][oldAddress.system][oldAddress.group][oldAddress.point]);
     removePoint(cid, oldAddress);
 
     qDebug() << parent() << "- Moved point" << cid
@@ -377,6 +376,18 @@ QList<point_t> Container::getPointList(cid_t cid, system_t system, group_t group
     QList<point_t> ret = addressMap[cid][system][group].keys();
     std::sort(ret.begin(),ret.end());
     return ret;
+}
+
+pointDetails_t Container::PointDetails(cid_t cid, address_t address)
+{
+    return addressMap[cid][address.system][address.group][address.point];
+}
+pointDetails_t Container::PointDetails(cid_t cid, address_t address) const
+{
+    if (addressMap[cid][address.system][address.group].contains(address.point))
+        return addressMap[cid][address.system][address.group].value(address.point);
+    else
+        return std::make_shared<pointDetails>(pointDetails());
 }
 
 bool Container::isValid(const address_t address) const

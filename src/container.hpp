@@ -83,10 +83,8 @@ namespace OTP
             { movePoint(cid, {oldSystem, oldGroup, oldPoint}, {newSystem, newGroup, newPoint}); }
         QList<point_t> getPointList(system_t system, group_t group) const;
         QList<point_t> getPointList(cid_t cid, system_t system, group_t group) const;
-        pointDetails_t PointDetails(cid_t cid, address_t address)
-            { return addressMap[cid][address.system][address.group][address.point]; }
-        pointDetails_t PointDetails(cid_t cid, address_t address) const
-            { return addressMap[cid][address.system][address.group][address.point]; }
+        pointDetails_t PointDetails(cid_t cid, address_t address);
+        pointDetails_t PointDetails(cid_t cid, address_t address) const;
         pointDetails_t PointDetails(cid_t cid, system_t system, group_t group, point_t point)
             { return PointDetails(cid, {system, group, point}); }
         bool isValid(address_t address) const;
