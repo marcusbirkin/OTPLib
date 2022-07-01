@@ -122,10 +122,14 @@ component_t Container::getComponent(cid_t cid) const
 cid_t Container::getWinningComponent(address_t address) const
 {
     cid_t ret;
-    pointDetails_t pdA;
-    for (const auto &cid : getComponentList())
+    pointDetails_t pdA, pdB;
+    for (auto it = componentMap.begin(); it != componentMap.end(); it++)
     {
-        pointDetails_t pdB = PointDetails(cid, address);
+        const auto cid = it.key();
+        if (!addressMap[cid][address.system][address.group].contains(address.point))
+            continue;
+
+        pdB = PointDetails(cid, address);
         if (!pdB || pdB->isExpired()) continue;
         if (!pdA || (!pdA->isExpired() && pdB->getPriority() > pdA->getPriority()))
         {
