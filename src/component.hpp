@@ -94,7 +94,7 @@ namespace OTP
         /* Local CID */
         public:
             cid_t getLocalCID() const { return CID; }
-            void setLocalCID(OTP::cid_t);
+            void setLocalCID(OTP::cid_t value);
         signals:
             void newLocalCID(OTP::cid_t);
         protected:

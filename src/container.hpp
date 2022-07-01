@@ -45,6 +45,7 @@ namespace OTP
                 const moduleList_t &list = moduleList_t())
             { addComponent(cid, IPAddr, name, component_t::consumer, list); }
         void removeComponent(const cid_t &cid);
+        bool changeComponentCID(cid_t oldCID, cid_t newCID);
 
         QList<cid_t> getComponentList() const;
         component_t getComponent(cid_t cid) const;

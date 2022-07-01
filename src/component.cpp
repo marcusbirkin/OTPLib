@@ -146,7 +146,10 @@ void Component::newDatagram(QNetworkDatagram datagram)
 void Component::setLocalCID(cid_t value)
 {
     if (CID == value) return;
+
+    otpNetwork->changeComponentCID(CID, value);
     CID = value;
+
     emit newLocalCID(CID);
 }
 

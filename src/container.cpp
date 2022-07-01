@@ -90,6 +90,23 @@ void Container::removeComponent(const cid_t &cid)
     }
 }
 
+bool Container::changeComponentCID(cid_t oldCID, cid_t newCID)
+{
+    if (!componentMap.contains(oldCID) || componentMap.contains(newCID))
+        return false;
+
+    // Move
+    componentMap[newCID] = componentMap[oldCID];
+    addressMap[newCID] = addressMap[oldCID];
+
+    qDebug() << parent() << "- Changed component CID" << oldCID << newCID;
+    emit newComponent(newCID);
+
+    removeComponent(oldCID);
+
+    return true;
+}
+
 QList<cid_t> Container::getComponentList() const
 {
     return componentMap.keys();
