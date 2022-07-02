@@ -19,6 +19,7 @@
 #include "container.hpp"
 #include "otp.hpp"
 #include <QTimer>
+#include <QMutexLocker>
 
 using namespace OTP;
 
@@ -97,7 +98,10 @@ bool Container::changeComponentCID(cid_t oldCID, cid_t newCID)
 
     // Move
     componentMap[newCID] = std::move(componentMap[oldCID]);
-    addressMap[newCID] = std::move(addressMap[oldCID]);
+    {
+        QMutexLocker lock(&addressMapMutex);
+        addressMap[newCID] = std::move(addressMap[oldCID]);
+    }
     removeComponent(oldCID);
 
     qDebug() << parent() << "- Changed component CID" << oldCID << newCID;
@@ -142,6 +146,7 @@ cid_t Container::getWinningComponent(address_t address) const
 
 void Container::clearSystems()
 {
+    QMutexLocker lock(&addressMapMutex);
     addressMap.clear();
 }
 
@@ -151,7 +156,10 @@ void Container::addSystem(cid_t cid, system_t system)
 
     if (!getSystemList(cid).contains(system))
     {
-        addressMap[cid][system];
+        {
+            QMutexLocker lock(&addressMapMutex);
+            addressMap[cid][system];
+        }
         qDebug() << parent() << "- New system" << cid << system;
         emit newSystem(cid, system);
     }
@@ -159,9 +167,11 @@ void Container::addSystem(cid_t cid, system_t system)
 
 void Container::removeSystem(cid_t cid, system_t system)
 {
+    QMutexLocker lock(&addressMapMutex);
     if (addressMap[cid].contains(system))
     {
         addressMap[cid].remove(system);
+        lock.unlock();
         qDebug() << parent() << "- Removed system" << cid << system;
         emit removedSystem(cid, system);
     }
@@ -169,6 +179,7 @@ void Container::removeSystem(cid_t cid, system_t system)
 
 QList<system_t> Container::getSystemList() const
 {
+    QMutexLocker lock(&addressMapMutex);
     QList<system_t> ret;
     QHashIterator<cid_t, systemMap_t> i(addressMap);
     while (i.hasNext()) {
@@ -183,6 +194,7 @@ QList<system_t> Container::getSystemList() const
 
 QList<system_t> Container::getSystemList(cid_t cid) const
 {
+    QMutexLocker lock(&addressMapMutex);
     if (!addressMap.contains(cid)) return QList<system_t>();
 
     QList<system_t> ret = addressMap[cid].keys();
@@ -200,7 +212,10 @@ void Container::addGroup(cid_t cid, system_t system, group_t group)
     bool updated = getGroupList(system).contains(group);
     if (!existing)
     {
-        addressMap[cid][system][group] = pointMap_t();
+        {
+            QMutexLocker lock(&addressMapMutex);
+            addressMap[cid][system][group] = pointMap_t();
+        }
         if (updated)
         {
             // New to this CID
@@ -217,7 +232,10 @@ void Container::removeGroup(cid_t cid, system_t system, group_t group)
 {
     if (getGroupList(cid, system).contains(group))
     {
-        addressMap[cid][system].remove(group);
+        {
+            QMutexLocker lock(&addressMapMutex);
+            addressMap[cid][system].remove(group);
+        }
         qDebug() << parent() << "- Removed Group" << cid << system << group;
         emit removedGroup(cid, system, group);
     }
@@ -239,6 +257,7 @@ QList<group_t> Container::getGroupList(system_t system) const
 
 QList<group_t> Container::getGroupList(cid_t cid, system_t system) const
 {
+    QMutexLocker lock(&addressMapMutex);
     if (!addressMap.contains(cid)) return QList<group_t>();
     if (!addressMap[cid].contains(system)) return QList<group_t>();
 
@@ -304,12 +323,18 @@ void Container::addPoint(cid_t cid, address_t address, priority_t priority)
     bool existing = getPointList(cid, address.system, address.group).contains(address.point);
     if (existing)
     {
-        addressMap[cid][address.system][address.group][address.point]->updateLastSeen();
+        {
+            QMutexLocker lock(&addressMapMutex);
+            addressMap[cid][address.system][address.group][address.point]->updateLastSeen();
+        }
         emit updatedPoint(cid, address.system, address.group, address.point);
     } else
     {
         auto newDetails = pointDetails_t(new pointDetails);
-        addressMap[cid][address.system][address.group].insert(address.point, newDetails);
+        {
+            QMutexLocker lock(&addressMapMutex);
+            addressMap[cid][address.system][address.group].insert(address.point, newDetails);
+        }
         qDebug() << parent() << "- New point" << cid << address.system << address.group << address.point << "(Priority: " << priority << ")";
         emit newPoint(cid, address.system, address.group, address.point);
     }
@@ -334,7 +359,10 @@ void Container::removePoint(cid_t cid, address_t address)
     if (!address.point.isValid()) return;
     if (!getPointList(address.system, address.group).contains(address.point)) return;
 
-    addressMap[cid][address.system][address.group].remove(address.point);
+    {
+        QMutexLocker lock(&addressMapMutex);
+        addressMap[cid][address.system][address.group].remove(address.point);
+    }
     qDebug() << parent() << "- Removed point" << cid << address.system << address.group << address.point;
     emit removedPoint(cid, address.system, address.group, address.point);
 }
@@ -348,8 +376,11 @@ void Container::movePoint(cid_t cid, address_t oldAddress, address_t newAddress)
     if (getPointList(newAddress.system, newAddress.group).contains(newAddress.point)) return;
 
     addPoint(cid, newAddress);
-    addressMap[cid][newAddress.system][newAddress.group][newAddress.point] =
-            std::move(addressMap[cid][oldAddress.system][oldAddress.group][oldAddress.point]);
+    {
+        QMutexLocker lock(&addressMapMutex);
+        addressMap[cid][newAddress.system][newAddress.group][newAddress.point] =
+                std::move(addressMap[cid][oldAddress.system][oldAddress.group][oldAddress.point]);
+    }
     removePoint(cid, oldAddress);
 
     qDebug() << parent() << "- Moved point" << cid
@@ -373,6 +404,8 @@ QList<point_t> Container::getPointList(system_t system, group_t group) const
 
 QList<point_t> Container::getPointList(cid_t cid, system_t system, group_t group) const
 {
+    QMutexLocker lock(&addressMapMutex);
+
     if (!addressMap.contains(cid)) return QList<point_t>();
     if (!addressMap[cid].contains(system)) return QList<point_t>();
     if (!addressMap[cid][system].contains(group)) return QList<point_t>();
@@ -384,10 +417,12 @@ QList<point_t> Container::getPointList(cid_t cid, system_t system, group_t group
 
 pointDetails_t Container::PointDetails(cid_t cid, address_t address)
 {
+    QMutexLocker lock(&addressMapMutex);
     return addressMap[cid][address.system][address.group][address.point];
 }
 pointDetails_t Container::PointDetails(cid_t cid, address_t address) const
 {
+    QMutexLocker lock(&addressMapMutex);
     if (addressMap[cid][address.system][address.group].contains(address.point))
         return addressMap[cid][address.system][address.group].value(address.point);
     else

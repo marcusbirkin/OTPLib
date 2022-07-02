@@ -20,6 +20,7 @@
 #define CONTAINER_H
 
 #include <QObject>
+#include <QMutex>
 #include "types.hpp"
 
 namespace OTP
@@ -120,6 +121,7 @@ namespace OTP
         void pruneComponentList();
 
     private:
+        mutable QMutex addressMapMutex;
         addressMap_t addressMap;
         componentMap_t componentMap;
         QTimer componentTimeout;
