@@ -307,6 +307,17 @@ namespace OTP
     inline bool operator==(const address_t& l, const address_t& r)
         { return ((l.system == r.system) && (l.group == r.group) && (l.point == r.point)); }
     inline bool operator!=(const address_t& l, const address_t& r) { return !(l == r); }
+    inline uint qHash(const address_t &key, uint seed = 0)
+    {
+        #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+            auto address = {static_cast<unsigned int>(key.system),
+                            static_cast<unsigned int>(key.group),
+                            static_cast<unsigned int>(key.point)};
+            return qHashRange(address.begin(), address.end(), seed);
+        #else
+            return qHashMulti(seed, key.system, key.group, key.point);
+        #endif
+    }
 
     typedef QHash<point_t, pointDetails_t> pointMap_t;
     typedef QHash<group_t, pointMap_t> groupMap_t;

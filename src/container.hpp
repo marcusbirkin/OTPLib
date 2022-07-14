@@ -20,15 +20,19 @@
 #define CONTAINER_H
 
 #include <QObject>
+#include <QMutex>
 #include "types.hpp"
 
 namespace OTP
 {
+    class Merger;
     class Container : public QObject
     {
         Q_OBJECT
+        friend class Merger;
     public:
         explicit Container(QObject *parent = nullptr);
+        ~Container();
 
         void clearComponents();
 
@@ -58,6 +62,7 @@ namespace OTP
         void removeSystem(cid_t cid, system_t system);
         QList<system_t> getSystemList() const;
         QList<system_t> getSystemList(cid_t cid) const;
+        void setSystemDirty(system_t system);
 
         void addGroup(cid_t cid, system_t system, group_t group);
         void removeGroup(cid_t cid, system_t system, group_t group);
@@ -116,15 +121,68 @@ namespace OTP
         void removedPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
 
     private slots:
-        void pruneModuleList(OTP::cid_t cid);
+        /**
+         * @brief Check for, and prune, expired points for specified component and address
+         * @param cid CID of component to check
+         * @param address Address to check
+         */
+        void prunePointList(const OTP::cid_t &cid, OTP::address_t address);
+
+        /**
+         * @brief Check for, and prune, expired modules for specified components
+         * @param cid CID of component to check
+         */
+        void pruneModuleList(const OTP::cid_t &cid);
+
+        /**
+         * @brief Check for, and prune, expired components
+         * @details Called regularly by QTimer componentTimeout
+         */
         void pruneComponentList();
 
     private:
+        /**
+         * @brief Mutex to protect addressMap
+         */
+        mutable QMutex addressMapMutex;
+        /**
+         * @brief Container of point details indexed by CID, system, group, point
+         */
         addressMap_t addressMap;
+
+        /**
+         * @brief Container of component details indexed by CID
+         */
         componentMap_t componentMap;
+
+        /**
+         * @brief Regularly calls pruneComponentList()
+         */
         QTimer componentTimeout;
+
+        /**
+         * @brief Container of QTimers to prune expired modules
+         * @details Modules are pruned by pruneModuleList() called from lambda function created in addModule()
+         */
         QMap<cid_t, std::shared_ptr<QTimer>> moduleListTimeoutMap;
+
+        /**
+         * @brief Container of QTimers to prune expired points
+         * @details Points are pruned by prunePointList() called from lambda function created in addPoint()
+         */
         QMap<address_t, std::shared_ptr<QTimer>> pointTimeoutMap;
+
+        /**
+         * @brief Container of Merger threads, to determine winning source for each address
+         * @details winningSources is updated by this thread
+         */
+        QMap<system_t, std::shared_ptr<Merger>> mergerThreads;
+
+        /**
+         * @brief Container of winning component indexed by address
+         * @details Updated by mergerThread
+         */
+        QHash<address_t, cid_t> winningSources;
     };
 }
 
