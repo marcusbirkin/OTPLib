@@ -378,7 +378,7 @@ void Consumer::setupListener()
     Component::setupListener();
 
     for (const auto &system : getLocalSystems())
-        addLocalSystem(system);
+        Consumer::addLocalSystem(system);
 }
 
 bool Consumer::receiveOTPTransformMessage(const QNetworkDatagram &datagram)
@@ -540,6 +540,9 @@ bool Consumer::receiveOTPTransformMessage(const QNetworkDatagram &datagram)
                         }
                     }
                 }
+
+                // Flag system as dirty, to force a merge
+                otpNetwork->setSystemDirty(system);
             }
         }
         return true;

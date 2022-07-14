@@ -18,6 +18,7 @@
 */
 #include "container.hpp"
 #include "otp.hpp"
+#include "merger.hpp"
 #include <QTimer>
 #include <QMutexLocker>
 
@@ -28,6 +29,10 @@ Container::Container(QObject *parent) :
 {
     componentTimeout.start(OTP_COMPONENT_TIMEOUT);
     connect(&componentTimeout, &QTimer::timeout, this, &Container::pruneComponentList);
+}
+
+Container::~Container()
+{
 }
 
 void Container::clearComponents()
@@ -125,23 +130,7 @@ component_t Container::getComponent(cid_t cid) const
 
 cid_t Container::getWinningComponent(address_t address) const
 {
-    cid_t ret;
-    pointDetails_t pdA, pdB;
-    for (auto it = componentMap.begin(); it != componentMap.end(); it++)
-    {
-        const auto cid = it.key();
-        if (!addressMap[cid][address.system][address.group].contains(address.point))
-            continue;
-
-        pdB = PointDetails(cid, address);
-        if (!pdB || pdB->isExpired()) continue;
-        if (!pdA || (!pdA->isExpired() && pdB->getPriority() > pdA->getPriority()))
-        {
-            ret = cid;
-            pdA = pdB;
-        }
-    }
-    return ret;
+    return winningSources.value(address);
 }
 
 void Container::clearSystems()
@@ -160,6 +149,7 @@ void Container::addSystem(cid_t cid, system_t system)
             QMutexLocker lock(&addressMapMutex);
             addressMap[cid][system];
         }
+
         qDebug() << parent() << "- New system" << cid << system;
         emit newSystem(cid, system);
     }
@@ -175,6 +165,8 @@ void Container::removeSystem(cid_t cid, system_t system)
         qDebug() << parent() << "- Removed system" << cid << system;
         emit removedSystem(cid, system);
     }
+
+    mergerThreads.remove(system);
 }
 
 QList<system_t> Container::getSystemList() const
@@ -202,6 +194,13 @@ QList<system_t> Container::getSystemList(cid_t cid) const
     return ret;
 }
 
+void Container::setSystemDirty(system_t system)
+{
+    if (!mergerThreads.contains(system))
+        mergerThreads[system] = std::make_shared<Merger>(system, this);
+
+    mergerThreads.value(system)->setDirty();
+}
 
 void Container::addGroup(cid_t cid, system_t system, group_t group)
 {
@@ -346,8 +345,7 @@ void Container::addPoint(cid_t cid, address_t address, priority_t priority)
             [this, cid, address]() {
                 if(!isValid(address) || isExpired(cid, address))
                 {
-                    qDebug() << parent() << "- Expired point" << cid << address.system << address.group << address.point;
-                    emit expiredPoint(cid, address.system, address.group, address.point);
+                    prunePointList(cid, address);
                 }
             });
     }
@@ -434,7 +432,16 @@ bool Container::isValid(const address_t address) const
     return getPointList(address.system, address.group).contains(address.point);
 }
 
-void Container::pruneModuleList(cid_t cid)
+void Container::prunePointList(const cid_t &cid, address_t address)
+{
+    if(!isValid(address) || isExpired(cid, address))
+    {
+        qDebug() << parent() << "- Expired point" << cid << address.system << address.group << address.point;
+        emit expiredPoint(cid, address.system, address.group, address.point);
+    }
+}
+
+void Container::pruneModuleList(const cid_t &cid)
 {
     bool itemsRemoved = false;
     for (const auto &item : componentMap.value(cid).getModuleList())
