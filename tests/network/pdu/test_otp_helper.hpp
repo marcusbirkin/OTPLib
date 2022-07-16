@@ -21,7 +21,7 @@ namespace TEST_OTP::HELPER
         for (auto value = valueMin; value < valueMax; value += forStep)
         {
             PDUByteArray ba; ba << value;
-            pdu.replace(octlet, fieldSize, ba);
+            pdu.replace(octlet, static_cast<int>(fieldSize), ba);
             layer.fromPDUByteArray(pdu);
             QCOMPARE(layer.toPDUByteArray(), pdu);
         }

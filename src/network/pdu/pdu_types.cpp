@@ -115,7 +115,7 @@ namespace OTP::PDU {
     name_t::name_t(const QByteArray &ba) : name_t()
     {
         replace(0,
-            std::min(static_cast<size_t>(ba.size()), NAME_LENGTH),
+            std::min(ba.size(), static_cast<decltype(ba.size())>(NAME_LENGTH)),
             ba.mid(0, NAME_LENGTH));
     }
     name_t::name_t(const QString &s) : name_t()
@@ -142,7 +142,7 @@ namespace OTP::PDU {
     void name_t::fromString(const QString &s)
     {
         replace(0,
-            std::min(static_cast<size_t>(s.toUtf8().size()), NAME_LENGTH),
+            std::min(s.toUtf8().size(), static_cast<decltype(s.toUtf8().size())>(NAME_LENGTH)),
             s.toUtf8().mid(0, NAME_LENGTH));
     }
     PDUByteArray& operator<<(PDUByteArray &l, const name_t &r)
