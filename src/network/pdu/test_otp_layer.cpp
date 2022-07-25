@@ -1,9 +1,15 @@
 #include "test_otp_layer.hpp"
-#include "test_appendix_B.h"
+#include "network/messages/test_appendix_B.hpp"
 #include "test_otp_helper.hpp"
 
 const size_t PDUOctlet = 0;
 const size_t PDULength = (78+1) - PDUOctlet;
+
+int test_otp_layer(int argc, char *argv[])
+{
+    TEST_OTP::PDU::OTPLayer testObject;
+    return QTest::qExec(&testObject, argc, argv);
+}
 
 void TEST_OTP::PDU::OTPLayer::initTestCase()
 {

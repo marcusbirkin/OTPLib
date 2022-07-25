@@ -7,6 +7,8 @@ INCLUDEPATH += $$PWD/
 SOURCES += \
     $$PWD/container.cpp \
     $$PWD/component.cpp \
+    $$PWD/eventflag.cpp \
+    $$PWD/merger.cpp \
     $$PWD/otp.cpp \
     $$PWD/producer.cpp \
     $$PWD/consumer.cpp \
@@ -33,6 +35,8 @@ SOURCES += \
 HEADERS += \
     $$PWD/bugs.hpp \
     $$PWD/component.hpp \
+    $$PWD/eventflag.hpp \
+    $$PWD/merger.hpp \
     $$PWD/otp.hpp \
     $$PWD/container.hpp \
     $$PWD/const.hpp \
