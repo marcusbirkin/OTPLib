@@ -15,6 +15,8 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Install Qt
       uses: jurplel/install-qt-action@v2.14.0
@@ -25,40 +27,30 @@ jobs:
       if: startsWith(matrix.os, 'windows')
       uses: ilammy/msvc-dev-cmd@v1
 
-    - name: Create Makefile
-      run: qmake
-
-    - name: Build (nmake)
-      if: (startsWith(matrix.os, 'windows'))
-      run: nmake
+    - name: Configure Build
+      shell: bash
+      run: |
+        if [[ -n "${Qt5_DIR}" ]]; then export CMAKE_PREFIX_PATH=${Qt5_DIR}; fi
+        if [[ -n "${Qt6_DIR}" ]]; then export CMAKE_PREFIX_PATH=${Qt6_DIR}; fi
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DOTPLIB_BUILD_TESTS=ON
       
-    - name: Build (make)
-      if: (!startsWith(matrix.os, 'windows'))
-      run: make
+    - name: Build
+      run: cmake --build build --config Release
 
     - name: Run Unit Tests
-      shell: bash
       continue-on-error: true
-      working-directory: ${{github.workspace}}/tests
-      run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          ./release/OTPLib_TESTS.exe -junitxml > tests.xml
-        else
-          chmod +x OTPLib_TESTS
-          ./OTPLib_TESTS -junitxml > tests.xml
-        fi
-        awk 'BEGIN {NUM=0} /xml version="1.0"/ {NUM++; filename="test_"NUM".xml"} {print > filename}' tests.xml
+      run: ctest --test-dir build --build-config Release --output-on-failure --output-junit tests.xml -V
 
     - name: Publish Unit Test Results (Linux)
       if: runner.os == 'Linux'
       uses: EnricoMi/publish-unit-test-result-action@v1
       with:
         check_name: "results_${{ matrix.os }}_Qt${{ matrix.qtltsver }}"
-        files:  "${{github.workspace}}/**/test_*.xml"
+        files:  "build/tests.xml"
         
     - name: Publish Unit Test Results (Windows/macOS)
       if: runner.os == 'Windows' || runner.os == 'macOS'
       uses: EnricoMi/publish-unit-test-result-action/composite@v1
       with:
         check_name: "results_${{ matrix.os }}_Qt${{ matrix.qtltsver }}"
-        files:  "${{github.workspace}}/**/test_*.xml"
+        files:  "build/tests.xml"
