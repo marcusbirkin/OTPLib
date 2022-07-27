@@ -87,7 +87,7 @@ void Merger::doMerge()
                 const auto pdB = addressMap[cid][address.system][address.group][address.point];
 
                 if (!pdB || pdB->isExpired()) continue;
-                if (!pdA || (!pdA->isExpired() && pdB->getPriority() > pdA->getPriority()))
+                if (!pdA || pdA->isExpired() || pdB->getPriority() > pdA->getPriority())
                 {
                     winningSources[address] = cid;
                     pdA = pdB;
