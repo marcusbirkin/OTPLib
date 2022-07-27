@@ -115,27 +115,34 @@ namespace OTP::PDU {
     name_t::name_t(const QByteArray &ba) : name_t()
     {
         replace(0,
-            std::min(static_cast<size_t>(ba.size()), NAME_LENGTH),
+            std::min(ba.size(), static_cast<decltype(ba.size())>(NAME_LENGTH)),
             ba.mid(0, NAME_LENGTH));
     }
-    name_t::name_t(const QString &s) : name_t() { fromString(s); }
-
+    name_t::name_t(const QString &s) : name_t()
+    {
+        fromString(s);
+    }
     int name_t::maxSize() { return NAME_LENGTH; };
-    bool name_t::isValid() const {
-        if (static_cast<size_t>(toString().toUtf8().size()) > NAME_LENGTH)
+    bool name_t::isValid() const
+    {
+        if (static_cast<size_t>(static_cast<QString>(this->data()).toUtf8().size()) > NAME_LENGTH)
             return false;
-        if (this->data() != toString().toUtf8())
+        if (this->data() != static_cast<QString>(this->data()).toUtf8())
             return false;
         return true;
     }
-    QString name_t::toString() const
+    name_t::operator QString() const
     {
         return QString::fromUtf8(this->data());
+    }
+    QString name_t::toString() const
+    {
+        return static_cast<QString>(this->data());
     }
     void name_t::fromString(const QString &s)
     {
         replace(0,
-            std::min(static_cast<size_t>(s.toUtf8().size()), NAME_LENGTH),
+            std::min(s.toUtf8().size(), static_cast<decltype(s.toUtf8().size())>(NAME_LENGTH)),
             s.toUtf8().mid(0, NAME_LENGTH));
     }
     PDUByteArray& operator<<(PDUByteArray &l, const name_t &r)
@@ -166,6 +173,11 @@ namespace OTP::PDU {
             r = l.left(OTP_PACKET_IDENT.size());
             l.remove(0, OTP_PACKET_IDENT.size());
             return l;
+        }
+
+        cid_t cid_t::createUuid()
+        {
+            return cid_t(QUuid::createUuid());
         }
 
         PDUByteArray& operator<<(PDUByteArray &l, const cid_t &r)
@@ -390,14 +402,6 @@ namespace OTP::PDU {
                 if (data >= PROTOTYPE_BEGIN && data <= PROTOTYPE_END)
                     return false;
             return true;
-        }
-        QString manufacturerID_t::getName() const {
-            using namespace ESTA::ManufacturerIDs;
-            const auto it = Manufacturers.find(data);
-            if (it != Manufacturers.end())
-                return QString::fromStdString(it->second);
-            else
-                return QObject::tr("Unknown");
         }
         PDUByteArray& operator>>(PDUByteArray &l, manufacturerID_t &r)
         {

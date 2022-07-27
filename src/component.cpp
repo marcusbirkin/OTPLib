@@ -49,11 +49,11 @@ Component::Component(
 
     // System Signals
     connect(otpNetwork.get(), &Container::newSystem,
-        [this](cid_t cid, system_t system) {
+        this, [this](cid_t cid, system_t system) {
             if (cid == getLocalCID()) emit newLocalSystem(system);
         });
     connect(otpNetwork.get(), &Container::removedSystem,
-        [this](cid_t cid, system_t system) {
+        this, [this](cid_t cid, system_t system) {
             if (cid == getLocalCID()) emit removedLocalSystem(system);
         });
     connect(otpNetwork.get(), &Container::newSystem, this, &Component::newSystem);
@@ -85,6 +85,13 @@ void Component::setNetworkInterface(QNetworkInterface value)
     setupListener();
     emit newNetworkInterface(iface);
 }
+QAbstractSocket::SocketState Component::getNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const
+{
+    QMutexLocker lock(&socketsMutex);
+    if (!sockets.contains(transport))
+        return QAbstractSocket::UnconnectedState;
+    return sockets.value(transport)->state();
+}
 
 /* Network Transport */
 void Component::setNetworkTransport(QAbstractSocket::NetworkLayerProtocol value)
@@ -94,13 +101,15 @@ void Component::setNetworkTransport(QAbstractSocket::NetworkLayerProtocol value)
     setupListener();
     emit newNetworkTransport(transport);
 }
+
 void Component::setupListener()
 {
     qDebug() << parent() << "- Starting on interface" << iface.humanReadableName() << iface.hardwareAddress();
 
+    QMutexLocker lock(&socketsMutex);
     sockets.clear();
 
-    for (const auto &connection : listenerConnections)
+    for (const auto &connection : qAsConst(listenerConnections))
         disconnect(connection);
 
     if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
@@ -117,7 +126,7 @@ void Component::setupListener()
         qDebug() << this << "- Listening to Advertisement Messages" << OTP_Advertisement_Message_IPv6;
     }
 
-    for (const auto &socket : sockets) {
+    for (const auto &socket : qAsConst(sockets)) {
         listenerConnections.append(
                     connect(
                         socket.get(), &SocketManager::newDatagram,
@@ -125,15 +134,32 @@ void Component::setupListener()
         listenerConnections.append(
                     connect(
                         socket.get(), &SocketManager::stateChanged,
-                        this, &Component::stateChangedNetworkInterface));
+                        this, &Component::stateChangedNetworkInterface,
+                        Qt::QueuedConnection));
     }
+}
+void Component::newDatagram(QNetworkDatagram datagram)
+{
+    /* Unicast packets to self have no senderAddress */
+    if (datagram.senderAddress().isNull()) datagram.setSender(datagram.destinationAddress());
+
+    // Transform Messages
+    if (receiveOTPTransformMessage(datagram)) return;
+
+    // Advertisement Messages
+    if (receiveOTPModuleAdvertisementMessage(datagram)) return;
+    if (receiveOTPNameAdvertisementMessage(datagram)) return;
+    if (receiveOTPSystemAdvertisementMessage(datagram)) return;
 }
 
 /* Local CID */
 void Component::setLocalCID(cid_t value)
 {
     if (CID == value) return;
+
+    otpNetwork->changeComponentCID(CID, value);
     CID = value;
+
     emit newLocalCID(CID);
 }
 
@@ -167,6 +193,33 @@ void Component::removeLocalSystem(system_t system)
     emit removedLocalSystem(system);
 }
 
+/* Local Modules */
+moduleList_t Component::getLocalModules() const
+{
+    return otpNetwork->getModuleList(getLocalCID());
+}
+void Component::addLocalModule(moduleList_t::value_type module)
+{
+    if (!module.isValid()) return;
+
+    if (!getLocalModules().contains(module)) {
+        otpNetwork->addModule(getLocalCID(), module);
+        emit newLocalModule(module);
+    }
+}
+void Component::removeLocalModule(moduleList_t::value_type module)
+{
+    if (!module.isValid()) return;
+    otpNetwork->removeModule(getLocalCID(), module);
+    emit removedLocalModule(module);
+}
+
+/* Components */
+bool Component::isComponentExpired(cid_t cid) const
+{
+    return otpNetwork->getComponent(cid).isExpired();
+}
+
 /* Groups */
 bool Component::isGroupExpired(cid_t cid, system_t system, group_t group) const
 {
@@ -176,7 +229,7 @@ bool Component::isGroupExpired(cid_t cid, system_t system, group_t group) const
     else
         pointList = getPoints(cid, system, group);
 
-    for (const auto &point : pointList)
+    for (const auto &point : qAsConst(pointList))
     {
         auto address = address_t{system, group, point};
         if (!isPointExpired(cid, address)) return false;
@@ -187,23 +240,11 @@ bool Component::isGroupExpired(cid_t cid, system_t system, group_t group) const
 /* Points */
 QString Component::getPointName(cid_t cid, address_t address) const
 {
+    if (cid.isNull())
+        cid = otpNetwork->getWinningComponent(address);
+
     if (!isPointValid(cid, address)) return QString();
     if (!getPoints(cid, address.system, address.group).contains(address.point)) return QString();
-    if (cid.isNull())
-    {
-        cid_t newestCid;
-        QDateTime lastSeen;
-        for (const auto &cid : getComponents())
-        {
-            auto tempSeen = otpNetwork->PointDetails(cid, address)->getLastSeen();
-            if (tempSeen > lastSeen)
-            {
-                lastSeen = tempSeen;
-                newestCid = cid;
-            }
-        }
-        return otpNetwork->PointDetails(newestCid, address)->getName();
-    }
     return otpNetwork->PointDetails(cid, address)->getName();
 }
 bool Component::isPointValid(address_t address) const
@@ -227,18 +268,7 @@ bool Component::isPointValid(cid_t cid, address_t address) const
 QDateTime Component::getPointLastSeen(cid_t cid, address_t address) const
 {
     if (cid.isNull())
-    {
-        QDateTime ret;
-        for (const auto &cid : getComponents())
-        {
-            if (isPointValid(cid, address))
-            {
-                auto temp = otpNetwork->PointDetails(cid, address)->getLastSeen();
-                if (temp > ret) ret = temp;
-            }
-        }
-        return ret;
-    }
+        cid = otpNetwork->getWinningComponent(address);
 
     if (!isPointValid(cid, address)) return QDateTime();
     return otpNetwork->PointDetails(cid, address)->getLastSeen();
@@ -246,12 +276,7 @@ QDateTime Component::getPointLastSeen(cid_t cid, address_t address) const
 bool Component::isPointExpired(cid_t cid, address_t address) const
 {
     if (cid.isNull())
-    {
-        for (const auto &cid : getComponents())
-            if (isPointValid(cid, address))
-                if (!otpNetwork->PointDetails(cid, address)->isExpired()) return false;
-        return true;
-    }
+        cid = otpNetwork->getWinningComponent(address);
 
     if (!isPointValid(cid, address)) return true;
     return otpNetwork->PointDetails(cid, address)->isExpired();
@@ -300,7 +325,7 @@ QString Component::getUnitString(
         bool html) const
 {
     using namespace MODULES::STANDARD::VALUES;
-    return QString ("%1%2")
-            .arg(getScaleString(scale, html))
-            .arg(UNITS::getUnitString(moduleValue, html));
+    return QString ("%1%2").arg(
+                getScaleString(scale, html),
+                UNITS::getUnitString(moduleValue, html));
 }

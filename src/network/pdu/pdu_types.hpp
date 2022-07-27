@@ -50,13 +50,14 @@ namespace OTP::PDU
         name_t(const QString &s);
         static int maxSize();
         bool isValid() const;
+        operator QString() const;
         QString toString() const;
         void fromString(const QString &s);
     };
     PDUByteArray& operator<<(PDUByteArray &l, const name_t &r);
     PDUByteArray& operator>>(PDUByteArray &l, name_t &r);
     inline bool operator==(const name_t &l, const name_t &r) {
-        return (l.toString().toUtf8() == r.toString().toUtf8());
+        return (static_cast<QString>(l).toUtf8() == static_cast<QString>(r).toUtf8());
     }
     inline bool operator!=(const name_t &l, const name_t &r) { return !(l == r); }
 
@@ -95,11 +96,14 @@ namespace OTP::PDU
         };
         PDUByteArray& operator<<(PDUByteArray &l, const otpIdent_t &r);
         PDUByteArray& operator>>(PDUByteArray &l, otpIdent_t &r);
-        class cid_t : public QUuid
+        class OTP_LIB_EXPORT cid_t : public QUuid
         {
         public:
             cid_t() : QUuid() {}
             cid_t(const QUuid &id) : QUuid(id) {}
+            explicit cid_t(const QByteArray &id) : QUuid(id) {}
+
+            static cid_t createUuid();
         };
         PDUByteArray& operator<<(PDUByteArray &l, const cid_t &r);
         PDUByteArray& operator>>(PDUByteArray &l, cid_t &r);
@@ -176,19 +180,19 @@ namespace OTP::PDU
         }
 
         typedef quint64 timestamp_t;
-        typedef struct options_s
+        typedef struct options_t
         {
-            options_s() : data(0) {}
-            options_s(bool FullPointSet) : data(0) {
+            options_t() : data(0) {}
+            options_t(bool FullPointSet) : data(0) {
                 setFullPointSet(FullPointSet);
             }
             bool isFullPointSet() const { return data[FULL_POINT_SET_BIT]; }
             void setFullPointSet(bool value) { data[FULL_POINT_SET_BIT] = value; }
-            friend PDUByteArray& operator<<(PDUByteArray &l, const options_s &r) {
+            friend PDUByteArray& operator<<(PDUByteArray &l, const options_t &r) {
                 l << type(r.data.to_ulong());
                 return l;
             }
-            friend PDUByteArray& operator>>(PDUByteArray &l, options_s &r) {
+            friend PDUByteArray& operator>>(PDUByteArray &l, options_t &r) {
                 type temp;
                 l >> temp;
                 r.data = std::bitset<bitWidth>(temp);
@@ -301,7 +305,6 @@ namespace OTP::PDU
             const static manufacturerID_t getMin() { return std::numeric_limits<type>::min(); };
             const static manufacturerID_t getMax() { return std::numeric_limits<type>::max(); };
             size_t getSize() const { return sizeof(type); }
-            QString getName() const;
             operator type() const { return data; }
             friend PDUByteArray& operator>>(PDUByteArray &l, manufacturerID_t &r);
         private:
@@ -325,12 +328,12 @@ namespace OTP::PDU
             type data;
         };
 
-        typedef struct ident_s
+        typedef struct ident_t
         {
-            ident_s() :
+            ident_t() :
                 ManufacturerID(),
                 ModuleNumber() {}
-            ident_s(manufacturerID_t ManufacturerID, moduleNumber_t ModuleNumber) :
+            ident_t(manufacturerID_t ManufacturerID, moduleNumber_t ModuleNumber) :
                 ManufacturerID(ManufacturerID),
                 ModuleNumber(ModuleNumber) {}
             bool isValid() const;
@@ -391,24 +394,24 @@ namespace OTP::PDU
     }
 
     namespace OTPNameAdvertisementLayer {
-        typedef struct options_s
+        typedef struct options_t
         {
-            options_s() : data(0) {}
+            options_t() : data(0) {}
             bool isRequest() const { return data[REQUEST_RESPONSE_BIT] == REQUEST; }
             void setRequest() { data[REQUEST_RESPONSE_BIT] = REQUEST; }
             bool isResponse() const { return data[REQUEST_RESPONSE_BIT] == RESPONSE;}
             void setResponse() { data[REQUEST_RESPONSE_BIT] = RESPONSE; }
-            friend PDUByteArray& operator<<(PDUByteArray &l, const options_s &r) {
+            friend PDUByteArray& operator<<(PDUByteArray &l, const options_t &r) {
                 l << type(r.data.to_ulong());
                 return l;
             }
-            friend PDUByteArray& operator>>(PDUByteArray &l, options_s &r) {
+            friend PDUByteArray& operator>>(PDUByteArray &l, options_t &r) {
                 type temp;
                 l >> temp;
                 r.data = std::bitset<bitWidth>(temp);
                 return l;
             }
-            friend bool operator==(const options_s &l, const options_s &r) {
+            friend bool operator==(const options_t &l, const options_t &r) {
                 return l.data == r.data;
             }
         private:
@@ -426,14 +429,14 @@ namespace OTP::PDU
         } options_t;
 
         typedef quint32 reserved_t;
-        typedef struct addressPointDescriptions_s
+        typedef struct addressPointDescriptions_t
         {
-            addressPointDescriptions_s() :
+            addressPointDescriptions_t() :
                 System(0),
                 Group(0),
                 Point(0),
                 PointName(QString("")) {}
-            addressPointDescriptions_s(
+            addressPointDescriptions_t(
                     OTPTransformLayer::system_t System,
                     OTPPointLayer::group_t Group,
                     OTPPointLayer::point_t Point,

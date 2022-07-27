@@ -61,18 +61,22 @@ namespace OTP
         void setNetworkInterface(QNetworkInterface value);
         QAbstractSocket::NetworkLayerProtocol getNetworkTransport() const { return transport; }
         void setNetworkTransport(QAbstractSocket::NetworkLayerProtocol transport);
-        QAbstractSocket::SocketState getNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const
-        {
-            if (!sockets.contains(transport)) return QAbstractSocket::UnconnectedState;
-            return sockets.value(transport)->state();
-        }
+        QAbstractSocket::SocketState getNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const;
+
     signals:
         void newNetworkInterface(QNetworkInterface);
         void newNetworkTransport(QAbstractSocket::NetworkLayerProtocol);
         void stateChangedNetworkInterface(QAbstractSocket::SocketState);
 
     private slots:
-        virtual void newDatagram(QNetworkDatagram) {}
+        virtual void newDatagram(QNetworkDatagram);
+
+    private:
+        virtual bool receiveOTPTransformMessage(const QNetworkDatagram &datagram) = 0;
+        virtual bool receiveOTPModuleAdvertisementMessage(const QNetworkDatagram &datagram)  = 0;
+        virtual bool receiveOTPNameAdvertisementMessage(const QNetworkDatagram &datagram) = 0;
+        virtual bool receiveOTPSystemAdvertisementMessage(const QNetworkDatagram &datagram) = 0;
+
     protected:
         folioMap_t folioMap;
 
@@ -82,23 +86,24 @@ namespace OTP
         QNetworkInterface iface;
         QAbstractSocket::NetworkLayerProtocol transport;
         QList<QMetaObject::Connection> listenerConnections;
+        mutable QMutex socketsMutex;
         QMap<QAbstractSocket::NetworkLayerProtocol, QSharedPointer<SocketManager>> sockets;
 
         /* Local CID */
         public:
             cid_t getLocalCID() const { return CID; }
-            void setLocalCID(cid_t);
+            void setLocalCID(OTP::cid_t value);
         signals:
-            void newLocalCID(cid_t);
+            void newLocalCID(OTP::cid_t);
         protected:
             cid_t CID;
 
         /* Local Name */
         public:
             name_t getLocalName() const { return name; }
-            void setLocalName(name_t);
+            void setLocalName(OTP::name_t);
         signals:
-            void newLocalName(name_t);
+            void newLocalName(OTP::name_t);
         protected:
             name_t name;
 
@@ -108,16 +113,26 @@ namespace OTP
             virtual void addLocalSystem(system_t);
             virtual void removeLocalSystem(system_t);
         signals:
-            void newLocalSystem(system_t);
-            void removedLocalSystem(system_t);
+            void newLocalSystem(OTP::system_t);
+            void removedLocalSystem(OTP::system_t);
+
+        /* Local Modules */
+        public:
+            moduleList_t getLocalModules() const;
+            void addLocalModule(moduleList_t::value_type);
+            void removeLocalModule(moduleList_t::value_type);
+        signals:
+            void newLocalModule(moduleList_t::value_type);
+            void removedLocalModule(moduleList_t::value_type);
 
         /* Components */
         public:
             QList<cid_t> getComponents() const { return otpNetwork->getComponentList(); }
             component_t getComponent(cid_t cid) const { return otpNetwork->getComponent(cid); }
+            bool isComponentExpired(cid_t cid) const;
         signals:
-            void newComponent(cid_t);
-            void removedComponent(cid_t);
+            void newComponent(OTP::cid_t);
+            void removedComponent(OTP::cid_t);
             void updatedComponent(const OTP::cid_t&, const OTP::name_t&);
             void updatedComponent(const OTP::cid_t&, const QHostAddress&);
             void updatedComponent(const OTP::cid_t&, const OTP::moduleList_t &);
@@ -128,8 +143,8 @@ namespace OTP
             QList<system_t> getSystems() const { return otpNetwork->getSystemList(); }
             QList<system_t> getSystems(cid_t cid) const { return otpNetwork->getSystemList(cid); }
         signals:
-            void newSystem(cid_t, system_t);
-            void removedSystem(cid_t, system_t);
+            void newSystem(OTP::cid_t, OTP::system_t);
+            void removedSystem(OTP::cid_t, OTP::system_t);
 
         /* Groups */
         public:
@@ -140,8 +155,8 @@ namespace OTP
             bool isGroupExpired(system_t system, group_t group) const
                 { return isGroupExpired(cid_t(), system, group); }
         signals:
-            void newGroup(cid_t, system_t, group_t);
-            void removedGroup(cid_t, system_t, group_t);
+            void newGroup(OTP::cid_t, OTP::system_t, OTP::group_t);
+            void removedGroup(OTP::cid_t, OTP::system_t, OTP::group_t);
 
         /* Points */
         public:
@@ -156,7 +171,7 @@ namespace OTP
                 { return getPointName(cid_t(), address); }
             QString getPointName(system_t system, group_t group, point_t point) const
                 { return getPointName(address_t(system, group, point)); }
-                        QDateTime getPointLastSeen(cid_t, address_t) const;
+            QDateTime getPointLastSeen(cid_t, address_t) const;
             QDateTime getPointLastSeen(cid_t cid, system_t system, group_t group, point_t point) const
                 { return getPointLastSeen(cid, address_t(system, group, point)); }
             QDateTime getPointLastSeen(address_t address) const
@@ -171,10 +186,10 @@ namespace OTP
             bool isPointExpired(system_t system, group_t group, point_t point) const
                 { return isPointExpired(address_t(system, group, point)); }
         signals:
-            void newPoint(cid_t, system_t, group_t, point_t);
-            void removedPoint(cid_t, system_t, group_t, point_t);
-            void updatedPoint(cid_t, system_t, group_t, point_t);
-            void expiredPoint(cid_t, system_t, group_t, point_t);
+            void newPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
+            void removedPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
+            void updatedPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
+            void expiredPoint(OTP::cid_t, OTP::system_t, OTP::group_t, OTP::point_t);
 
         /* Addresses */
         public:

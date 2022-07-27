@@ -10,4 +10,4 @@ Extract (emphasis added) from E1.59
 used for safety critical applications.</b>"
 
 #### CI Status
-[![Build and Tests](https://github.com/marcusbirkin/OTPLib/actions/workflows/qmake.yml/badge.svg)](https://github.com/marcusbirkin/OTPLib/actions/workflows/qmake.yml)
+[![Build and Tests](https://github.com/marcusbirkin/OTPLib/actions/workflows/ci.yml/badge.svg)](https://github.com/marcusbirkin/OTPLib/actions/workflows/ci.yml)

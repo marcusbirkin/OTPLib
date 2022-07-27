@@ -103,12 +103,12 @@ Message::Message(
 bool Message::isValid() const
 {
     size_t lengthCheck = toByteArray().length();
-    if (lengthCheck != otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET)
+    if (lengthCheck != static_cast<size_t>(otpLayer->getPDULength() + OTPLayer::LENGTHOFFSET))
         return false;
     if (!otpLayer->isValid()) return false;
 
     lengthCheck -= otpLayer->toPDUByteArray().length();
-    if (lengthCheck != transformLayer->getPDULength() + OTPTransformLayer::LENGTHOFFSET)
+    if (lengthCheck != static_cast<size_t>(transformLayer->getPDULength() + OTPTransformLayer::LENGTHOFFSET))
         return false;
     if (!transformLayer->isValid()) return false;
 
@@ -190,7 +190,7 @@ void Message::updatePduLength()
 {
     pduLength_t length = 0;
 
-    for (const auto &pointLayer : pointLayers)
+    for (const auto &pointLayer : qAsConst(pointLayers))
     {
         pduLength_t modulesLength = 0;
         address_t address = {transformLayer->getSystem(), pointLayer->getGroup(), pointLayer->getPoint()};
@@ -221,5 +221,4 @@ void Message::updatePduLength()
     /* 6.3 Length */
     length += otpLayer->toPDUByteArray().size();
     otpLayer->setPDULength(length - OTPLayer::LENGTHOFFSET);
-    auto test = toByteArray();
 }

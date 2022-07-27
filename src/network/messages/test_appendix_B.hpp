@@ -58,7 +58,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     point = std::numeric_limits<quint32>::max();
                     description = QString("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
                 }
-                description_t(quint8 system, quint32 group, quint16 point, QString description) :
+                description_t(quint8 system, quint32 group, quint16 point, const QString &description) :
                     system(system),
                     group(group),
                     point(point),
@@ -122,7 +122,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     } exampleDetails_t;
 
     // Table B-1 Transform Message Example
-    static const unsigned char ExampleB_1[] = {
+    const unsigned char ExampleB_1[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
         /* Vector */ 0x00,0x01, // VECTOR_OTP_TRANSFORM_MESSAGE
         /* Length */ 0x00,0xB9, // 185
@@ -149,7 +149,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     };
 
     // Table B-2: System Advertisement Message Consumer Example
-    static const unsigned char ExampleB_2[] = {
+    const unsigned char ExampleB_2[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
         /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
         /* Length */ 0x00,0x50, // 80
@@ -178,7 +178,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     };
 
     // Table B-3: System Advertisement Message Producer Example
-    static const unsigned char ExampleB_3[] = {
+    const unsigned char ExampleB_3[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
         /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
         /* Length */ 0x00,0x52, // 82
@@ -210,7 +210,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     };
 
     // Table B-4: Name Advertisement Message Consumer Example
-    static const unsigned char ExampleB_4[] = {
+    const unsigned char ExampleB_4[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
         /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
         /* Length */ 0x00,0x50, // 80
@@ -239,7 +239,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     };
 
     // Table B-5: Name Advertisement Message Producer Example
-    static const unsigned char ExampleB_5[] = {
+    const unsigned char ExampleB_5[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
         /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
         /* Length */ 0x00,0xEC, // 236
@@ -301,7 +301,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
     };
 
     // Table B-6: Module Advertisement Message Example
-    static const unsigned char ExampleB_6[] = {
+    const unsigned char ExampleB_6[] = {
         /* OTP Packet Identifier */ 0x4f,0x54,0x50,0x2d,0x45,0x31,0x2e,0x35,0x39,0x00,0x00,0x00,
         /* Vector */ 0x00,0x02, // VECTOR_OTP_ADVERTISEMENT_MESSAGE
         /* Length */ 0x00,0x57, // 87
@@ -335,7 +335,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
         0x00,0x03,                                  // Module Number
     };
 
-    static const QList<std::pair<QByteArray,exampleDetails_t>> Examples = {
+    const QList<std::pair<QByteArray,exampleDetails_t>> Examples = {
         {
             QByteArray::fromRawData(reinterpret_cast<const char*>(ExampleB_1), sizeof(ExampleB_1)),
             {
@@ -390,7 +390,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .length = 5,
                     .option_Response = 0,
                     .reserved = 0,
-                    .systems = QList<exampleDetails_t::OTPSystemAdvertisementLayer::systems_t>(),
+                    .systems = {},
                 },
             }
         },
@@ -452,7 +452,7 @@ namespace TEST_OTP::MESSAGES::APPENDIX_B {
                     .length = 5,
                     .option_Response = false,
                     .reserved = 0,
-                    .descriptions = QList<exampleDetails_t::OTPNameAdvertisementLayer::description_t>(),
+                    .descriptions = {},
                 }
             }
         },

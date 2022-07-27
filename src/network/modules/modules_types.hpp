@@ -21,6 +21,7 @@
 
 #include "../../bugs.hpp"
 #include <QDateTime>
+#include <QRegularExpression>
 #include <bitset>
 #include "../messages/message_types.hpp"
 #include "../pdu/pdu_types.hpp"
@@ -31,7 +32,7 @@ namespace OTP::MODULES {
 
     typedef struct module_t
     {
-        typedef struct
+        typedef struct moduleDescription_t
         {
             QString Manufactuer;
             QString Name;
@@ -66,16 +67,16 @@ namespace OTP::MODULES {
         // 16.1 Position Module
         class PositionModule_t {
         public:
-            typedef struct options_s
+            typedef struct options_t
             {
-                options_s() : data(0) {}
+                options_t() : data(0) {}
                 bool isScaling() const { return data[SCALING_BIT]; }
                 void setScaling(bool value) { data[SCALING_BIT] = value; }
-                friend additional_t& operator<<(additional_t &l, const options_s &r) {
+                friend additional_t& operator<<(additional_t &l, const options_t &r) {
                     l << type(r.data.to_ulong());
                     return l;
                 }
-                friend additional_t& operator>>(additional_t &l, options_s &r) {
+                friend additional_t& operator>>(additional_t &l, options_t &r) {
                     type temp;
                     l >> temp;
                     r.data = std::bitset<bitWidth>(temp);
@@ -261,7 +262,7 @@ namespace OTP::MODULES {
                 rotation_t() : data(0) {}
                 rotation_t(type value) : data(value) {}
 
-                operator type() {
+                operator type() const {
                     return data;
                 }
 
@@ -445,9 +446,11 @@ namespace OTP::MODULES {
             }
 
             static percent_t toPercent(scale_t scale);
-            static QString toPercentString(scale_t scale) {
-                auto ret = QString::number(toPercent(scale), 'f', 4);
-                ret.remove( QRegExp("\\.?0+$") );
+            static QString toPercentString(scale_t scale, int precision = 4) {
+                auto ret = QString::number(toPercent(scale), 'f', precision);
+                // Remove trailing fractional zeros. i.e. 10.0100 becomes 10.01
+                static auto trailingZeros = QRegularExpression("\\.?0+$");
+                ret.remove(trailingZeros);
                 return ret;
             }
             static scale_t fromPercent(percent_t percent);

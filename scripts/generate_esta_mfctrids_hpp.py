@@ -26,28 +26,30 @@ def main():
 
     # Begin c++ header
     print('Writing', filename)
-    headerFile = open(filename, 'w')
-    headerFile.write('/*' + '\r\n')
-    headerFile.write(' * Auto generated' + '\r\n')
-    headerFile.write(' * from: ' + url + '\r\n')
-    headerFile.write(' * at: ' + datetime.now().astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ') + '\r\n')
-    headerFile.write('*/' + '\r\n')
-    headerFile.write('\r\n')
-    headerFile.write('#ifndef ESTA_MFCTRIDS_HPP' + '\r\n')
-    headerFile.write('#define ESTA_MFCTRIDS_HPP' + '\r\n')
-    headerFile.write('\r\n')
-    headerFile.write('#include <map>' + '\r\n')
-    headerFile.write('\r\n')
-    headerFile.write('namespace ESTA {' + '\r\n')
-    headerFile.write('\t' + 'namespace ManufacturerIDs {' + '\r\n')
+    headerFile = open(filename, 'w', encoding="utf-8-sig")
+    headerFile.write('/*' + '\n')
+    headerFile.write(' * Auto generated' + '\n')
+    headerFile.write(' * from: ' + url + '\n')
+    headerFile.write(' * at: ' + datetime.now().astimezone(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ') + '\n')
+    headerFile.write('*/' + '\n')
+    headerFile.write('\n')
+    headerFile.write('#ifndef ESTA_MFCTRIDS_HPP' + '\n')
+    headerFile.write('#define ESTA_MFCTRIDS_HPP' + '\n')
+    headerFile.write('\n')
+    headerFile.write('#include <map>' + '\n')
+    headerFile.write('#include <string>' + '\n')
+    headerFile.write('\n')
+    headerFile.write('namespace ESTA {' + '\n')
+    headerFile.write('\t' + 'namespace ManufacturerIDs {' + '\n')
 
     # Prototyping and experimental
-    headerFile.write('\t\t' + 'static const uint16_t PROTOTYPE_BEGIN = 0x7FF0;' + '\r\n')
-    headerFile.write('\t\t' + 'static const uint16_t PROTOTYPE_END = 0x7FFF;' + '\r\n')
-    headerFile.write('\r\n')
+    headerFile.write('\t\t' + 'const uint16_t PROTOTYPE_BEGIN = 0x7FF0;' + '\n')
+    headerFile.write('\t\t' + 'const uint16_t PROTOTYPE_END = 0x7FFF;' + '\n')
+    headerFile.write('\n')
 
     # std::map of <Manufacturer ID, Company String>
-    headerFile.write('\t\t' + 'std::map<uint16_t, std::string> Manufacturers = {' + '\r\n')
+    headerFile.write('\t\t' + 'using namespace std::string_literals;' + '\n')
+    headerFile.write('\t\t' + 'const std::map<uint16_t, std::wstring> Manufacturers = {' + '\n')
     for row in table.find_all("tr")[1:]:
         data = [td.get_text() for td in row.find_all("td")]
 
@@ -57,13 +59,13 @@ def main():
         company = data[2].strip()
         company = company.replace('"', '\'')
 
-        headerFile.write('\t\t\t' + '{' + mfctrId + ', "' + company + '"},' + '\r\n')
+        headerFile.write('\t\t\t' + '{' + mfctrId + ', L"' + company + '"s},' + '\n')
 
-    headerFile.write('\t\t' + '}; // std::map' + '\r\n')
+    headerFile.write('\t\t' + '}; // std::map' + '\n')
 
-    headerFile.write('\t' + '} // ManufacturerIDs' + '\r\n')
-    headerFile.write('} // ESTA' + '\r\n')
-    headerFile.write('#endif // ESTA_MFCTRIDS_HPP' + '\r\n')
+    headerFile.write('\t' + '} // ManufacturerIDs' + '\n')
+    headerFile.write('} // ESTA' + '\n')
+    headerFile.write('#endif // ESTA_MFCTRIDS_HPP' + '\n')
     headerFile.close()
     # End c++ header
 

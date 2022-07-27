@@ -28,7 +28,7 @@ namespace OTP {
 
     namespace RANGES {
         /* 9.3 Priority */
-        const range_t Priority = {0, 200};
+        inline const range_t Priority = {0,200};
 
         /* Table 7-2: Address Numbering */
         inline const range_t System = {1,200};
@@ -80,6 +80,11 @@ namespace OTP {
     inline const std::chrono::milliseconds OTP_NAME_ADVERTISEMENT_MAX_BACKOFF = std::chrono::seconds(5);
     // OTP System Advertisement
     inline const std::chrono::milliseconds OTP_SYSTEM_ADVERTISEMENT_MAX_BACKOFF = std::chrono::seconds(5);
+    /*
+     * ANSI E1.59:2021 doesn't specify a component timeout
+     * this however should be a suitable interval
+     */
+    inline const std::chrono::milliseconds OTP_COMPONENT_TIMEOUT = OTP_ADVERTISEMENT_TIMEOUT;
 
     /* Table A-3: Additional Defines */
     inline const quint16 OTP_PORT = 5568;

@@ -32,7 +32,7 @@ namespace OTP::MODULES {
         constexpr static const MODULES::moduleNumber_t SCALE = 0x0005;
         constexpr static const MODULES::moduleNumber_t REFERENCE_FRAME = 0x0006;
 
-        static const QMap<moduleNumber_t, module_t> modules{
+        inline const QMap<moduleNumber_t, module_t> modules{
             {POSITION, {{QObject::tr("ESTA"), QObject::tr("Position")},{ESTA_MANUFACTURER_ID, POSITION}}},
             {POSITION_VELOCITY_ACCELERATION, {{QObject::tr("ESTA"), QObject::tr("Position Velocity/Acceleration")},{ESTA_MANUFACTURER_ID, POSITION_VELOCITY_ACCELERATION}}},
             {ROTATION, {{QObject::tr("ESTA"), QObject::tr("Rotation")}, {ESTA_MANUFACTURER_ID, ROTATION}}},
@@ -55,59 +55,60 @@ namespace OTP::MODULES {
 
             namespace UNITS {
                 namespace unicode {
-                    constexpr static const QChar superscript2 = char16_t(0x00b2);
-                    constexpr static const QChar degrees = char16_t(0x00B0);
-                    constexpr static const QChar micro = char16_t(0x03BC);
+                    inline const QChar superscript2 = char16_t(0x00b2);
+                    inline const QChar degrees = char16_t(0x00B0);
+                    inline const QChar micro = char16_t(0x03BC);
 
-                    static const QMap<moduleValue_t, QString> baseUnits{
+                    inline const QMap<moduleValue_t, QString> baseUnits{
                         {POSITION, QString("m")},
                         {POSITION_VELOCITY, QString("%1m/sec")
                                     .arg(micro)},
                         {POSITION_ACCELERATION, QString("%1m/sec%2")
-                                    .arg(micro)
-                                    .arg(superscript2)},
+                                    .arg(micro, superscript2)},
                         {ROTATION, QString("%1%2")
-                                    .arg(micro)
-                                    .arg(degrees)},
+                                    .arg(micro, degrees)},
                         {ROTATION_VELOCITY, QString("%1%2/sec")
-                                    .arg(micro)
-                                    .arg(degrees)},
+                                    .arg(micro, degrees)},
                         {ROTATION_ACCELERATION, QString("%1%2/sec%3")
-                                    .arg(micro)
-                                    .arg(degrees)
-                                    .arg(superscript2)}
+                                    .arg(micro, degrees, superscript2)},
+                        // Unitless
+                        {SCALE, QString("")},
+                        {REFERENCE_FRAME, QString("")}
                     };
 
-                    static QMap<PositionModule_t::scale_t, QString> scale{
+                    inline const QMap<PositionModule_t::scale_t, QString> scale{
                         {PositionModule_t::mm, QString("m")},
                         {PositionModule_t::um, QString("%1").arg(micro)}
                     };
                 }
                 namespace html {
-                    constexpr static const std::string_view superscript2 = "&sup2;";
-                    constexpr static const std::string_view degrees = "&deg;";
-                    constexpr static const std::string_view micro = "&mu;";
+                    inline const std::string_view superscript2 = "&sup2;";
+                    inline const std::string_view degrees = "&deg;";
+                    inline const std::string_view micro = "&mu;";
 
-                    static QMap<moduleValue_t, QString> baseUnits{
+                    inline const QMap<moduleValue_t, QString> baseUnits{
                         {POSITION, QString("m")},
                         {POSITION_VELOCITY, QString("%1m/sec")
                                     .arg(std::string(micro).c_str())},
                         {POSITION_ACCELERATION, QString("%1m/sec%2")
-                                    .arg(std::string(micro).c_str())
-                                    .arg(std::string(superscript2).c_str())},
+                                    .arg(std::string(micro).c_str(),
+                                         std::string(superscript2).c_str())},
                         {ROTATION, QString("%1%2")
-                                    .arg(std::string(micro).c_str())
-                                    .arg(std::string(degrees).c_str())},
+                                    .arg(std::string(micro).c_str(),
+                                        std::string(degrees).c_str())},
                         {ROTATION_VELOCITY, QString("%1%2/sec")
-                                    .arg(std::string(micro).c_str())
-                                    .arg(std::string(degrees).c_str())},
+                                    .arg(std::string(micro).c_str(),
+                                        std::string(degrees).c_str())},
                         {ROTATION_ACCELERATION, QString("%1%2/sec%3")
-                                    .arg(std::string(micro).c_str())
-                                    .arg(std::string(degrees).c_str())
-                                    .arg(std::string(superscript2).c_str())}
+                                    .arg(std::string(micro).c_str(),
+                                        std::string(degrees).c_str(),
+                                        std::string(superscript2).c_str())},
+                        // Unitless
+                        {SCALE, QString("")},
+                        {REFERENCE_FRAME, QString("")}
                     };
 
-                    static QMap<PositionModule_t::scale_t, QString> scale{
+                    inline const QMap<PositionModule_t::scale_t, QString> scale{
                         {PositionModule_t::mm, QString("m")},
                         {PositionModule_t::um, QString("%1").arg(std::string(micro).c_str())}
                     };
@@ -118,7 +119,7 @@ namespace OTP::MODULES {
             }
 
             namespace RANGES {
-                static QMap<moduleValue_t, range_t> ranges{
+                inline const QMap<moduleValue_t, range_t> ranges{
                     {POSITION, {STANDARD::PositionModule_t::position_t(-2147483648LL),PositionModule_t::position_t(2147483647)}},
                     {POSITION_VELOCITY, {STANDARD::PositionVelAccModule_t::velocity_t(-2147483648LL),STANDARD::PositionVelAccModule_t::velocity_t(2147483647)}},
                     {POSITION_ACCELERATION, {STANDARD::PositionVelAccModule_t::acceleration_t(-2147483648LL),STANDARD::PositionVelAccModule_t::acceleration_t(2147483647)}},

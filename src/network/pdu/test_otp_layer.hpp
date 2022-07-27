@@ -34,7 +34,7 @@ namespace TEST_OTP::PDU
         void componentName();
 
     private:
-        const Layer DefaultLayer;
+        const OTP::PDU::OTPLayer::Layer DefaultLayer;
         PDUByteArray DefaultPDUByteArray;
     };
 }

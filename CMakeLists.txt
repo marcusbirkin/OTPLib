@@ -1,0 +1,93 @@
+cmake_minimum_required(VERSION 3.14)
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+set(PROJECT_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
+include(gitversion)
+project(OTPLib LANGUAGES CXX
+    VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_VERSION_PATCH}.${PROJECT_VERSION_TWEAK})
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+add_definitions (-DQT_DISABLE_DEPRECATED_BEFORE=0x060000) # disables all the APIs deprecated before Qt 6.0.0
+
+find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Network)
+
+set(APP_RESOURCE_WINDOWS res/${PROJECT_NAME}.rc)
+
+# Source files excluding unit tests
+file(GLOB_RECURSE LIBRARY_HEADERS CONFIGURE_DEPENDS "src/*.hpp")
+list(FILTER LIBRARY_HEADERS EXCLUDE REGEX "^.*test_.*$")
+file(GLOB_RECURSE LIBRARY_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+list(FILTER LIBRARY_SOURCES EXCLUDE REGEX "^.*test_.*$")
+
+if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    cmake_minimum_required(VERSION 3.19)
+    qt_add_library(${PROJECT_NAME} SHARED
+        ${LIBRARY_HEADERS}
+        ${LIBRARY_SOURCES}
+        ${APP_RESOURCE_WINDOWS}
+    )
+else()
+    add_library(${PROJECT_NAME} SHARED
+        ${LIBRARY_HEADERS}
+        ${LIBRARY_SOURCES}
+        ${APP_RESOURCE_WINDOWS}
+    )
+endif()
+target_include_directories(${PROJECT_NAME} PRIVATE "src")
+
+# Installable items
+install(
+    FILES "OTPLib.hpp"
+    TYPE INCLUDE
+    COMPONENT ${PROJECT_NAME}
+)
+install(TARGETS ${PROJECT_NAME} COMPONENT ${PROJECT_NAME})
+
+# Create PDB files for Release
+include(mscv_pdb)
+
+# Qt
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core Network)
+target_link_libraries(${PROJECT_NAME} PRIVATE
+    Qt${QT_VERSION_MAJOR}::Core
+    Qt${QT_VERSION_MAJOR}::Network)
+
+# Version numbering
+string(TIMESTAMP YEAR "%Y")
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    VER_FILEVERSION=${PROJECT_VERSION_MAJOR},${PROJECT_VERSION_MINOR},${PROJECT_VERSION_PATCH},${PROJECT_VERSION_TWEAK}
+    VER_FILEVERSION_STR="${PROJECT_VERSION}"
+    VER_PRODUCTVERSION=${PROJECT_VERSION}
+    VER_PRODUCTVERSION_STR="${PROJECT_VERSION}"
+    VER_COMPANYNAME_STR="Marcus Birkin"
+    VER_FILEDESCRIPTION_STR="${PROJECT_NAME}"
+    VER_INTERNALNAME_STR="${PROJECT_NAME}"
+    VER_LEGALCOPYRIGHT_STR="2019 - ${YEAR} Marcus Birkin"
+    VER_ORIGINALFILENAME_STR="${PROJECT_NAME}.exe"
+    VER_PRODUCTNAME_STR="${PROJECT_NAME}"
+)
+set_target_properties(
+    ${PROJECT_NAME} PROPERTIES
+    VERSION ${PROJECT_VERSION}
+)
+
+# Public exports
+target_compile_definitions(${PROJECT_NAME} PRIVATE MAKE_OTP_LIB)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+# Unit tests
+option(OTPLIB_BUILD_TESTS "Build the ${PROJECT_NAME} tests" OFF)
+if(OTPLIB_BUILD_TESTS)
+    message("Including OTPLib unit tests")
+    include(unit_tests)
+endif()

@@ -41,10 +41,12 @@ namespace OTP
     typedef OTP::PDU::OTPTransformLayer::timestamp_t timestamp_t;
     typedef OTP::MESSAGES::OTPModuleAdvertisementMessage::list_t moduleList_t;
     typedef OTP::MODULES::STANDARD::axis_t axis_t;
+    class Container;
 
-    typedef struct component_s {
+    typedef struct component_t {
+        friend Container;
     public:
-        component_s() {}
+        component_t() {}
         typedef enum type_e
         {
             consumer,
@@ -64,19 +66,23 @@ namespace OTP
         ModuleList_t getModuleList() const {
             return moduleList.keys();
         }
-        void addModuleList(ModuleList_t list) {
-            for (const auto &item : list)
-                moduleList[item] = QDateTime::currentDateTime();
+        void addModuleItem(const ModuleItem_t &item) {
+            moduleList[item] = QDateTime::currentDateTime();
             updateLastSeen();
         }
-        void removeModuleItem(ModuleItem_t item) { moduleList.remove(item); }
+        void removeModuleItem(const ModuleItem_t &item) {
+            moduleList.remove(item);
+        }
         bool isExpired(ModuleItem_t item) const;
         static QString getModuleString(ModuleItem_t item, bool includeManf = true);
 
-        QDateTime getLastSeen() const { return lastSeen; }
+        QDateTime getLastSeen() const { return lastSeen; };
+        bool isExpired() const;
+
+    protected:
+        void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
 
     private:
-        void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
         name_t name;
         QHostAddress ipAddr;
         QDateTime lastSeen;
@@ -85,7 +91,7 @@ namespace OTP
     } component_t;
     typedef QMap<cid_t, component_t> componentMap_t;
 
-    typedef struct folioMap_s {
+    typedef struct folioMap_t {
     private: auto noSystem() { return system_t().getMin() - 1; }
     public:
         bool checkSequence(cid_t cid, vector_t vector, OTPLayer::folio_t value)
@@ -148,11 +154,13 @@ namespace OTP
                 vector_t vector,
                 OTPLayer::folio_t folio);
 
+        void removeComponent(cid_t);
+
     private:
         typedef std::pair<cid_t, std::pair<system_t, vector_t>> key_t;
-        struct folioMapPrivate_s {
-            folioMapPrivate_s() : folio(0) {}
-            folioMapPrivate_s(OTPLayer::folio_t folio)
+        struct folioMapPrivate_t {
+            folioMapPrivate_t() : folio(0) {}
+            explicit folioMapPrivate_t(OTPLayer::folio_t folio)
                 : folio(folio) {}
 
             bool checkSequence(OTPLayer::folio_t value) { return folio.checkSequence(value); }
@@ -161,17 +169,17 @@ namespace OTP
             QVector<OTPLayer::page_t> pages;
             QVector<QNetworkDatagram> datagrams;
         };
-        QMap<key_t, folioMapPrivate_s> folioMap;
+        QMap<key_t, folioMapPrivate_t> folioMap;
     } folioMap_t;
 
     class pointDetails
     {
     public:
-        pointDetails() : lastSeen(QDateTime::currentDateTime()) {}
+        pointDetails() : lastSeen(QDateTime()) {}
         pointDetails(priority_t priority) :
             lastSeen(QDateTime::currentDateTime()),
             priority(priority) {}
-        pointDetails(QString name, priority_t priority) :
+        pointDetails(const QString &name, priority_t priority) :
             name(name),
             lastSeen(QDateTime::currentDateTime()),
             priority(priority) {}
@@ -181,7 +189,7 @@ namespace OTP
 
         QDateTime getLastSeen() const { return std::max(lastSeen, standardModules.getLastSeen()); }
         void updateLastSeen() { lastSeen = QDateTime::currentDateTime(); }
-        bool isExpired();
+        bool isExpired() const;
 
         priority_t getPriority() const { return priority; }
         void setPriority(priority_t value) { priority = value; updateLastSeen(); }
@@ -212,6 +220,50 @@ namespace OTP
                 return ret;
             }
 
+            template <class T>
+            T &getModule() {
+                using namespace MODULES::STANDARD;
+                if constexpr (std::is_base_of<PositionModule_t, T>())
+                    return position;
+
+                if constexpr (std::is_base_of<PositionVelAccModule_t, T>())
+                    return positionVelAcc;
+
+                if constexpr (std::is_base_of<RotationModule_t, T>())
+                    return rotation;
+
+                if constexpr (std::is_base_of<RotationVelAccModule_t, T>())
+                    return rotationVelAcc;
+
+                if constexpr (std::is_base_of<ScaleModule_t, T>())
+                    return scale;
+
+                if constexpr (std::is_base_of<ReferenceFrameModule_t, T>())
+                    return referenceFrame;
+            }
+
+            template <class T>
+            const T &getModule() const {
+                using namespace MODULES::STANDARD;
+                if constexpr (std::is_base_of<PositionModule_t, T>())
+                    return position;
+
+                if constexpr (std::is_base_of<PositionVelAccModule_t, T>())
+                    return positionVelAcc;
+
+                if constexpr (std::is_base_of<RotationModule_t, T>())
+                    return rotation;
+
+                if constexpr (std::is_base_of<RotationVelAccModule_t, T>())
+                    return rotationVelAcc;
+
+                if constexpr (std::is_base_of<ScaleModule_t, T>())
+                    return scale;
+
+                if constexpr (std::is_base_of<ReferenceFrameModule_t, T>())
+                    return referenceFrame;
+            }
+
             MODULES::STANDARD::PositionModule_t position;
             MODULES::STANDARD::PositionVelAccModule_t positionVelAcc;
             MODULES::STANDARD::RotationModule_t rotation;
@@ -229,12 +281,12 @@ namespace OTP
     };
     typedef std::shared_ptr<pointDetails> pointDetails_t;
 
-    typedef struct OTP_LIB_EXPORT address_s {
-        address_s() :
+    typedef struct OTP_LIB_EXPORT address_t {
+        address_t() :
             system(),
             group(),
             point() {}
-        address_s(system_t system, group_t group, point_t point) :
+        address_t(system_t system, group_t group, point_t point) :
             system(system),
             group(group),
             point(point) {}
@@ -255,15 +307,26 @@ namespace OTP
     inline bool operator==(const address_t& l, const address_t& r)
         { return ((l.system == r.system) && (l.group == r.group) && (l.point == r.point)); }
     inline bool operator!=(const address_t& l, const address_t& r) { return !(l == r); }
+    inline uint qHash(const address_t &key, uint seed = 0)
+    {
+        #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+            auto address = {static_cast<unsigned int>(key.system),
+                            static_cast<unsigned int>(key.group),
+                            static_cast<unsigned int>(key.point)};
+            return qHashRange(address.begin(), address.end(), seed);
+        #else
+            return qHashMulti(seed, key.system, key.group, key.point);
+        #endif
+    }
 
     typedef QHash<point_t, pointDetails_t> pointMap_t;
     typedef QHash<group_t, pointMap_t> groupMap_t;
     typedef QHash<system_t, groupMap_t> systemMap_t;
     typedef QHash<cid_t, systemMap_t> addressMap_t;
 
-    typedef struct range_s {
-        range_s() : min(0), max(0) {}
-        range_s(qint64 min, qint64 max) : min(min), max(max) {}
+    typedef struct range_t {
+        range_t() : min(0), max(0) {}
+        range_t(qint64 min, qint64 max) : min(min), max(max) {}
 
         qint64 getMin() const { return min; }
         qint64 getMax() const { return max; }

@@ -1,9 +1,15 @@
 #include "test_otp_layer.hpp"
-#include "test_appendix_B.h"
+#include "network/messages/test_appendix_B.hpp"
 #include "test_otp_helper.hpp"
 
 const size_t PDUOctlet = 0;
 const size_t PDULength = (78+1) - PDUOctlet;
+
+int test_otp_layer(int argc, char *argv[])
+{
+    TEST_OTP::PDU::OTPLayer testObject;
+    return QTest::qExec(&testObject, argc, argv);
+}
 
 void TEST_OTP::PDU::OTPLayer::initTestCase()
 {
@@ -660,7 +666,7 @@ void TEST_OTP::PDU::OTPLayer::componentName()
             Layer layer(vector_t(), pduLength_t(), cid_t(), folio_t(), page_t(), page_t(), value);
             QVERIFY(static_cast<size_t>(layer.getComponentName().size()) <= fieldSize);
             QCOMPARE(layer.getComponentName().toString(), QString(value.mid(PDUOctlet, fieldSize)));
-            value += char('A') + n;
+            value += static_cast<char>(static_cast<unsigned int>(char('A')) + n);
         }
     }
 
@@ -675,7 +681,7 @@ void TEST_OTP::PDU::OTPLayer::componentName()
             Layer layer(pdu);
             QVERIFY(static_cast<size_t>(layer.getComponentName().size()) <= fieldSize);
             QCOMPARE(layer.getComponentName().toString(), QString(value.mid(PDUOctlet, fieldSize)));
-            value += char('A') + n;
+            value += static_cast<char>(static_cast<unsigned int>(char('A')) + n);
         }
     }
 
@@ -688,7 +694,7 @@ void TEST_OTP::PDU::OTPLayer::componentName()
             layer.setComponentName(value);
             QVERIFY(static_cast<size_t>(layer.getComponentName().size()) <= fieldSize);
             QCOMPARE(layer.getComponentName().toString(), QString(value.mid(PDUOctlet, fieldSize)));
-            value += char('A') + n;
+            value += static_cast<char>(static_cast<unsigned int>(char('A')) + n);
         }
     }
 

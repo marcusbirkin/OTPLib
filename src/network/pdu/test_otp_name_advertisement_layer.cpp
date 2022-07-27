@@ -1,27 +1,33 @@
-#include "test_otp_system_advertisement_layer.hpp"
-#include "test_appendix_B.h"
+#include "test_otp_name_advertisement_layer.hpp"
+#include "network/messages/test_appendix_B.hpp"
 #include "test_otp_helper.hpp"
 
 #include <QRandomGenerator>
 
 const size_t PDUOctlet = 87;
 const size_t PDULength_Min = 96 - PDUOctlet;
-const size_t PDULength_Max = PDULength_Min + 200;
+const size_t PDULength_Max = PDULength_Min + 1365;
 
-void TEST_OTP::PDU::OTPSystemAdvertisementLayer::initTestCase()
+int test_otp_name_advertisement_layer(int argc, char *argv[])
+{
+    TEST_OTP::PDU::OTPNameAdvertisementLayer testObject;
+    return QTest::qExec(&testObject, argc, argv);
+}
+
+void TEST_OTP::PDU::OTPNameAdvertisementLayer::initTestCase()
 {
     DefaultPDUByteArray = DefaultLayer.toPDUByteArray();
     QCOMPARE(DefaultPDUByteArray.size(), PDULength_Min);
 }
 
-void TEST_OTP::PDU::OTPSystemAdvertisementLayer::isValid()
+void TEST_OTP::PDU::OTPNameAdvertisementLayer::isValid()
 {
     QVERIFY(!DefaultLayer.isValid());
 
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         if (example.second.OTPLayer.vector == VECTOR_OTP_ADVERTISEMENT_MESSAGE
-                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM) {
+                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME) {
             PDUByteArray pdu;
             pdu.append(example.first.mid(PDUOctlet));
             Layer layer(pdu);
@@ -35,7 +41,7 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::isValid()
     }
 }
 
-void TEST_OTP::PDU::OTPSystemAdvertisementLayer::toFromPDUByteArray()
+void TEST_OTP::PDU::OTPNameAdvertisementLayer::toFromPDUByteArray()
 {
     {
         Layer layer(DefaultPDUByteArray);
@@ -46,8 +52,8 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::toFromPDUByteArray()
         for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
         {
             if (example.second.OTPLayer.vector == VECTOR_OTP_ADVERTISEMENT_MESSAGE
-                    && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM
-                    && example.second.OTPSystemAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST)
+                    && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME
+                    && example.second.OTPNameAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME_LIST)
             {
                 PDUByteArray pdu;
                 pdu.append(example.first.mid(PDUOctlet));
@@ -66,7 +72,7 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::toFromPDUByteArray()
     }
 }
 
-void TEST_OTP::PDU::OTPSystemAdvertisementLayer::vector()
+void TEST_OTP::PDU::OTPNameAdvertisementLayer::vector()
 {
     const unsigned int octlet = 87;
     const size_t fieldSize = 2;
@@ -77,7 +83,7 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::vector()
     /* Default constructor*/
     {
         Layer layer;
-        QCOMPARE(layer.getVector(), VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST);
+        QCOMPARE(layer.getVector(), VECTOR_OTP_ADVERTISEMENT_NAME_LIST);
         QVERIFY(!layer.isValid());
     }
 
@@ -93,7 +99,7 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::vector()
             pdu.replace(octlet - PDUOctlet, fieldSize, ba);
             Layer layer(pdu);
             QCOMPARE(layer.getVector(), value);
-            if (value != VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST)
+            if (value != VECTOR_OTP_ADVERTISEMENT_NAME_LIST)
                 QVERIFY(!layer.isValid());
         }
     }
@@ -110,18 +116,18 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::vector()
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         if (example.second.OTPLayer.vector == VECTOR_OTP_ADVERTISEMENT_MESSAGE
-                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM
-                && example.second.OTPSystemAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST)
+                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME
+                && example.second.OTPNameAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME_LIST)
         {
             PDUByteArray pdu;
             pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
             Layer layer(pdu);
-            QCOMPARE(layer.getVector(), example.second.OTPSystemAdvertisementLayer.vector);
+            QCOMPARE(layer.getVector(), example.second.OTPNameAdvertisementLayer.vector);
         }
     }
 }
 
-void TEST_OTP::PDU::OTPSystemAdvertisementLayer::length()
+void TEST_OTP::PDU::OTPNameAdvertisementLayer::length()
 {
     const unsigned int octlet = 89;
     const size_t fieldSize = 2;
@@ -180,18 +186,18 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::length()
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         if (example.second.OTPLayer.vector == VECTOR_OTP_ADVERTISEMENT_MESSAGE
-                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM
-                && example.second.OTPSystemAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST)
+                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME
+                && example.second.OTPNameAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME_LIST)
         {
             PDUByteArray pdu;
             pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
             Layer layer(pdu);
-            QCOMPARE(layer.getPDULength(), example.second.OTPSystemAdvertisementLayer.length);
+            QCOMPARE(layer.getPDULength(), example.second.OTPNameAdvertisementLayer.length);
         }
     }
 }
 
-void TEST_OTP::PDU::OTPSystemAdvertisementLayer::options()
+void TEST_OTP::PDU::OTPNameAdvertisementLayer::options()
 {
     const unsigned int octlet = 91;
     const size_t fieldSize = 1;
@@ -275,18 +281,18 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::options()
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         if (example.second.OTPLayer.vector == VECTOR_OTP_ADVERTISEMENT_MESSAGE
-                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM
-                && example.second.OTPSystemAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST)
+                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME
+                && example.second.OTPNameAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME_LIST)
         {
             PDUByteArray pdu;
             pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
             Layer layer(pdu);
-            QCOMPARE(layer.getOptions().isResponse(), example.second.OTPSystemAdvertisementLayer.option_Response);
+            QCOMPARE(layer.getOptions().isResponse(), example.second.OTPNameAdvertisementLayer.option_Response);
         }
     }
 }
 
-void TEST_OTP::PDU::OTPSystemAdvertisementLayer::reserved()
+void TEST_OTP::PDU::OTPNameAdvertisementLayer::reserved()
 {
     const unsigned int octlet = 92;
     const size_t fieldSize = 4;
@@ -328,25 +334,27 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::reserved()
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         if (example.second.OTPLayer.vector == VECTOR_OTP_ADVERTISEMENT_MESSAGE
-                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM
-                && example.second.OTPSystemAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST)
+                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME
+                && example.second.OTPNameAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME_LIST)
         {
             PDUByteArray pdu;
             pdu.append(example.first.mid(PDUOctlet, DefaultPDUByteArray.size()));
             Layer layer(pdu);
-            QCOMPARE(layer.getReserved(), example.second.OTPSystemAdvertisementLayer.reserved);
+            QCOMPARE(layer.getReserved(), example.second.OTPNameAdvertisementLayer.reserved);
         }
     }
 }
 
-void TEST_OTP::PDU::OTPSystemAdvertisementLayer::list()
+void TEST_OTP::PDU::OTPNameAdvertisementLayer::list()
 {
     typedef OTP::PDU::OTPTransformLayer::system_t system_t;
+    typedef OTP::PDU::OTPPointLayer::group_t group_t;
+    typedef OTP::PDU::OTPPointLayer::point_t point_t;
 
     const unsigned int octlet = 96;
-    const size_t fieldSize = 1;
+    const size_t fieldSize = 1 + 2 + 4 + 32;
     const size_t listCountMin = 0;
-    const size_t listCountMax = 200;
+    const size_t listCountMax = 35;
     QVERIFY(typeid(DefaultLayer.getList().first()) == typeid(item_t));
     QVERIFY(item_t().getSize() == fieldSize);
 
@@ -366,7 +374,16 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::list()
                     QRandomGenerator::global()->bounded(
                         system_t::getMin(),
                         system_t::getMax() + 1
-                    )
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        group_t::getMin(),
+                        group_t::getMax() + 1
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        point_t::getMin(),
+                        point_t::getMax() + 1
+                    ),
+                    QString(Q_FUNC_INFO)
                 );
                 list.append(item);
             }
@@ -382,7 +399,16 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::list()
                     QRandomGenerator::global()->bounded(
                         system_t::getMax(),
                         std::numeric_limits<quint8>::max()
-                    )
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        group_t::getMax(),
+                        std::numeric_limits<quint16>::max()
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        point_t::getMax(),
+                        std::numeric_limits<quint32>::max()
+                    ),
+                    QString(Q_FUNC_INFO)
                 );
                 list.append(item);
             }
@@ -434,8 +460,17 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::list()
                 item_t item(
                     QRandomGenerator::global()->bounded(
                         system_t::getMin(),
-                        system_t::getMax()
-                    )
+                        system_t::getMax() + 1
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        group_t::getMin(),
+                        group_t::getMax() + 1
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        point_t::getMin(),
+                        point_t::getMax() + 1
+                    ),
+                    QString(Q_FUNC_INFO)
                 );
                 list.append(item);
             }
@@ -458,7 +493,16 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::list()
                     QRandomGenerator::global()->bounded(
                         system_t::getMax(),
                         std::numeric_limits<quint8>::max()
-                    )
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        group_t::getMax(),
+                        std::numeric_limits<quint16>::max()
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        point_t::getMax(),
+                        std::numeric_limits<quint32>::max()
+                    ),
+                    QString(Q_FUNC_INFO)
                 );
                 list.append(item);
             }
@@ -470,36 +514,51 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::list()
 
     /* add function */
     {
-        for (size_t count = 0; count <= listCountMax; ++count) {
+        for (size_t count = 0; count <= listCountMax + 1; ++count) {
             Layer layer;
             for (size_t n = 0; n < count; ++n) {
-                system_t system =
-                        QRandomGenerator::global()->bounded(
-                            system_t::getMin(),
-                            system_t::getMax() + 1);
-                while (layer.getList().contains(item_t(system))) {
-                     system =
-                       QRandomGenerator::global()->bounded(
-                           system_t::getMin(),
-                           system_t::getMax() + 1);
+                item_t item(
+                    QRandomGenerator::global()->bounded(
+                        system_t::getMin(),
+                        system_t::getMax() + 1
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        group_t::getMin(),
+                        group_t::getMax() + 1
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        point_t::getMin(),
+                        point_t::getMax() + 1
+                    ),
+                    QString(Q_FUNC_INFO)
+                );
+                if (n < listCountMax) {
+                    QVERIFY(layer.addItem(item));
+                    QVERIFY(layer.getList().contains(item));
+                } else {
+                    QVERIFY(!layer.addItem(item));
+                    QVERIFY(!layer.getList().contains(item));
                 }
-                item_t item(system);
-                QVERIFY(layer.addItem(item));
-                QVERIFY(layer.getList().contains(item));
             }
-            item_t item(system_t::getMax() + 1);
-            QVERIFY(!layer.addItem(item));
-            QVERIFY(!layer.getList().contains(item));
         }
 
         {
             Layer layer;
-            for (size_t count = 0; count <= listCountMax; ++count) {
+            for (size_t count = 0; count <= listCountMax + 1; ++count) {
                 item_t item(
                     QRandomGenerator::global()->bounded(
-                        system_t::getMax() + 1,
+                        system_t::getMax(),
                         std::numeric_limits<quint8>::max()
-                    )
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        group_t::getMax(),
+                        std::numeric_limits<quint16>::max()
+                    ),
+                    QRandomGenerator::global()->bounded(
+                        point_t::getMax(),
+                        std::numeric_limits<quint32>::max()
+                    ),
+                    QString(Q_FUNC_INFO)
                 );
                 QVERIFY(!layer.addItem(item));
             }
@@ -510,18 +569,24 @@ void TEST_OTP::PDU::OTPSystemAdvertisementLayer::list()
     for (const auto &example : TEST_OTP::MESSAGES::APPENDIX_B::Examples)
     {
         if (example.second.OTPLayer.vector == VECTOR_OTP_ADVERTISEMENT_MESSAGE
-                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM
-                && example.second.OTPSystemAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_SYSTEM_LIST)
+                && example.second.OTPAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME
+                && example.second.OTPNameAdvertisementLayer.vector == VECTOR_OTP_ADVERTISEMENT_NAME_LIST)
         {
             PDUByteArray pdu;
             pdu.append(example.first.mid(PDUOctlet));
             Layer layer(pdu);
 
             QVERIFY(layer.getList().count() ==
-                    example.second.OTPSystemAdvertisementLayer.systems.count());
+                    example.second.OTPNameAdvertisementLayer.descriptions.count());
             for (auto idx = 0; idx < layer.getList().count(); ++idx) {
-                QCOMPARE(layer.getList().at(idx),
-                         example.second.OTPSystemAdvertisementLayer.systems.at(idx).system);
+                QCOMPARE(layer.getList().at(idx).System,
+                         example.second.OTPNameAdvertisementLayer.descriptions.at(idx).system);
+                QCOMPARE(layer.getList().at(idx).Group,
+                         example.second.OTPNameAdvertisementLayer.descriptions.at(idx).group);
+                QCOMPARE(layer.getList().at(idx).Point,
+                         example.second.OTPNameAdvertisementLayer.descriptions.at(idx).point);
+                QCOMPARE(layer.getList().at(idx).PointName.toString(),
+                         example.second.OTPNameAdvertisementLayer.descriptions.at(idx).description);
             }
 
         }
