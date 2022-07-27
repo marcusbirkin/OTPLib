@@ -84,7 +84,7 @@ namespace OTP
             return ret;
         }
 
-        QAbstractSocket::SocketState state() { return RXSocket->state(); }
+        QAbstractSocket::SocketState state();
 
     signals:
         void newDatagram(QNetworkDatagram datagram);

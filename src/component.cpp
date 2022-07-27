@@ -85,6 +85,13 @@ void Component::setNetworkInterface(QNetworkInterface value)
     setupListener();
     emit newNetworkInterface(iface);
 }
+QAbstractSocket::SocketState Component::getNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const
+{
+    QMutexLocker lock(&socketsMutex);
+    if (!sockets.contains(transport))
+        return QAbstractSocket::UnconnectedState;
+    return sockets.value(transport)->state();
+}
 
 /* Network Transport */
 void Component::setNetworkTransport(QAbstractSocket::NetworkLayerProtocol value)
@@ -94,10 +101,12 @@ void Component::setNetworkTransport(QAbstractSocket::NetworkLayerProtocol value)
     setupListener();
     emit newNetworkTransport(transport);
 }
+
 void Component::setupListener()
 {
     qDebug() << parent() << "- Starting on interface" << iface.humanReadableName() << iface.hardwareAddress();
 
+    QMutexLocker lock(&socketsMutex);
     sockets.clear();
 
     for (const auto &connection : qAsConst(listenerConnections))
@@ -125,7 +134,8 @@ void Component::setupListener()
         listenerConnections.append(
                     connect(
                         socket.get(), &SocketManager::stateChanged,
-                        this, &Component::stateChangedNetworkInterface));
+                        this, &Component::stateChangedNetworkInterface,
+                        Qt::QueuedConnection));
     }
 }
 void Component::newDatagram(QNetworkDatagram datagram)

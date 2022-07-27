@@ -555,6 +555,7 @@ void Producer::sendOTPNameAdvertisementMessage(QHostAddress destinationAddr, MES
     page_t lastPage = static_cast<page_t>(folioMessages.count()) - 1;
     for (page_t page = 0; page < folioMessages.count(); page++)
     {
+        QMutexLocker lock(&socketsMutex);
         auto datagram = folioMessages[page]->toQNetworkDatagram(
                     destinationAddr,
                     folio,

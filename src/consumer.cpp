@@ -76,6 +76,7 @@ void Consumer::addLocalSystem(system_t system)
 
     if ((transport == QAbstractSocket::IPv4Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
     {
+        QMutexLocker lock(&socketsMutex);
         auto groupAddr = QHostAddress(OTP_Transform_Message_IPv4.toIPv4Address() + system);
         if (sockets.value(QAbstractSocket::IPv4Protocol)->joinMulticastGroup(groupAddr))
             qDebug() << this << "- Listening to Transform Messages for System" << system << groupAddr;
@@ -83,6 +84,7 @@ void Consumer::addLocalSystem(system_t system)
 
     if ((transport == QAbstractSocket::IPv6Protocol) || (transport == QAbstractSocket::AnyIPProtocol))
     {
+        QMutexLocker lock(&socketsMutex);
         auto groupAddr = QHostAddress(OTP_Transform_Message_IPv6.toIPv6Address() + system);
         if (sockets.value(QAbstractSocket::IPv6Protocol)->joinMulticastGroup(groupAddr))
             qDebug() << this << "- Listening to Transform Messages for System" << system << groupAddr;

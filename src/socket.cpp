@@ -132,3 +132,11 @@ bool SocketManager::leaveMulticastGroup(const QHostAddress &groupAddress)
     return RXSocket->leaveMulticastGroup(groupAddress, interface);
 }
 
+QAbstractSocket::SocketState SocketManager::state() {
+    if (RXSocket)
+        return RXSocket->state();
+    else
+        return QAbstractSocket::UnconnectedState;
+}
+
+

@@ -61,11 +61,8 @@ namespace OTP
         void setNetworkInterface(QNetworkInterface value);
         QAbstractSocket::NetworkLayerProtocol getNetworkTransport() const { return transport; }
         void setNetworkTransport(QAbstractSocket::NetworkLayerProtocol transport);
-        QAbstractSocket::SocketState getNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const
-        {
-            if (!sockets.contains(transport)) return QAbstractSocket::UnconnectedState;
-            return sockets.value(transport)->state();
-        }
+        QAbstractSocket::SocketState getNetworkinterfaceState(QAbstractSocket::NetworkLayerProtocol transport) const;
+
     signals:
         void newNetworkInterface(QNetworkInterface);
         void newNetworkTransport(QAbstractSocket::NetworkLayerProtocol);
@@ -89,6 +86,7 @@ namespace OTP
         QNetworkInterface iface;
         QAbstractSocket::NetworkLayerProtocol transport;
         QList<QMetaObject::Connection> listenerConnections;
+        mutable QMutex socketsMutex;
         QMap<QAbstractSocket::NetworkLayerProtocol, QSharedPointer<SocketManager>> sockets;
 
         /* Local CID */
