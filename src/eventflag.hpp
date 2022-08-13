@@ -47,25 +47,25 @@ public:
      * @brief Get flag value
      * @return Current state of flag
      */
-    operator bool();
+    operator bool() const;
 
     /**
      * @brief Wait for the flag to be set
      */
-    void wait() { wait(true); }
+    void wait() const { wait(true); }
 
     /**
      * @brief Wait for the flag to be set to specfic state
      * @param state State to wait for
      */
-    void wait(bool state);
+    void wait(bool state) const;
 
     /**
      * @brief Wait for the flag to be set, or timeout
      * @param timeout Timeout before giving up on flag
      * @return flag value, will return false if timeout occurred
      */
-    bool waitFor(std::chrono::milliseconds timeout) { return waitFor(true, timeout); }
+    bool waitFor(std::chrono::milliseconds timeout) const { return waitFor(true, timeout); }
 
     /**
      * @brief Wait for the flag to be set to specfic state, or timeout
@@ -73,12 +73,12 @@ public:
      * @param timeout Timeout before giving up on flag
      * @return flag value, will return the inverse of 'state' on timeout
      */
-    bool waitFor(bool state, std::chrono::milliseconds timeout);
+    bool waitFor(bool state, std::chrono::milliseconds timeout) const;
 
 private:
     std::atomic_bool flag;
-    std::condition_variable cv;
-    std::mutex mutex;
+    mutable std::condition_variable cv;
+    mutable std::mutex mutex;
 };
 
 #endif // EVENTFLAG_H

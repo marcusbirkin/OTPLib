@@ -35,19 +35,19 @@ void EventFlag::operator=(bool set)
     cv.notify_all();
 }
 
-EventFlag::operator bool()
+EventFlag::operator bool() const
 {
     std::lock_guard lk(mutex);
     return flag;
 }
 
-void EventFlag::wait(bool state)
+void EventFlag::wait(bool state) const
 {
     std::unique_lock lk(mutex);
     return cv.wait(lk, [state, this]{ return flag == state; });
 }
 
-bool EventFlag::waitFor(bool state, std::chrono::milliseconds timeout)
+bool EventFlag::waitFor(bool state, std::chrono::milliseconds timeout) const
 {
     std::unique_lock lk(mutex);
     return cv.wait_for(lk, timeout, [state, this]{ return flag == state; });
