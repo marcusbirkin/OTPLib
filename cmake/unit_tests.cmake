@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Test Network)
+find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Test Network Concurrent)
 
 # Required for the example message structure in test_appendix_B.hpp
 if(MSVC AND CMAKE_CXX_COMPILER_VERSION VERSION_GREATER_EQUAL 19.29.30129 AND CMAKE_VERSION VERSION_GREATER 3.20.3)
@@ -46,6 +46,7 @@ target_include_directories(${TEST_TARGET} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(${TEST_TARGET} PRIVATE
    Qt${QT_VERSION_MAJOR}::Test
    Qt${QT_VERSION_MAJOR}::Network
+   Qt${QT_VERSION_MAJOR}::Concurrent
 )
 
 # OTPLib
