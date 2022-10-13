@@ -17,7 +17,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "modules_const.hpp"
-#include "esta_mfcrids.hpp"
+#include "ESTA_MFCTRIDS/esta_mfcrids.hpp"
 
 namespace OTP::MODULES {
 

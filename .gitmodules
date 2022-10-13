@@ -1,0 +1,3 @@
+[submodule "src/ESTA_MFCTRIDS"]
+	path = src/ESTA_MFCTRIDS
+	url = https://github.com/marcusbirkin/ESTA_MFCTRIDS

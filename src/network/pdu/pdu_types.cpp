@@ -19,7 +19,7 @@
 #include "pdu_types.hpp"
 #include "pdu_const.hpp"
 #include "../../const.hpp"
-#include "esta_mfcrids.hpp"
+#include "ESTA_MFCTRIDS/esta_mfcrids.hpp"
 #include <QtEndian>
 
 namespace OTP::PDU {
