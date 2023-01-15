@@ -21,6 +21,9 @@ find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Core)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Network)
 
+# Mitigate QTBUG-90395
+include(qtbug-90395)
+
 set(APP_RESOURCE_WINDOWS res/${PROJECT_NAME}.rc)
 
 # Source files excluding unit tests
