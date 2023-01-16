@@ -1,8 +1,9 @@
-﻿/*
- * Auto generated
- * from: https://tsp.esta.org/tsp/working_groups/CP/mfctrIDs.php
- * at: 2022-06-24T10:28:16Z
-*/
+﻿/**
+ * @file esta_mfcrids.hpp
+ * @brief ESTA ManufacturerIDs
+ * @details Auto generated from https://tsp.esta.org/tsp/working_groups/CP/mfctrIDs.php
+ * @date 2022-08-20T11:44:43Z
+ */
 
 #ifndef ESTA_MFCTRIDS_HPP
 #define ESTA_MFCTRIDS_HPP
@@ -11,11 +12,30 @@
 #include <string>
 
 namespace ESTA {
+
+	/**
+	 * @details The Manufacturer ID Database is a public listing of 
+	 * (1) all the two-byte IDs assigned per clauses E4 and D5.12 of ANSI E1.11, Entertainment Technology - 
+	 * USITT DMX512-A - Asynchronous Serial Data Transmission Standard for Controlling Lighting Equipment and Accessories,
+	 * and (2) all the Textual Organization Identifiers assigned per clause 3.2 of ACN EPI 16.
+	 */
 	namespace ManufacturerIDs {
-		const uint16_t PROTOTYPE_BEGIN = 0x7FF0;
-		const uint16_t PROTOTYPE_END = 0x7FFF;
+		/**
+		 * @name Prototype Range
+		 * @details
+		 * Manufacturer IDs 7FF0h through 7FFFh are reserved for prototyping and experimental use
+		 * by a manufacturer while that manufacturer is waiting for an assigned Manufacturer ID.
+		 * They are not permitted to be used in product that is shipping.
+		 *@{*/
+		const uint16_t PROTOTYPE_BEGIN = 0x7FF0; /**< Prototyping range begin */
+		const uint16_t PROTOTYPE_END = 0x7FFF; /**< Prototyping range end */
+		/**@}*/
 
 		using namespace std::string_literals;
+		/**
+		 * @brief Manufacturer Company names
+		 * @details Indexed by Manufacturer ID
+		 */
 		const std::map<uint16_t, std::wstring> Manufacturers = {
 			{0x0000, L"ESTA"s},
 			{0x0000, L"PLASA"s},
@@ -356,9 +376,12 @@ namespace ESTA {
 			{0x05AB, L"Shenzhen Lesan Lighting Co., Ltd."s},
 			{0x05B5, L"Turkowski GmbH"s},
 			{0x05BC, L"CantoUSA"s},
+			{0x05C0, L"Vertigo"s},
 			{0x05CF, L"Brighten Technology Development Co., Ltd."s},
 			{0x05D3, L"D-LED Illumination Technologies Ltd."s},
+			{0x05E0, L"esp_dmx"s},
 			{0x05E2, L"KORRO PLUS"s},
+			{0x05E8, L"Snap One"s},
 			{0x05EB, L"GUANGZHOU BO WEI TE LIGHTING  CO.LTD"s},
 			{0x05EF, L"Guangzhou Chai Yi Light Co., Ltd."s},
 			{0x05F2, L"O'Light"s},
@@ -370,11 +393,10 @@ namespace ESTA {
 			{0x060A, L"Kindwin Opto Electronic (ShenZhen) Co. Ltd"s},
 			{0x060B, L"Lighting Science Group (formerly LED Effects, Inc.)"s},
 			{0x060D, L"HANIL TNC  CO.,LTD"s},
-			{0x061, L"LEDRAYS INC"s},
+			{0x061C, L"LEDRAYS INC"s},
 			{0x0622, L"Lupo SRL"s},
 			{0x0623, L"JAS LIGHTING & SOUND CO., LTD."s},
 			{0x0624, L"S4 Lights"s},
-			{0x0628, L"APEX PRO LIGHT CO.,LTD"s},
 			{0x062B, L"CKC Lighting Co., Ltd."s},
 			{0x063A, L"AVM Belgium BVBA"s},
 			{0x063C, L"LaserNet"s},
@@ -393,6 +415,7 @@ namespace ESTA {
 			{0x0682, L"Beijing Ming Rui Lighting Technology Co., Ltd."s},
 			{0x0684, L"LEDART LLC"s},
 			{0x0685, L"IBL/ESD-Datentechnik GmbH"s},
+			{0x0687, L"INSMARINE LLC"s},
 			{0x068E, L"GUANGZHOU TEANMA STAGE LIGHTING FACTORY"s},
 			{0x0696, L"SHENZHEN HOION LIGHTING CO.,LTD"s},
 			{0x0697, L"Shenzhen LED Innovator Technology Co., Ltd"s},
@@ -418,6 +441,7 @@ namespace ESTA {
 			{0x06EC, L"SISTEMA Jsc"s},
 			{0x06F0, L"CTG sp. z o.o."s},
 			{0x06F1, L"Aqualux Lighting"s},
+			{0x06F8, L"CHONGQING XINYUANHUI OPTOELECTRONIC TECHNOLOGY CO.,LTD"s},
 			{0x0702, L"Drinelec"s},
 			{0x0707, L"Conceptinetics Technologies and Consultancy Ltd."s},
 			{0x0708, L"AK-LIGHT"s},
@@ -446,6 +470,7 @@ namespace ESTA {
 			{0x078A, L"FATEC sarl"s},
 			{0x078E, L"SHENZHEN BGLOPTO TECHNOLOGY Co., LTD."s},
 			{0x0792, L"MY-Semi Inc."s},
+			{0x0797, L"ARCPROLED Limited"s},
 			{0x07A3, L"Guangzhou GBR PROLIGHT GROUP CO.,LTD (GBR PROLIGHT)"s},
 			{0x07A5, L"X LED Systems"s},
 			{0x07AD, L"CLS LED BV"s},
@@ -457,12 +482,12 @@ namespace ESTA {
 			{0x07BE, L"Sanko Device Co.Ltd."s},
 			{0x07C0, L"Code Mercenaries GmbH"s},
 			{0x07C2, L"BOOQlight BV"s},
-			{0x07C, L"SBS Lighting LLC"s},
-			{0x07C, L"BK Lighting"s},
+			{0x07C5, L"SBS Lighting LLC"s},
+			{0x07C6, L"BK Lighting"s},
 			{0x07C8, L"Sidus Link Ltd."s},
 			{0x07CC, L"Griven S.r.l."s},
 			{0x07CF, L"MH-Sound"s},
-			{0x07D, L"Made By Mouse LTD"s},
+			{0x07D1, L"Made By Mouse LTD"s},
 			{0x07D5, L"PHIDA Stage Equipment Co., Ltd"s},
 			{0x07D6, L"Lite Puter Enterprise Co., Ltd."s},
 			{0x07DA, L"Flytech s.r.l."s},
@@ -477,6 +502,7 @@ namespace ESTA {
 			{0x07F8, L"Ultimate Technology Solutions GmbH"s},
 			{0x07F9, L"Bion Technologies GmbH"s},
 			{0x07FD, L"THELIGHT Luminary for Cine and TV S.L."s},
+			{0x07FE, L"Shenzhen Apexls Optoelectronic Co., Ltd."s},
 			{0x07FF, L"Guangzhou HOMEI LIGHT Manufacturer"s},
 			{0x0800, L"Hongyeah Light"s},
 			{0x0801, L"Guangzhou Favolite Stage Lighting Co., Ltd."s},
@@ -492,6 +518,7 @@ namespace ESTA {
 			{0x0812, L"Yamagiwa Corporation"s},
 			{0x0813, L"Shenzhen Scenico Optoelectronic Co., Ltd."s},
 			{0x0814, L"squareV"s},
+			{0x081C, L"MR Electronics Ltd."s},
 			{0x0823, L"Opito Labs GmbH"s},
 			{0x0824, L"Almotechnos CO.,LTD."s},
 			{0x0827, L"Shineon Hardtech Co,.LTD"s},
@@ -574,9 +601,9 @@ namespace ESTA {
 			{0x08C1, L"Project SSSHH Incorporated"s},
 			{0x08C3, L"Guangzhou Spark Stage Equipment Co. Ltd"s},
 			{0x08C5, L"EHRGEIZ Lichttechnik GmbH"s},
-			{0x08C, L"Guangzhou Ever Famous Electronic Co.,Ltd"s},
+			{0x08C6, L"Guangzhou Ever Famous Electronic Co.,Ltd"s},
 			{0x08C9, L"LEDitgo Videowall Germany GmbH"s},
-			{0x08C, L"Foshan City Xuandao Optoelectronics Equipment Co., Ltd"s},
+			{0x08CA, L"Foshan City Xuandao Optoelectronics Equipment Co., Ltd"s},
 			{0x08CC, L"Guangzhou Santu Stage Lighting Equipment Co.Ltd"s},
 			{0x08D3, L"SVI Public Company Limited"s},
 			{0x08D4, L"Sensa-Lite Ltd."s},
@@ -592,11 +619,12 @@ namespace ESTA {
 			{0x08E3, L"Guangzhou JinZhiHui Electronic Technology Co.,Ltd."s},
 			{0x08E4, L"LMP Lichttechnik Vertriebsgesellschaft GmbH & Co KG"s},
 			{0x08E7, L"3A Guangzhou Electronics Co., Ltd"s},
+			{0x08EA, L"Changchun Cedar Electronic Technology Co.,Ltd."s},
 			{0x08EC, L"Marvin Nadrowski"s},
 			{0x08ED, L"ShowLED"s},
 			{0x08EE, L"Spacelights"s},
 			{0x08EF, L"Guangzhou RuiYang lighting technology co. LTD."s},
-			{0x08F, L"Guang Dong LMJ Lighting Co., Ltd"s},
+			{0x08F0, L"Guang Dong LMJ Lighting Co., Ltd"s},
 			{0x08F1, L"SanDevices, LLC"s},
 			{0x08F3, L"Outdoor Lasers Ltd."s},
 			{0x08F4, L"MC Electronic Technology(GZ) Co., Ltd."s},
@@ -605,7 +633,7 @@ namespace ESTA {
 			{0x08F8, L"Liberal Logic Inc."s},
 			{0x08F9, L"ACS - Ackerman Computer Sciences"s},
 			{0x08FA, L"Phaton Lighting Co., Ltd."s},
-			{0x08F, L"RPA Electronic Solutions Inc."s},
+			{0x08FB, L"RPA Electronic Solutions Inc."s},
 			{0x08FC, L"Lights By Brian"s},
 			{0x08FE, L"Zhuhai Shengchang Electronics Co., Ltd."s},
 			{0x0900, L"nox multimedia GmbH"s},
@@ -646,6 +674,7 @@ namespace ESTA {
 			{0x092F, L"Guangzhou Shinelight Stage Equipment Factory"s},
 			{0x0930, L"jiaozuo shengguang film &equipment Co. Ltd"s},
 			{0x0931, L"Cristal Controles"s},
+			{0x0932, L"GUANGZHOU BORAY ELECTRON CO.,LTD"s},
 			{0x0933, L"Beyond Lighting WLL"s},
 			{0x0935, L"Guangzhou Huadu District Richa Lighting Equipment Factory"s},
 			{0x0936, L"AquaTronic"s},
@@ -698,6 +727,7 @@ namespace ESTA {
 			{0x098E, L"Ecosense Lighting Inc"s},
 			{0x098F, L"Digital Sputnik Lighting"s},
 			{0x0990, L"Stagelight Holding"s},
+			{0x0993, L"Shenzhen Trigger digital Technology Co., LTD"s},
 			{0x0996, L"CCI Power Supplies, LLC"s},
 			{0x0997, L"Star Iluminacao Computadorizada LTDA"s},
 			{0x0999, L"Concept Smoke Systems Ltd."s},
@@ -792,7 +822,6 @@ namespace ESTA {
 			{0x16AE, L"Electrone Americas Ltd. Co."s},
 			{0x16DC, L"Traxon Technologies Ltd."s},
 			{0x16E4, L"Aboutshow Color Light Co., LTD"s},
-			{0x16FA, L"Lite Puter Enterprise Co., Ltd."s},
 			{0x1701, L"ARTBOX"s},
 			{0x170E, L"Serva Transport Systems GmbH"s},
 			{0x170F, L"Kezun Stage Lighting Equipment Co., Ltd."s},
@@ -801,7 +830,7 @@ namespace ESTA {
 			{0x1808, L"Guangzhou Jinye Electronic Technology Co., Ltd."s},
 			{0x1809, L"Rotolight"s},
 			{0x180A, L"Guangdong Longjoin Optoelectronics Technology Co. Ltd."s},
-			{0x180B, L"Light master"s},
+			{0x180B, L"Light stream"s},
 			{0x1871, L"Smoke Factory GmbH"s},
 			{0x1872, L"Super-Can Industry Growing Co. Ltd."s},
 			{0x1873, L"Zhongshan Wellmake Electronic Technology Co., Ltd."s},
@@ -955,7 +984,7 @@ namespace ESTA {
 			{0x388A, L"Guangzhou Yajiang (Yagang - Silver Star) Photoelectric Equipment Ltd."s},
 			{0x3A37, L"TheOlymp - Networking & InterNet Services"s},
 			{0x3AFC, L"Black Tank Engineering"s},
-			{0x3B1, L"NXP Semiconductors B.V."s},
+			{0x3B10, L"NXP Semiconductors B.V."s},
 			{0x3B88, L"Shenzhen Eastar Electronic Co., Ltd."s},
 			{0x3D30, L"zactrack Lighting Technologies Gmbh"s},
 			{0x400D, L"Quasar Science LLC"s},
@@ -1077,6 +1106,7 @@ namespace ESTA {
 			{0x4ACC, L"RVL techniek"s},
 			{0x4B00, L"Gabor Galyas Lighting"s},
 			{0x4B42, L"KissBox"s},
+			{0x4B43, L"TmTech Electronic Co.,Ltd."s},
 			{0x4B46, L"Kino Flo, Inc."s},
 			{0x4B4C, L"KLH Electronics PLC"s},
 			{0x4B4D, L"KMX Inc."s},
@@ -1135,7 +1165,6 @@ namespace ESTA {
 			{0x5005, L"MEDIAM Ltd. (Modus brand)"s},
 			{0x5006, L"ENEDO Power SpA"s},
 			{0x5007, L"Alfalite"s},
-			{0x5007, L"Prizm Lighting (part of American Lighting Inc.)"s},
 			{0x5008, L"Chengdu Chengyu Electronic Technology Co., Ltd."s},
 			{0x5009, L"Izzro Optoelectronics Technology Co., Ltd."s},
 			{0x500A, L"AU Optronics Corporation (AUO)"s},
@@ -1143,6 +1172,7 @@ namespace ESTA {
 			{0x500C, L"L.E.C. Societe Lyonnaise D' Equipement Et De Controle"s},
 			{0x5010, L"Shenzhen Viye Technology Co., Ltd."s},
 			{0x5011, L"Guangzhou Skydance Co., Ltd."s},
+			{0x5017, L"American Lighting"s},
 			{0x5040, L"Guangzhou Color Imagination LED Lighting Ltd."s},
 			{0x5041, L"Philips Entertainment Lighting Asia"s},
 			{0x5043, L"Pathway Connectivity Inc."s},
@@ -1347,6 +1377,8 @@ namespace ESTA {
 			{0x7D61, L"HMB|TEC GmbH"s},
 			{0x7DE7, L"Guangzhou ILightings Equipment Co., Ltd."s},
 			{0x7DE8, L"Shenzhen LAMP Technology Co., Ltd."s},
+			{0x7DEA, L"RobLight A/S"s},
+			{0x7DEB, L"Krypton"s},
 			{0x7DEE, L"zencontrol Pty Ltd"s},
 			{0x7EE7, L"Arthur Digital Solutions Kft"s},
 			{0x7EE8, L"Guangzhou Yingfeng Lighting Equipment Co., Ltd."s},

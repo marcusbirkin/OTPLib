@@ -1,21 +1,24 @@
-/*
-    OTPLib
-    A QT interface for E1.59  (Entertainment  Technology  Object  Transform  Protocol  (OTP))
-    Copyright (C) 2019  Marcus Birkin
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+/**
+ * @file        modules_types.hpp
+ * @brief       Custom types for OTP Modules
+ * @details     Part of OTPLib - A QT interface for E1.59
+ * @authors     Marcus Birkin
+ * @copyright   Copyright (C) 2020 Marcus Birkin
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 #ifndef MODULES_TYPES_HPP
 #define MODULES_TYPES_HPP
 
@@ -27,51 +30,130 @@
 #include "../pdu/pdu_types.hpp"
 
 using namespace OTP::PDU;
+
 namespace OTP::MODULES {
+    /*! Creates a type name for OTP::PDU::OTPTransformLayer::timestamp_t */ 
     typedef OTP::PDU::OTPTransformLayer::timestamp_t timestamp_t;
 
+    /**
+     * @brief Module identification type
+     * 
+     */
     typedef struct module_t
     {
+        /**
+         * @brief Human readable Module Description Type
+         * 
+         */
         typedef struct moduleDescription_t
         {
-            QString Manufactuer;
-            QString Name;
+            QString Manufactuer; /**< Manufacturer Name (e.g. ESTA) */
+            QString Name; /**< Module Name (e.g. Position)*/
         } moduleDescription_t;
+
+        /**
+         * @brief Human readable Module Description
+         * 
+         */
         moduleDescription_t description;
+
+        /**
+         * @brief Module Identifier
+         * @details
+         * Modules are uniquely identified using a Module Identifier, 
+         * which is composed of a Manufacturer ID and a 16-bit Module Number.
+         * 
+         */
         PDU::OTPModuleLayer::ident_t ident;
     } module_t;
+
+    /*! Creates a type name for PDU::OTPModuleLayer::moduleNumber_t */ 
     typedef PDU::OTPModuleLayer::moduleNumber_t moduleNumber_t;
 
-    /* Section 16 Standard Modules */
+    /**
+     * @brief These Standard Modules each define different sets of information about a Point.
+     * @details As defined by E1-59 Section 16 "Standard Modules"
+     * 
+     */
     namespace STANDARD {
+        /*! Creates a type name for OTP::PDU::OTPModuleLayer::additional_t */ 
         typedef OTP::PDU::OTPModuleLayer::additional_t additional_t;
 
+        /**
+         * @brief Valid axes
+         * 
+         */
         typedef enum axis_e
         {
             first,
-            X = first,
-            Y,
-            Z,
+            X = first, /**< X Axis */
+            Y, /**< Y Axis */
+            Z, /**< Z Axis */
             last = Z,
             count
         } axis_t;
+        /**
+         * @brief Axis post-increment operator
+         * @details Does not roll over
+         * 
+         * @param a Axis object to increase
+         * 
+         * @return Next axis
+         */
         inline axis_e operator++(axis_e& a,int){
             axis_e temp=a;
             a = std::clamp(static_cast<axis_t>(static_cast<unsigned int>(a) + 1), axis_t::first, axis_t::count);
             return temp;
         }
+        /**
+         * @brief Axis pre-increment operator
+         * @details Does not roll over
+         * 
+         * @param a Axis object to increase
+         * 
+         * @return Next axis
+         */
         inline axis_e operator++ (axis_e& a) {
             return a++;
         }
 
-        // 16.1 Position Module
+        /**
+         * @internal
+         * @brief This data structure contains the current position of a Point in all three linear directions.
+         * @details As defined by E1-59 Section 16.1 "Position Module"
+         * 
+         */
         class PositionModule_t {
         public:
+            /**
+             * @brief Option flags
+             * 
+             */
             typedef struct options_t
             {
                 options_t() : data(0) {}
+
+                /**
+                 * @brief Is the scaling option set
+                 * @details 
+                 * This bit, when set to 1, indicates that the remaining fields in this Module provide values in mm. 
+                 * When set to 0, the remaining fields use μm.
+                 * 
+                 * @return true Scaling option set
+                 * @return false Scaling option not set
+                 */
                 bool isScaling() const { return data[SCALING_BIT]; }
+                
+                /**
+                 * @brief Set scaling option
+                 * @details 
+                 * This bit, when set to 1, indicates that the remaining fields in this Module provide values in mm. 
+                 * When set to 0, the remaining fields use μm.
+                 * 
+                 * @param value New value of scaling option
+                 */
                 void setScaling(bool value) { data[SCALING_BIT] = value; }
+
                 friend additional_t& operator<<(additional_t &l, const options_t &r) {
                     l << type(r.data.to_ulong());
                     return l;
@@ -86,15 +168,25 @@ namespace OTP::MODULES {
                 typedef quint8 type;
                 static const quint8 bitWidth = sizeof(type) * 8;
                 enum {
-                    SCALING_BIT = 7
+                    SCALING_BIT = 7 /**< Value scabled in mm (1) or μm (0) */
                 };
                 std::bitset<bitWidth> data;
             } options_t;
+
+            /**
+             * @brief Point position type
+             * 
+             */
             typedef qint32 position_t;
+
+            /**
+             * @brief Scale of position value
+             * 
+             */
             typedef enum scale_e : quint8
             {
-                mm = 0, // Millimeters (mm)
-                um = 1 // Micrometers (μm)
+                mm = 0, /**< Millimeters (mm) */
+                um = 1 /**< Micrometers (μm) */
             } scale_t;
 
             PositionModule_t() : options(), timestamp(0), lastSeen(QDateTime())
@@ -102,6 +194,12 @@ namespace OTP::MODULES {
                 std::fill(std::begin(position), std::end(position), 0);
             }
 
+            /**
+             * @brief Construct a new Position Module object
+             * 
+             * @param additional Additional fields
+             * @param timestamp Sample timestamp
+             */
             PositionModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
             {
                 updateLastSeen();
@@ -111,9 +209,25 @@ namespace OTP::MODULES {
                 std::copy(std::begin(temp.position), std::end(temp.position), std::begin(position));
             }
 
+            /**
+             * @brief Get the sample timestamp for the most recent point data
+             * 
+             * @return Position data sample time
+             */
             timestamp_t getTimestamp() const { return timestamp; }
+
+            /**
+             * @brief Get last point activity time for the module
+             * 
+             * @return Last activity time 
+             */
             QDateTime getLastSeen() const { return lastSeen; }
 
+            /**
+             * @brief Set the scaling of the value
+             * 
+             * @param scale New value scale
+             */
             void setScaling(scale_t scale) {
                 switch (scale)
                 {
@@ -122,11 +236,45 @@ namespace OTP::MODULES {
                 }
                 updateLastSeen();
             }
+
+            /**
+             * @brief Get the scaling of the value
+             * 
+             * @return Current value scale
+             */
             scale_t getScaling() const { return options.isScaling() ? mm : um; }
+
+            /**
+             * @brief Is the value scaling current set to Millimeters (mm)
+             * 
+             * @return true Value is in Millimeters (mm)
+             * @return false Value is not in Millimeters (mm)
+             */
             bool isScalingMM() const { return getScaling() == mm; }
+
+            /**
+             * @brief Is the value scaling current set to Micrometers (μm)
+             * 
+             * @return true Value is in Micrometers (μm)
+             * @return false Value is not in Micrometers (μm)
+             */
             bool isScalingUM() const { return getScaling() == um; }
 
+            /**
+             * @brief Get the current position of an axis
+             * 
+             * @param axis Axis to query
+             * @return Current position 
+             */
             position_t getPosition(axis_t axis) const { return position[std::clamp(axis, axis_t::first, axis_t::last)]; }
+
+            /**
+             * @brief Set the current position of an axis
+             * 
+             * @param axis Axis to set
+             * @param value New position
+             * @param time Sample time
+             */
             void setPosition(axis_t axis, position_t value, timestamp_t time = 0)
             {
                 position[std::clamp(axis, axis_t::first, axis_t::last)] = value;
@@ -175,10 +323,24 @@ namespace OTP::MODULES {
             QDateTime lastSeen;
         };
 
-        // 16.2 Position Velocity/Acceleration Module
+        /**
+         * @internal
+         * @brief This data structure contains the positional velocity and acceleration of a Point.
+         * @details As defined by E1-59 Section 16.2 "Position Velocity/Acceleration Module"
+         * 
+         */
         class PositionVelAccModule_t {
         public:
+            /**
+             * @brief Point velocity type
+             * 
+             */
             typedef qint32 velocity_t;
+
+            /**
+             * @brief Point acceleration type
+             * 
+             */
             typedef qint32 acceleration_t;
 
             PositionVelAccModule_t() : timestamp(0), lastSeen(QDateTime())
@@ -187,6 +349,12 @@ namespace OTP::MODULES {
                 std::fill(std::begin(acceleration), std::end(acceleration), 0);
             }
 
+            /**
+             * @brief Construct a new Position Velocity/Acceleration Module object
+             * 
+             * @param additional Additional fields
+             * @param timestamp Sample timestamp
+             */
             PositionVelAccModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
             {
                 updateLastSeen();
@@ -196,10 +364,38 @@ namespace OTP::MODULES {
                 std::copy(std::begin(temp.acceleration), std::end(temp.acceleration), std::begin(acceleration));
             }
 
+            /**
+             * @brief Get the sample timestamp for the most recent point data
+             * 
+             * @return Position data sample time
+             */
             timestamp_t getTimestamp() const { return timestamp; }
+
+            /**
+             * @brief Get last point activity time for the module
+             * 
+             * @return Last activity time 
+             */
             QDateTime getLastSeen() const { return lastSeen; }
 
-            velocity_t getVelocity(axis_t axis) const { return velocity[std::clamp(axis, axis_t::first, axis_t::last)]; }
+            /**
+             * @brief Get the Velocity of axis
+             * 
+             * @param axis Axis to query
+             * @return Current Velocity
+             */
+            velocity_t getVelocity(axis_t axis) const 
+            { 
+                return velocity[std::clamp(axis, axis_t::first, axis_t::last)]; 
+            }
+
+            /**
+             * @brief Set the Velocity of the axis
+             * 
+             * @param axis Axis to set
+             * @param value New Velocity value
+             * @param time Sample timestamp
+             */
             void setVelocity(axis_t axis, velocity_t value, timestamp_t time = 0)
             {
                 velocity[std::clamp(axis, axis_t::first, axis_t::last)] = value;
@@ -207,7 +403,24 @@ namespace OTP::MODULES {
                 updateLastSeen();
             }
 
-            acceleration_t getAcceleration(axis_t axis) const { return acceleration[std::clamp(axis, axis_t::first, axis_t::last)]; }
+            /**
+             * @brief Get the Acceleration of axis
+             * 
+             * @param axis Axis to query
+             * @return Current Acceleration
+             */
+            acceleration_t getAcceleration(axis_t axis) const 
+            { 
+                return acceleration[std::clamp(axis, axis_t::first, axis_t::last)]; 
+            }
+
+            /**
+             * @brief Set the Acceleration of the axis
+             * 
+             * @param axis Axis to set
+             * @param value New Acceleration value
+             * @param time Sample timestamp
+             */
             void setAcceleration(axis_t axis, acceleration_t value, timestamp_t time = 0)
             {
                 acceleration[std::clamp(axis, axis_t::first, axis_t::last)] = value;
@@ -251,17 +464,38 @@ namespace OTP::MODULES {
             QDateTime lastSeen;
         };
 
-        // 16.3 Rotation Module
+        /**
+         * @internal
+         * @brief This data structure contains the current rotation of the Point 
+         * using intrinsic Euler rotation calculated in the x-convention (the Tait-Bryan ZYX convention)
+         * @details As defined by E1-59 Section 16.3 "Rotation Module"
+         * 
+         */
         class RotationModule_t {
         public:
+            /**
+             * @brief Point rotation type
+             * 
+             */
             class rotation_t {
             private:
                 typedef quint32 type;
 
             public:
                 rotation_t() : data(0) {}
+
+                /**
+                 * @brief Construct a new Rotation object
+                 * 
+                 * @param value Rotation value
+                 */
                 rotation_t(type value) : data(value) {}
 
+                /**
+                 * @brief Return the current Rotation value
+                 * 
+                 * @return Rotation value 
+                 */
                 operator type() const {
                     return data;
                 }
@@ -290,6 +524,12 @@ namespace OTP::MODULES {
                 std::fill(std::begin(rotation), std::end(rotation), 0);
             }
 
+            /**
+             * @brief Construct a new Rotation Module object
+             * 
+             * @param additional Additional fields
+             * @param timestamp Sample timestamp
+             */
             RotationModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
             {
                 updateLastSeen();
@@ -298,10 +538,38 @@ namespace OTP::MODULES {
                 std::copy(std::begin(temp.rotation), std::end(temp.rotation), std::begin(rotation));
             }
 
+            /**
+             * @brief Get the sample timestamp for the most recent point data
+             * 
+             * @return Position data sample time
+             */
             timestamp_t getTimestamp() const { return timestamp; }
+
+            /**
+             * @brief Get last point activity time for the module
+             * 
+             * @return Last activity time 
+             */
             QDateTime getLastSeen() const { return lastSeen; }
 
-            rotation_t getRotation(axis_t axis) const { return rotation[std::clamp(axis, axis_t::first, axis_t::last)]; }
+            /**
+             * @brief Get the Rotation of axis
+             * 
+             * @param axis Axis to query
+             * @return Current Rotation
+             */
+            rotation_t getRotation(axis_t axis) const 
+            { 
+                return rotation[std::clamp(axis, axis_t::first, axis_t::last)]; 
+            }
+            
+            /**
+             * @brief Set the Rotation of the axis
+             * 
+             * @param axis Axis to set
+             * @param value New Rotation value
+             * @param time Sample timestamp
+             */
             void setRotation(axis_t axis, rotation_t value, timestamp_t time = 0)
             {
                 rotation[std::clamp(axis, axis_t::first, axis_t::last)] = value;
@@ -339,10 +607,18 @@ namespace OTP::MODULES {
             QDateTime lastSeen;
         };
 
-        // 16.4 Rotation Velocity/Acceleration Module
+        /**
+         * @internal
+         * @brief This data structure contains the rotational velocity and acceleration of the Point 
+         * using intrinsic Euler rotation calculated in the x-convention (the Tait-Bryan ZYX convention)
+         * @details As defined by E1-59 Section 16.4 "Rotation Velocity/Acceleration Module"
+         * 
+         */
         class RotationVelAccModule_t {
         public:
+            /*! Velocity value type */ 
             typedef qint32 velocity_t;
+            /*! Acceleration value type */ 
             typedef qint32 acceleration_t;
 
             RotationVelAccModule_t() : timestamp(0), lastSeen(QDateTime())
@@ -351,6 +627,12 @@ namespace OTP::MODULES {
                 std::fill(std::begin(acceleration), std::end(acceleration), 0);
             }
 
+            /**
+             * @brief Construct a new Rotation Velocity/Acceleration Module object
+             * 
+             * @param additional Additional fields
+             * @param timestamp Sample timestamp
+             */
             RotationVelAccModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
             {
                 updateLastSeen();
@@ -360,10 +642,38 @@ namespace OTP::MODULES {
                 std::copy(std::begin(temp.acceleration), std::end(temp.acceleration), std::begin(acceleration));
             }
 
+            /**
+             * @brief Get the sample timestamp for the most recent point data
+             * 
+             * @return Position data sample time
+             */
             timestamp_t getTimestamp() const { return timestamp; }
+
+            /**
+             * @brief Get last point activity time for the module
+             * 
+             * @return Last activity time 
+             */
             QDateTime getLastSeen() const { return lastSeen; }
 
-            velocity_t getVelocity(axis_t axis) const { return velocity[std::clamp(axis, axis_t::first, axis_t::last)]; }
+            /**
+             * @brief Get the Velocity of axis
+             * 
+             * @param axis Axis to query
+             * @return Current Velocity
+             */
+            velocity_t getVelocity(axis_t axis) const 
+            { 
+                return velocity[std::clamp(axis, axis_t::first, axis_t::last)];
+            }
+            
+            /**
+             * @brief Set the Velocity of the axis
+             * 
+             * @param axis Axis to set
+             * @param value New Velocity value
+             * @param time Sample timestamp
+             */
             void setVelocity(axis_t axis, velocity_t value, timestamp_t time = 0)
             {
                 velocity[std::clamp(axis, axis_t::first, axis_t::last)] = value;
@@ -371,7 +681,24 @@ namespace OTP::MODULES {
                 updateLastSeen();
             }
 
-            acceleration_t getAcceleration(axis_t axis) const { return acceleration[std::clamp(axis, axis_t::first, axis_t::last)]; }
+            /**
+             * @brief Get the Acceleration of axis
+             * 
+             * @param axis Axis to query
+             * @return Current Acceleration
+             */
+            acceleration_t getAcceleration(axis_t axis) const 
+            {
+                return acceleration[std::clamp(axis, axis_t::first, axis_t::last)];
+            }
+
+            /**
+             * @brief Set the Acceleration of the axis
+             * 
+             * @param axis Axis to set
+             * @param value New Acceleration value
+             * @param time Sample timestamp
+             */
             void setAcceleration(axis_t axis, acceleration_t value, timestamp_t time = 0)
             {
                 acceleration[std::clamp(axis, axis_t::first, axis_t::last)] = value;
@@ -415,10 +742,27 @@ namespace OTP::MODULES {
             QDateTime lastSeen;
         };
 
-        // 16.5 Scale
+        /**
+         * @internal
+         * @brief This data structure describes the unitless, absolute scale of the Point 
+         * in the X, Y, and Z directions. 
+         * @details As defined by E1-59 Section 16.5 "Scale"
+         * 
+         * The Scale Module may be used for description of Points that have the ability to change size.
+         * 
+         */
         class OTP_LIB_EXPORT ScaleModule_t {
         public:
+            /**
+             * @brief Integer scale type
+             * 
+             */
             typedef qint32 scale_t;
+
+            /**
+             * @brief Floating point scale percentage
+             * 
+             */
             typedef qreal percent_t;
 
             ScaleModule_t() : timestamp(0), lastSeen(QDateTime())
@@ -426,6 +770,12 @@ namespace OTP::MODULES {
                 std::fill(std::begin(scale), std::end(scale), fromPercent(100));
             }
 
+            /**
+             * @brief Construct a new Scale Module object
+             * 
+             * @param additional Additional fields
+             * @param timestamp Sample timestamp
+             */
             ScaleModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
             {
                 updateLastSeen();
@@ -434,10 +784,38 @@ namespace OTP::MODULES {
                 std::copy(std::begin(temp.scale), std::end(temp.scale), std::begin(scale));
             }
 
+            /**
+             * @brief Get the sample timestamp for the most recent point data
+             * 
+             * @return Position data sample time
+             */
             timestamp_t getTimestamp() const { return timestamp; }
+
+            /**
+             * @brief Get last point activity time for the module
+             * 
+             * @return Last activity time 
+             */
             QDateTime getLastSeen() const { return lastSeen; }
 
-            scale_t getScale(axis_t axis) const { return scale[std::clamp(axis, axis_t::first, axis_t::last)]; }
+            /**
+             * @brief Get the Scale of the axis
+             * 
+             * @param axis Axis to query
+             * @return Scale of axis 
+             */
+            scale_t getScale(axis_t axis) const 
+            {
+                return scale[std::clamp(axis, axis_t::first, axis_t::last)];
+            }
+            
+            /**
+             * @brief Set the Scale of the axis
+             * 
+             * @param axis Axis to set
+             * @param value New scale of axis
+             * @param time Sample timestamp
+             */
             void setScale(axis_t axis, scale_t value, timestamp_t time = 0)
             {
                 scale[std::clamp(axis, axis_t::first, axis_t::last)] = value;
@@ -445,7 +823,21 @@ namespace OTP::MODULES {
                 updateLastSeen();
             }
 
+            /**
+             * @brief Convert scale to percent
+             * 
+             * @param scale Scale to convert
+             * @return Percentage 
+             */
             static percent_t toPercent(scale_t scale);
+
+            /**
+             * @brief Convert scale to human readable percentage
+             * 
+             * @param scale Scale to convert
+             * @param precision Precision of returned percentage
+             * @return Percentage string 
+             */
             static QString toPercentString(scale_t scale, int precision = 4) {
                 auto ret = QString::number(toPercent(scale), 'f', precision);
                 // Remove trailing fractional zeros. i.e. 10.0100 becomes 10.01
@@ -453,6 +845,13 @@ namespace OTP::MODULES {
                 ret.remove(trailingZeros);
                 return ret;
             }
+
+            /**
+             * @brief Convert percentage to scale
+             * 
+             * @param percent Percentage to convert
+             * @return Scale 
+             */
             static scale_t fromPercent(percent_t percent);
 
             friend additional_t& operator<<(additional_t &l, const ScaleModule_t &r)
@@ -481,15 +880,33 @@ namespace OTP::MODULES {
             QDateTime lastSeen;
         };
 
-        // 16.6 Reference Frame
+        /**
+         * @internal
+         * @brief This data structure contains the Address of the Reference Frame of the Point.
+         * @details As defined by E1-59 Section 16.6 "Reference Frame"
+         * 
+         * If a Reference Frame Module is included in a Point Layer, 
+         * any other Modules included in this Point shall
+         * contain transform information relative to that of the Reference Frame.
+         * 
+         */
         class ReferenceFrameModule_t {
         public:
+            /*! Creates a type name for OTPTransformLayer::system_t */ 
             typedef OTPTransformLayer::system_t system_t;
+            /*! Creates a type name for OTPTransformLayer::point_t */ 
             typedef OTPPointLayer::point_t point_t;
+            /*! Creates a type name for OTPTransformLayer::group_t */ 
             typedef OTPPointLayer::group_t group_t;
 
             ReferenceFrameModule_t() : timestamp(0), lastSeen(QDateTime()) { }
 
+            /**
+             * @brief Construct a new Reference Frame Module object
+             * 
+             * @param additional Additional fields
+             * @param timestamp Sample timestamp
+             */
             ReferenceFrameModule_t(additional_t additional, timestamp_t timestamp) : timestamp(timestamp)
             {
                 updateLastSeen();
@@ -500,10 +917,33 @@ namespace OTP::MODULES {
                 point = temp.point;
             }
 
+            /**
+             * @brief Get the sample timestamp for the most recent point data
+             * 
+             * @return Position data sample time
+             */
             timestamp_t getTimestamp() const { return timestamp; }
+
+            /**
+             * @brief Get last point activity time for the module
+             * 
+             * @return Last activity time 
+             */
             QDateTime getLastSeen() const { return lastSeen; }
 
+            /**
+             * @brief Get the System number
+             * 
+             * @return System number 
+             */
             system_t getSystem() const { return system; }
+
+            /**
+             * @brief Set the System number
+             * 
+             * @param value New system number
+             * @param time Sample timestamp
+             */
             void setSystem(system_t value, timestamp_t time)
             {
                 system = value;
@@ -511,7 +951,19 @@ namespace OTP::MODULES {
                 updateLastSeen();
             }
 
+            /**
+             * @brief Get the Group number
+             * 
+             * @return Group number 
+             */
             group_t getGroup() const { return group; }
+
+            /**
+             * @brief Set the Group number
+             * 
+             * @param value New Group number
+             * @param time Sample timestamp
+             */
             void setGroup(group_t value, timestamp_t time)
             {
                 group = value;
@@ -519,7 +971,19 @@ namespace OTP::MODULES {
                 updateLastSeen();
             }
 
+            /**
+             * @brief Get the Point number
+             * 
+             * @return Point number 
+             */
             point_t getPoint() const { return point; }
+
+            /**
+             * @brief Set the Point number
+             * 
+             * @param value New Point number
+             * @param time Sample timestamp
+             */
             void setPoint(point_t value, timestamp_t time)
             {
                 point = value;

@@ -1,21 +1,24 @@
-/*
-    OTPLib
-    A QT interface for E1.59 (Entertainment Technology Object Transform Protocol (OTP)) 
-    Copyright (C) 2019  Marcus Birkin
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
-
-    You should have received a copy of the GNU Lesser General Public License
-    along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+/**
+ * @file        consumer.cpp
+ * @brief       A Consumer is the intended target of information from a Producer
+ * @details     Part of OTPLib - A QT interface for E1.59
+ * @authors     Marcus Birkin
+ * @copyright   Copyright (C) 2019 Marcus Birkin
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ */
 #include "otp.hpp"
 #include "container.hpp"
 #include "socket.hpp"
@@ -142,7 +145,7 @@ T Consumer::getValueHelper(T2 &module, cid_t cid, address_t address, bool respec
 
 template <class T>
 QMap<cid_t, T> Consumer::getValuesHelper(
-        std::function<T(cid_t, address_t, axis_t, bool)> getFunc,
+        std::function<T(cid_t cid, address_t address, axis_t axis, bool respectRelative)> getFunc,
         address_t address,
         axis_t axis,
         bool respectRelative, bool excludeWinner) const
@@ -538,7 +541,7 @@ bool Consumer::receiveOTPTransformMessage(const QNetworkDatagram &datagram)
                             // - MODULES::STANDARD::REFERENCE_FRAME
                             otpNetwork->PointDetails(cid, address)->standardModules.referenceFrame = newStandardModules.referenceFrame;
                             if (oldStandardModules.referenceFrame != newStandardModules.referenceFrame)
-                                    emit updatedReferenceFrame(cid, address);
+                                emit updatedReferenceFrame(cid, address);
                         }
                     }
                 }

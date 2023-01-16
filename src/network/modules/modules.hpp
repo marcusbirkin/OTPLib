@@ -23,11 +23,30 @@
 #include "modules_types.hpp"
 #include "../pdu/pdu_types.hpp"
 
+/**
+ * @brief A set of properties of a Point, such as its position or rotation. 
+ * The data structure of a Module is either defined by this standard, or it is manufacturer-specific.
+ * 
+ */
 namespace OTP::MODULES {
     namespace STANDARD {
+        /**
+         * @brief Extract the Additional Fields from point details
+         * 
+         * @param standardModule Module ident
+         * @param pointDetails Point details to extract from
+         * @return Additional fields 
+         */
         additional_t getAdditional(PDU::OTPModuleLayer::ident_t standardModule,
                 pointDetails_t pointDetails);
 
+        /**
+         * @brief Extract the sample timestamp for the module from point details 
+         * 
+         * @param standardModule Module ident
+         * @param pointDetails Point details to extract from
+         * @return Sample timestamp 
+         */
         timestamp_t getTimestamp(
                 PDU::OTPModuleLayer::ident_t standardModule,
                 pointDetails_t pointDetails);
