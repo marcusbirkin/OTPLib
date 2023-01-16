@@ -9,5 +9,9 @@ Extract (emphasis added) from E1.59
 <b>Data transmitted is intended to coordinate visual and audio elements of a production and should not be
 used for safety critical applications.</b>"
 
+### Documentation
+Public API: https://marcusbirkin.github.io/OTPLib/public_api/  
+Internal API: https://marcusbirkin.github.io/OTPLib/internal/  
+
 #### CI Status
 [![Build and Tests](https://github.com/marcusbirkin/OTPLib/actions/workflows/ci.yml/badge.svg)](https://github.com/marcusbirkin/OTPLib/actions/workflows/ci.yml)

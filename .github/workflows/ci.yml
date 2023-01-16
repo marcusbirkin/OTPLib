@@ -54,3 +54,20 @@ jobs:
       with:
         check_name: "results_${{ matrix.os }}_Qt${{ matrix.qtltsver }}"
         files:  "build/tests.xml"
+
+  documentation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install Doxygen and Dependencies
+        shell: bash
+        run: sudo apt-get install doxygen graphviz -y
+
+      - name: Run doxygen
+        shell: bash
+        run: ./scripts/generate_docygen.sh
